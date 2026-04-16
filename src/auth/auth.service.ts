@@ -5,13 +5,8 @@ import { RegisterDTO } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
-
   async register(dto: RegisterDTO) {
-
-
-
-
-    return { message: 'registered' }
+    return { message: 'registered' };
   }
 
   create(createAuthDto: CreateAuthDto) {

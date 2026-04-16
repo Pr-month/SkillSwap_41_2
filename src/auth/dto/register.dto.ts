@@ -4,14 +4,11 @@ import {
   IsString,
   MinLength,
   IsDateString,
-  IsOptional, IsArray, IsNumber
-} from "class-validator";
-
-export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
-}
+  IsOptional,
+  IsArray,
+  IsNumber,
+} from 'class-validator';
+import { Gender } from '../../users/users.enums'
 
 export class RegisterDTO {
   @IsString()
