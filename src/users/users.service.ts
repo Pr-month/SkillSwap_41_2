@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -11,7 +13,7 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
-  
+
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
@@ -35,6 +37,20 @@ export class UsersService {
     // исключаем чувствительные поля
     const { password, refreshToken, ...result } = savedUser;
     return result;
+  }
+
+  async updatePassword(userId: number, dto: UpdatePasswordDto): Promise<{ message: string }> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const isPasswordValid = await bcrypt.compare(dto.oldPassword, user.password);
+    if (!isPasswordValid) throw new UnauthorizedException('Invalid old password');
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+    user.password = hashedPassword;
+    await this.usersRepository.save(user);
+
+    return { message: 'Пароль успешно обновлен.' };
   }
 
   remove(id: number) {
