@@ -18,7 +18,7 @@ export class AuthController {
 
   @Post('register')
   create(@Body() registerDTO: RegisterDTO) {
-    return this.authService.create.register(registerDTO);
+    return this.authService.register(registerDTO);
   }
 
   @Get()
