@@ -13,6 +13,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AccessTokenGuard } from '../auth/guards/accessToken.guard'; 
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -48,5 +49,12 @@ export class UsersController {
   async updateMe(@Req() req, @Body() updateUserDto: UpdateUserDto) {
     const userId = req.user.id; // предполагаем, что в req.user лежит payload с id
     return this.usersService.update(userId, updateUserDto);
-  }  
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Patch('me/password')
+  async updatePassword(@Req() req, @Body() updatePasswordDto: UpdatePasswordDto) {
+    const userId = req.user.id;
+    return this.usersService.updatePassword(userId, updatePasswordDto);
+  }
 }
