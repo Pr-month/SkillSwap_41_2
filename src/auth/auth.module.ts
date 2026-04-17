@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
   controllers: [AuthController],
   providers: [
     AuthService,
+    AccessTokenStrategy,
     JwtAccessStrategy,
     JwtRefreshStrategy,
     RefreshTokenStrategy,
