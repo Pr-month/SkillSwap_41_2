@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';

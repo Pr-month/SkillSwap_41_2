@@ -10,9 +10,13 @@ import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    JwtModule.register({}),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '15min' },
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
+  exports: [JwtModule],
 })
 export class AuthModule {}
