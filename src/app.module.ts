@@ -6,18 +6,19 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { databaseConfig } from './config/database.config';
+import { jwtConfig } from './config/jwt.config';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
     ConfigModule.forRoot({
-      load: [databaseConfig],
+      load: [databaseConfig, jwtConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => config.get<TypeOrmModuleOptions>('DB_CONFIG')!,
+      useFactory: (config: ConfigService) => config.get<TypeOrmModuleOptions>('DB_CONFIG')!,  
     }),
   ],
   controllers: [AppController],
