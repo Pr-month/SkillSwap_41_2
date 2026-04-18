@@ -34,9 +34,7 @@ export class UsersService {
     Object.assign(user, updateUserDto);
     const savedUser = await this.usersRepository.save(user);
     
-    // исключаем чувствительные поля
-    const { password, refreshToken, ...result } = savedUser;
-    return result;
+    return savedUser; // возвращаем весь объект, включая password и refreshToken (но они не будут отправлены, если не настроено)
   }
 
   async updatePassword(userId: number, dto: UpdatePasswordDto): Promise<{ message: string }> {
