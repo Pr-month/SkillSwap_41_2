@@ -5,9 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { CreateAuthDto } from './dto/create-auth.dto';
 import { RegisterDTO } from './dto/register.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 
 
 @Injectable()
@@ -32,18 +30,21 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     //создаем пользователя
+    const { password, birthday, wantToLearn, ...userData } = dto;
     const user = this.usersRepository.create({
-      ...dto,
+      ...userData,
       password: hashedPassword,
+      birthdate: birthday ? new Date(birthday) : undefined,
+      wantToLearn: wantToLearn?.map((id) => ({ id })),
     });
 
     // сохраняем пользователя в БД
     const savedUser = await this.usersRepository.save(user);
     // генерируем токены
-    const tokens = this.generateTokens(savedUser);
+    const tokens = await this.generateTokens(savedUser);
 
     //хешируем и сохраняем в бд
-    const hashedRefreshToken = await bcrypt.hash((await tokens).refreshToken, 10);
+    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
     savedUser.refreshToken = hashedRefreshToken;
     await this.usersRepository.save(savedUser);
 
@@ -53,26 +54,6 @@ export class AuthService {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     };
-  }
-
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
-
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
   }
 
   private async generateTokens(user: User) {
