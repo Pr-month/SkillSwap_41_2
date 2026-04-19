@@ -17,7 +17,6 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
-  ) {}
 
   private generateTokens(user: User) {
     const payload = {

@@ -1,12 +1,7 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdatePasswordDto } from './dto/update-password.dto';
-import * as bcrypt from 'bcrypt';
 
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -20,6 +15,17 @@ export class UsersService {
 
   findAll() {
     return `This action returns all users`;
+  }
+
+  async getMe(
+    userId: number,
+  ): Promise<Omit<User, 'password' | 'refreshToken'>> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const { password, refreshToken, ...result } = user;
+    return result;
   }
 
   findOne(id: number) {
