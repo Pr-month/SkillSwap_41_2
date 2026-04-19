@@ -17,6 +17,61 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
+  ) {}
+
+  private generateTokens(user: User) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: process.env.ACCESS_TOKEN_SECRET,
+      expiresIn: '1h',
+    });
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.REFRESH_TOKEN_SECRET,
+      expiresIn: '7d',
+    });
+    return { accessToken, refreshToken };
+  }
+
+  async register(dto: RegisterDTO) {
+    //проверяем уникальность емейла
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: dto.email },
+    });
+    if (existingUser) {
+      throw new ConflictException('Пользователь с таким email уже существует');
+    }
+
+    //хешируем пароль
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    //создаем пользователя
+    const user = this.usersRepository.create({
+      ...dto,
+      password: hashedPassword,
+    });
+
+    // сохраняем пользователя в БД
+    const savedUser = await this.usersRepository.save(user);
+    // генерируем токены
+    const tokens = this.generateTokens(savedUser);
+
+    //хешируем и сохраняем в бд
+    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+    savedUser.refreshToken = hashedRefreshToken;
+    await this.usersRepository.save(savedUser);
+
+    //формируем ответ
+    return {
+      user: savedUser,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
 
   create(createAuthDto: CreateAuthDto) {
     return 'This action adds a new auth';
