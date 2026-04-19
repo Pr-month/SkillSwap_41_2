@@ -1,4 +1,4 @@
-import { registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config';
 import { DataSourceOptions } from 'typeorm';
 
 export const databaseConfig = registerAs('DB_CONFIG', (): DataSourceOptions => ({
@@ -9,5 +9,7 @@ export const databaseConfig = registerAs('DB_CONFIG', (): DataSourceOptions => (
   password: process.env.DATABASE_PASSWORD ?? '', // Пустая строка вместо undefined
   database: process.env.DATABASE_NAME ?? 'my_db',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  synchronize: false
+  synchronize: process.env.NODE_ENV !== 'production'
 }));
+
+export type TDatabaseConfig = ConfigType<typeof databaseConfig>;

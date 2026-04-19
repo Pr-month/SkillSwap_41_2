@@ -1,13 +1,6 @@
-import { registerAs } from '@nestjs/config';
+import { ConfigType, registerAs } from '@nestjs/config';
 
-export interface JwtConfig {
-  accessSecret: string;
-  accessTokenExpires: string;
-  refreshSecret: string;
-  refreshTokenExpires: string;
-}
-
-export const jwtConfig = registerAs('JWT_CONFIG', (): JwtConfig => ({
+export const jwtConfig = registerAs('JWT_CONFIG', () => ({
   // Access Token
   accessSecret: process.env.JWT_ACCESS_SECRET ?? 'skillswap_41_2',
   accessTokenExpires: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
@@ -16,3 +9,5 @@ export const jwtConfig = registerAs('JWT_CONFIG', (): JwtConfig => ({
   refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'skillswap_41_2',
   refreshTokenExpires: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
 }));
+
+export type TJwtConfig = ConfigType<typeof jwtConfig>;

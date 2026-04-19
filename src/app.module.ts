@@ -5,7 +5,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { databaseConfig } from './config/database.config';
+import { databaseConfig, TDatabaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
 
 @Module({
@@ -17,8 +17,8 @@ import { jwtConfig } from './config/jwt.config';
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => config.get<TypeOrmModuleOptions>('DB_CONFIG')!,  
+      inject: [databaseConfig.KEY],
+      useFactory: (config: TDatabaseConfig) => config,  
     }),
   ],
   controllers: [AppController],
