@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, OneToMany, JoinTable } from 'typeorm';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { UserRole } from '../enums/user-role.enum';
 
 @Entity('users')
 export class User {
@@ -42,8 +43,8 @@ export class User {
   @JoinTable({ name: 'user_favorite_skills' })
   favoriteSkills?: Skill[];
 
-  @Column({ type: 'enum', enum: ['USER', 'ADMIN'], default: 'USER' })
-  role!: 'USER' | 'ADMIN';
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role!: UserRole;
 
   @Column({ nullable: true })
   refreshToken?: string;
