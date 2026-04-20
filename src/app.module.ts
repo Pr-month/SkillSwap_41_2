@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { databaseConfig, TDatabaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
+import { SkillsModule } from './skills/skills.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { jwtConfig } from './config/jwt.config';
       inject: [databaseConfig.KEY],
       useFactory: (config: TDatabaseConfig) => config,
     }),
+    SkillsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
