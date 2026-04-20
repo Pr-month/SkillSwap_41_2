@@ -9,7 +9,7 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { AccessTokenGuard } from 'src/auth/guards/accessToken.guard';
+import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -29,7 +29,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Get('me')
   async getMe(@Req() req) {
     const userId = req.user.id;
@@ -51,14 +51,14 @@ export class UsersController {
     return this.usersService.remove(+id);
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Patch('me')
   async updateMe(@Req() req, @Body() updateUserDto: UpdateUserDto) {
     const userId = req.user.id; // предполагаем, что в req.user лежит payload с id
     return this.usersService.update(userId, updateUserDto);
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Patch('me/password')
   async updatePassword(
     @Req() req,
