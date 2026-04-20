@@ -11,15 +11,13 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({ isGlobal: true }),
     UsersModule,
     AuthModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT as unknown as number,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      entities: [],
-      synchronize: false,
+    ConfigModule.forRoot({
+      load: [databaseConfig, jwtConfig],
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [databaseConfig.KEY],
+      useFactory: (config: TDatabaseConfig) => config,  
     }),
   ],
   controllers: [AppController],
