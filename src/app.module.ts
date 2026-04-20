@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { databaseConfig, TDatabaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
+import { appConfig } from './config/app.config';
 import { SkillsModule } from './skills/skills.module';
 
 @Module({
@@ -15,7 +16,7 @@ import { SkillsModule } from './skills/skills.module';
     UsersModule,
     AuthModule,
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig],
+      load: [databaseConfig, jwtConfig, appConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
