@@ -1,9 +1,19 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Param, Patch, Delete } from "@nestjs/common";
-import { AccessTokenGuard } from "src/auth/guards/accessToken.guard";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdatePasswordDto } from "./dto/update-password.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { UsersService } from "./users.service";
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Req,
+  Param,
+  Patch,
+  Delete,
+} from '@nestjs/common';
+import { AccessTokenGuard } from 'src/auth/guards/accessToken.guard';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
@@ -50,7 +60,10 @@ export class UsersController {
 
   @UseGuards(AccessTokenGuard)
   @Patch('me/password')
-  async updatePassword(@Req() req, @Body() updatePasswordDto: UpdatePasswordDto) {
+  async updatePassword(
+    @Req() req,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
     const userId = req.user.id;
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }

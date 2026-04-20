@@ -1,6 +1,5 @@
 import { User } from '../users/entities/user.entity';
 
-
 type UserBase = Pick<User, 'email' | 'name' | 'role'>;
 
 export type TJwtPayload = UserBase & {

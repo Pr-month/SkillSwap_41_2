@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,7 +11,6 @@ import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -15,7 +18,7 @@ export class AuthService {
     private configService: ConfigService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async register(dto: RegisterDTO) {
     //проверяем уникальность емейла
@@ -68,16 +71,23 @@ export class AuthService {
     });
     // Хешируем и сохраняем refreshToken в БД
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await this.usersRepository.update(user.id, { refreshToken: hashedRefreshToken });
+    await this.usersRepository.update(user.id, {
+      refreshToken: hashedRefreshToken,
+    });
     return { accessToken, refreshToken };
   }
 
   async refreshTokens(userId: number, refreshToken: string) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user || !user.refreshToken) throw new UnauthorizedException('Access denied');
+    if (!user || !user.refreshToken)
+      throw new UnauthorizedException('Access denied');
 
-    const refreshTokenMatches = await bcrypt.compare(refreshToken, user.refreshToken);
-    if (!refreshTokenMatches) throw new UnauthorizedException('Invalid refresh token');
+    const refreshTokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.refreshToken,
+    );
+    if (!refreshTokenMatches)
+      throw new UnauthorizedException('Invalid refresh token');
 
     return this.generateTokens(user);
   }

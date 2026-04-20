@@ -9,10 +9,9 @@ export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(
-    // @Inject(jwtConfig.KEY)
-    // private readonly config: TJwtConfig,
-  ) {
+  constructor() // @Inject(jwtConfig.KEY)
+  // private readonly config: TJwtConfig,
+  {
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
       ignoreExpiration: false,

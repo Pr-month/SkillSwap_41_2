@@ -6,6 +6,8 @@ export class UpdatePasswordDto {
 
   @IsString()
   @MinLength(6)
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)/, { message: 'Пароль должен содержать как минимум одну букву и одну цифру.' })
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)/, {
+    message: 'Пароль должен содержать как минимум одну букву и одну цифру.',
+  })
   newPassword!: string;
 }

@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
-import { ValidationPipe, BadRequestException  } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,7 +16,8 @@ async function bootstrap() {
       },
       forbidUnknownValues: true, // защита от "левого" payload (например, null вместо объекта)
 
-      exceptionFactory: (errors) => { // параметр коллбек, делаем понятный ответ при ошибке валидации
+      exceptionFactory: (errors) => {
+        // параметр коллбек, делаем понятный ответ при ошибке валидации
         return new BadRequestException({
           message: 'Validation failed',
           errors: errors.map((err) => ({

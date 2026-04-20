@@ -9,10 +9,9 @@ export class JwtAccessStrategy extends PassportStrategy(
   Strategy,
   'jwt-access',
 ) {
-  constructor(
-    // @Inject(jwtConfig.KEY)
-    // private readonly config: TJwtConfig,
-  ) {
+  constructor() // @Inject(jwtConfig.KEY)
+  // private readonly config: TJwtConfig,
+  {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
