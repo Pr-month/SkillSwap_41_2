@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Category } from '../../categories/entities/category.entity';
-import { UserRole } from '../enums/user-role.enum';
+import { Gender, UserRole } from '../enums/users.enums';
 
 @Entity('users')
 export class User {
@@ -33,8 +33,8 @@ export class User {
   @Column({ nullable: true })
   city?: string;
 
-  @Column({ nullable: true })
-  gender?: string;
+  @Column({ nullable: true, type: 'enum', enum: Gender })
+  gender?: Gender;
 
   @Column({ nullable: true })
   avatar?: string;
