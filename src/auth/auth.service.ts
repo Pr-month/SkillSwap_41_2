@@ -22,7 +22,8 @@ export class AuthService {
 
   async register(dto: RegisterDTO) {
     //хешируем пароль
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const salt = this.configService.get<number>('app.hashSalt') || 10;
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
 
     //создаем пользователя
     const { password, birthday, wantToLearn, ...userData } = dto;
@@ -30,18 +31,13 @@ export class AuthService {
       ...userData,
       password: hashedPassword,
       birthdate: birthday ? new Date(birthday) : undefined,
-      wantToLearn: wantToLearn?.map((id) => ({ id })),
+      // wantToLearn временно убираем – Category ещё нет
     });
 
     // сохраняем пользователя в БД
     const savedUser = await this.usersRepository.save(user);
     // генерируем токены
     const tokens = await this.generateTokens(savedUser);
-
-    //хешируем и сохраняем в бд
-    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
-    savedUser.refreshToken = hashedRefreshToken;
-    await this.usersRepository.save(savedUser);
 
     //формируем ответ
     return {
@@ -52,20 +48,34 @@ export class AuthService {
   }
 
   private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('auth.accessTokenSecret'),
-      expiresIn: this.configService.get('auth.accessTokenExpiresIn'),
-    });
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('auth.refreshTokenSecret'),
-      expiresIn: this.configService.get('auth.refreshTokenExpiresIn'),
-    });
-    // Хешируем и сохраняем refreshToken в БД
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await this.usersRepository.update(user.id, {
-      refreshToken: hashedRefreshToken,
-    });
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const accessSecret = this.configService.get<string>('JWT_CONFIG.accessSecret');
+    const refreshSecret = this.configService.get<string>('JWT_CONFIG.refreshSecret');
+    const accessExpires = this.configService.get<string>('JWT_CONFIG.accessTokenExpires') ?? '1h';
+    const refreshExpires = this.configService.get<string>('JWT_CONFIG.refreshTokenExpires') ?? '7d';
+
+    if (!accessSecret || !refreshSecret) {
+      throw new Error('JWT secrets are not defined in configuration');
+    }
+
+    const accessToken = this.jwtService.sign(payload as any, {
+      secret: accessSecret,
+      expiresIn: accessExpires,
+    } as any);
+
+    const refreshToken = this.jwtService.sign(payload as any, {
+      secret: refreshSecret,
+      expiresIn: refreshExpires,
+    } as any);
+    const salt = this.configService.get<number>('app.hashSalt') || 10;
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+    await this.usersRepository.update(user.id, { refreshToken: hashedRefreshToken });
+
     return { accessToken, refreshToken };
   }
 

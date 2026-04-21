@@ -8,7 +8,7 @@ import {
   IsArray,
   IsNumber,
 } from 'class-validator';
-import { Gender } from '../../users/users.enums';
+import { Gender } from '../../users/enums/users.enums';
 
 export class RegisterDTO {
   @IsString()
