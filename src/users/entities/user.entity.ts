@@ -33,8 +33,8 @@ export class User {
   @Column({ nullable: true })
   city?: string;
 
-  @Column({ nullable: true })
-  gender?: string;
+  @Column({ nullable: true, type: 'enum', enum: Gender })
+  gender?: Gender;
 
   @Column({ nullable: true })
   avatar?: string;

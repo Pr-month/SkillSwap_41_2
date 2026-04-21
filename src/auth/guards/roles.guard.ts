@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from 'src/users/enums/user-role.enum';
+import { UserRole } from 'src/users/enums/users.enums';
 
 const ROLES_KEY = 'roles'; //mock
 
