@@ -15,22 +15,22 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column({ type: "varchar", length: 255 })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: "varchar", length: 255, unique: true })
   email!: string;
 
-  @Column()
+  @Column({ type: "varchar", length: 255})
   password!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   about?: string;
 
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
-
-  @Column({ nullable: true })
+    
+  @Column({ type: 'varchar', length: 100, nullable: true })
   city?: string;
 
   @Column({ nullable: true, type: 'enum', enum: Gender })

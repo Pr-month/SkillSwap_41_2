@@ -21,14 +21,6 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDTO) {
-    //проверяем уникальность емейла
-    const existingUser = await this.usersRepository.findOne({
-      where: { email: dto.email },
-    });
-    if (existingUser) {
-      throw new ConflictException('Пользователь с таким email уже существует');
-    }
-
     //хешируем пароль
     const salt = this.configService.get<number>('app.hashSalt') || 10;
     const hashedPassword = await bcrypt.hash(dto.password, salt);
