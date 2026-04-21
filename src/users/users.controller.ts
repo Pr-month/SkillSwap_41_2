@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { TRequestWithUser } from 'src/auth/auth.types';
-import { AccessTokenGuard } from 'src/auth/guards/accessToken.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';

@@ -2,14 +2,16 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  OneToMany,
 //ManyToMany,
 //OneToMany,
 //JoinTable,
 } from 'typeorm';
 //import { Skill } from '../../skills/entities/skill.entity';
 //import { Category } from '../../categories/entities/category.entity';
-import { UserRole } from '../enums/user-role.enum';
 import { Exclude } from 'class-transformer';
+import { Gender, UserRole } from '../enums/users.enums';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Entity('users')
 export class User {
@@ -41,9 +43,8 @@ export class User {
   @Column({ nullable: true })
   avatar?: string;
 
-  // TODO: раскомментировать после реализации сущностей Skill и Category
-  //@OneToMany(() => Skill, (skill) => skill.owner)
-  //skills?: Skill[];
+  @OneToMany(() => Skill, (skill) => skill.owner)
+  skills?: Skill[];
 
   //@ManyToMany(() => Category)
   //@JoinTable({ name: 'user_want_to_learn' })

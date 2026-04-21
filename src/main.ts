@@ -1,12 +1,7 @@
-import {
-  BadRequestException,
-  ClassSerializerInterceptor,
-  ValidationPipe,
-} from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, ClassSerializerInterceptor } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/all-exception.filter';
 
 async function bootstrap() {
