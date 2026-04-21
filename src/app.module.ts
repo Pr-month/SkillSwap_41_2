@@ -11,7 +11,6 @@ import { SkillsModule } from './skills/skills.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
     UsersModule,
     AuthModule,
     ConfigModule.forRoot({
