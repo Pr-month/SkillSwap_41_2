@@ -12,9 +12,6 @@ import { SkillsModule } from './skills/skills.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    UsersModule,
-    AuthModule,
     ConfigModule.forRoot({
       load: [databaseConfig, jwtConfig, appConfig],
       isGlobal: true,
@@ -23,6 +20,8 @@ import { SkillsModule } from './skills/skills.module';
       inject: [databaseConfig.KEY],
       useFactory: (config: TDatabaseConfig) => config,
     }),
+    UsersModule,
+    AuthModule,
     SkillsModule,
   ],
   controllers: [AppController],
