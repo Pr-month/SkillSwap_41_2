@@ -10,6 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { TRequestWithUser } from 'src/auth/auth.types';
 import { AccessTokenGuard } from 'src/auth/guards/accessToken.guard';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -32,7 +33,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Get('me')
   async getMe(@Req() req: TRequestWithUser): Promise<User> {
     const userId = +req.user.sub;
@@ -58,7 +59,7 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Patch('me')
   async updateMe(
     @Req() req: TRequestWithUser,
@@ -68,7 +69,7 @@ export class UsersController {
     return this.usersService.update(userId, updateUserDto);
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Patch('me/password')
   async updatePassword(
     @Req() req: TRequestWithUser,

@@ -3,6 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -14,6 +15,7 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class UsersService {
   constructor(
+    private configService: ConfigService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
@@ -39,7 +41,7 @@ export class UsersService {
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
-  ): Promise<Omit<User, 'password' | 'refreshToken'>> {
+  ): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
 
@@ -62,9 +64,9 @@ export class UsersService {
       user.password,
     );
     if (!isPasswordValid)
-      throw new UnauthorizedException('Неверный старый пароль');
-
-    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+      throw new UnauthorizedException('Invalid old password');
+    const salt = this.configService.get<number>('app.hashSalt') || 10;
+    const hashedPassword = await bcrypt.hash(dto.newPassword, salt);
     user.password = hashedPassword;
     await this.usersRepository.save(user);
 

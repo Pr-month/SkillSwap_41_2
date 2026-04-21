@@ -2,13 +2,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToMany,
-  OneToMany,
-  JoinTable,
+//ManyToMany,
+//OneToMany,
+//JoinTable,
 } from 'typeorm';
-import { Skill } from '../../skills/entities/skill.entity';
-import { Category } from '../../categories/entities/category.entity';
-import { Gender, UserRole } from '../enums/users.enums';
+//import { Skill } from '../../skills/entities/skill.entity';
+//import { Category } from '../../categories/entities/category.entity';
+import { UserRole } from '../enums/user-role.enum';
 
 @Entity('users')
 export class User {
@@ -39,16 +39,17 @@ export class User {
   @Column({ nullable: true })
   avatar?: string;
 
-  @OneToMany(() => Skill, (skill) => skill.owner)
-  skills?: Skill[];
+  // TODO: раскомментировать после реализации сущностей Skill и Category
+  //@OneToMany(() => Skill, (skill) => skill.owner)
+  //skills?: Skill[];
 
-  @ManyToMany(() => Category)
-  @JoinTable({ name: 'user_want_to_learn' })
-  wantToLearn?: Category[];
+  //@ManyToMany(() => Category)
+  //@JoinTable({ name: 'user_want_to_learn' })
+  //wantToLearn?: Category[];
 
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'user_favorite_skills' })
-  favoriteSkills?: Skill[];
+  //@ManyToMany(() => Skill)
+  //@JoinTable({ name: 'user_favorite_skills' })
+  //favoriteSkills?: Skill[];
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role!: UserRole;
