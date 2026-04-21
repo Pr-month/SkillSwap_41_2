@@ -8,7 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  app.use(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
   
   app.useGlobalPipes(
     new ValidationPipe({
