@@ -1,18 +1,21 @@
 import {
-  Controller,
-  Post,
   Body,
-  Get,
-  UseGuards,
-  Req,
-  Param,
-  Patch,
+  Controller,
   Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { TRequestWithUser } from 'src/auth/auth.types';
 import { AccessTokenGuard } from 'src/auth/guards/accessToken.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -31,40 +34,47 @@ export class UsersController {
 
   @UseGuards(AccessTokenGuard)
   @Get('me')
-  async getMe(@Req() req) {
-    const userId = req.user.id;
-    return this.usersService.getMe(userId);
+  async getMe(@Req() req: TRequestWithUser): Promise<User> {
+    const userId = +req.user.sub;
+    const user = await this.usersService.findById(userId);
+    return user;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  findById(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findById(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(id);
   }
 
   @UseGuards(AccessTokenGuard)
   @Patch('me')
-  async updateMe(@Req() req, @Body() updateUserDto: UpdateUserDto) {
-    const userId = req.user.id; // предполагаем, что в req.user лежит payload с id
+  async updateMe(
+    @Req() req: TRequestWithUser,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const userId = +req.user.sub;
     return this.usersService.update(userId, updateUserDto);
   }
 
   @UseGuards(AccessTokenGuard)
   @Patch('me/password')
   async updatePassword(
-    @Req() req,
+    @Req() req: TRequestWithUser,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    const userId = req.user.id;
+    const userId = +req.user.sub;
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }

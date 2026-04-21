@@ -4,12 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -26,19 +26,14 @@ export class UsersService {
     return `This action returns all users`;
   }
 
-  async getMe(
-    userId: number,
-  ): Promise<Omit<User, 'password' | 'refreshToken'>> {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    const { password, refreshToken, ...result } = user;
-    return result;
-  }
+  async findById(id: number): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+    if (!user) throw new NotFoundException('Пользователь не найден');
+
+    return user;
   }
 
   async update(
@@ -46,7 +41,7 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<Omit<User, 'password' | 'refreshToken'>> {
     const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('Пользователь не найден');
 
     // обновляем только переданные поля
     Object.assign(user, updateUserDto);
@@ -60,14 +55,14 @@ export class UsersService {
     dto: UpdatePasswordDto,
   ): Promise<{ message: string }> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('Пользователь не найден');
 
     const isPasswordValid = await bcrypt.compare(
       dto.oldPassword,
       user.password,
     );
     if (!isPasswordValid)
-      throw new UnauthorizedException('Invalid old password');
+      throw new UnauthorizedException('Неверный старый пароль');
 
     const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
     user.password = hashedPassword;
