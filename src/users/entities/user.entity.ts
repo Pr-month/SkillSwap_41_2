@@ -9,6 +9,7 @@ import {
 import { Skill } from '../../skills/entities/skill.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { UserRole } from '../enums/user-role.enum';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -21,6 +22,7 @@ export class User {
   @Column({ unique: true })
   email!: string;
 
+  @Exclude()
   @Column()
   password!: string;
 
@@ -53,6 +55,7 @@ export class User {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role!: UserRole;
 
+  @Exclude()
   @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken?: string;
 }
