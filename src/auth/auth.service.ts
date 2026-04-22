@@ -11,7 +11,8 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
-import { TJwtConfig, jwtConfig } from '../config/jwt.config'
+import { TJwtConfig, jwtConfig } from '../config/jwt.config';
+import { StringValue } from 'ms';
 
 @Injectable()
 export class AuthService {
@@ -67,18 +68,20 @@ export class AuthService {
       throw new Error('JWT secrets are not defined in configuration');
     }
 
-    const accessToken = this.jwtService.sign(payload as any, {
+    const accessToken = this.jwtService.sign(payload, {
       secret: accessSecret,
-      expiresIn: accessExpires,
-    } as any);
+      expiresIn: accessExpires as StringValue,
+    });
 
-    const refreshToken = this.jwtService.sign(payload as any, {
+    const refreshToken = this.jwtService.sign(payload, {
       secret: refreshSecret,
-      expiresIn: refreshExpires,
-    } as any);
+      expiresIn: refreshExpires as StringValue,
+    });
     const salt = this.configService.get<number>('app.hashSalt') || 10;
     const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
-    await this.usersRepository.update(user.id, { refreshToken: hashedRefreshToken });
+    await this.usersRepository.update(user.id, {
+      refreshToken: hashedRefreshToken,
+    });
 
     return { accessToken, refreshToken };
   }
