@@ -17,7 +17,7 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Req() req: TRequestWithUser) {
     const userId = +req.user.sub;
-    const refreshToken = req.user.refreshToken;
+    const refreshToken = (req as any).refreshToken;
     return this.authService.refreshTokens(userId, refreshToken);
   }
 }
