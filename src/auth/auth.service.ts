@@ -7,9 +7,12 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { Response } from 'express';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
+import { LoginDTO } from './dto/login.dto';
+import { TAuthResponse, TTokens } from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +23,17 @@ export class AuthService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async register(dto: RegisterDTO) {
+  setRefreshTokenCookie(res: Response, refreshToken: string): void {
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/auth',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  async register(dto: RegisterDTO): Promise<TAuthResponse> {
     //проверяем уникальность емейла
     const existingUser = await this.usersRepository.findOne({
       where: { email: dto.email },
@@ -51,7 +64,6 @@ export class AuthService {
     savedUser.refreshToken = hashedRefreshToken;
     await this.usersRepository.save(savedUser);
 
-    //формируем ответ
     return {
       user: savedUser,
       accessToken: tokens.accessToken,
@@ -59,7 +71,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(user: User) {
+  private async generateTokens(user: User): Promise<TTokens> {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('auth.accessTokenSecret'),
@@ -77,7 +89,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async refreshTokens(userId: number, refreshToken: string) {
+  async refreshTokens(userId: number, refreshToken: string): Promise<TTokens> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user || !user.refreshToken)
       throw new UnauthorizedException('Access denied');
@@ -91,4 +103,30 @@ export class AuthService {
 
     return this.generateTokens(user);
   }
+
+  async login(dto: LoginDTO): Promise<TAuthResponse> {
+    const user = await this.usersRepository.findOne({
+      where: { email: dto.email },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    const passwordMatches = await bcrypt.compare(dto.password, user.password);
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    const tokens = await this.generateTokens(user);
+
+    return {
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
+
+  async logout(userId: number) {
+    await this.usersRepository.update(userId, { refreshToken: () => 'NULL' });
+    return { message: 'Успешный выход' };
+  }
+
 }
