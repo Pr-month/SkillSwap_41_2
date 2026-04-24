@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -10,12 +11,15 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
+import { TJwtConfig, jwtConfig } from '../config/jwt.config'
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(jwtConfig.KEY)
+    private readonly jwtCfg: TJwtConfig,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
@@ -54,10 +58,10 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessSecret = this.configService.get<string>('JWT_CONFIG.accessSecret');
-    const refreshSecret = this.configService.get<string>('JWT_CONFIG.refreshSecret');
-    const accessExpires = this.configService.get<string>('JWT_CONFIG.accessTokenExpires') ?? '1h';
-    const refreshExpires = this.configService.get<string>('JWT_CONFIG.refreshTokenExpires') ?? '7d';
+    const accessSecret = this.jwtCfg.accessSecret;
+    const refreshSecret = this.jwtCfg.refreshSecret;
+    const accessExpires = this.jwtCfg.accessTokenExpires;
+    const refreshExpires = this.jwtCfg.refreshTokenExpires;
 
     if (!accessSecret || !refreshSecret) {
       throw new Error('JWT secrets are not defined in configuration');
