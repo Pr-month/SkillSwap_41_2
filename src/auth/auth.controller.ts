@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
-import { TRequestWithUser } from './auth.types';
+import { TRequestWithRefreshToken } from './auth.types';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +15,7 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
-  async refresh(@Req() req: TRequestWithUser) {
+  async refresh(@Req() req: TRequestWithRefreshToken) {
     const userId = +req.user.sub;
     const refreshToken = req.user.refreshToken;
     return this.authService.refreshTokens(userId, refreshToken);
