@@ -36,11 +36,16 @@ export class SkillsController {
     return this.skillsService.findOne(+id);
   }
 
+  @UseGuards(JwtAccessGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSkillDto: UpdateSkillDto, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() updateSkillDto: UpdateSkillDto,
+    @Request() req,
+  ) {
     return this.skillsService.update(+id, updateSkillDto, req.user);
   }
-
+  
   @UseGuards(JwtAccessGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
