@@ -48,7 +48,7 @@ export class FileUploadService {
       await fs.rename(file.path, filePath);
     }
 
-    return filePath;
+    return `/uploads/${uniqueFileName}`;
   }
 
   private async ensureUploadDirectory(): Promise<void> {
