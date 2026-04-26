@@ -17,7 +17,7 @@ export class Category {
 
   @ManyToOne(() => Category, (category) => category.children, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'parent_id' })
-  parent?: Category;
+  parent?: Category | null;;
 
   @OneToMany(() => Category, (category) => category.parent)
   children?: Category[];
