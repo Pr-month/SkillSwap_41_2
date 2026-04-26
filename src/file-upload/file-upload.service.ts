@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 
 @Injectable()
 export class FileUploadService {
+  private readonly uploadPath = 'public/uploads';
   private readonly allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
   private readonly fileSignatures = {
     jpeg: [0xff, 0xd8, 0xff],
@@ -23,24 +24,52 @@ export class FileUploadService {
     if (file.size > maxSize) {
       throw new BadRequestException('Размер файла больше допустимого 2 МБ');
     }
+
     await this.validateFileContent(file);
-    return { message: 'Файл успешно загружен', filePath: file.path };
+    const savedFilePath = await this.saveFile(file);
+
+    return {
+      message: 'Файл успешно загружен',
+      filePath: savedFilePath,
+      originalName: file.originalname,
+    };
+  }
+
+  private async saveFile(file: Express.Multer.File): Promise<string> {
+    await this.ensureUploadDirectory();
+
+    const fileExtension = file.originalname.split('.').pop();
+    const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+    const filePath = `${this.uploadPath}/${uniqueFileName}`;
+
+    if (file.buffer) {
+      await fs.writeFile(filePath, file.buffer);
+    } else {
+      await fs.rename(file.path, filePath);
+    }
+
+    return filePath;
+  }
+
+  private async ensureUploadDirectory(): Promise<void> {
+    try {
+      await fs.access(this.uploadPath);
+    } catch {
+      await fs.mkdir(this.uploadPath, { recursive: true });
+    }
   }
 
   private async validateFileContent(file: Express.Multer.File): Promise<void> {
     try {
       let fileBuffer: Buffer;
 
-      // Если файл уже в памяти (memoryStorage)
       if (file.buffer) {
         fileBuffer = file.buffer;
       } else {
-        // Если файл на диске (diskStorage) - читаем весь файл и берем первые байты
         const fullBuffer = await fs.readFile(file.path);
-        fileBuffer = fullBuffer.slice(0, 8); // Берем только первые 8 байт
+        fileBuffer = fullBuffer.slice(0, 8);
       }
 
-      // Определяем тип файла по сигнатуре
       const detectedType = this.detectFileType(fileBuffer);
 
       if (!detectedType) {
@@ -49,7 +78,6 @@ export class FileUploadService {
         );
       }
 
-      // Сравниваем заявленный MIME-тип с фактическим содержимым
       const expectedType = this.getExpectedType(file.mimetype);
       if (detectedType !== expectedType) {
         throw new BadRequestException(
@@ -65,21 +93,15 @@ export class FileUploadService {
   }
 
   private detectFileType(buffer: Buffer): string | null {
-    // Проверка JPEG
     if (this.checkSignature(buffer, this.fileSignatures.jpeg)) {
       return 'jpeg';
     }
-
-    // Проверка PNG
     if (this.checkSignature(buffer, this.fileSignatures.png)) {
       return 'png';
     }
-
-    // Проверка GIF
     if (this.checkSignature(buffer, this.fileSignatures.gif)) {
       return 'gif';
     }
-
     return null;
   }
 
@@ -87,13 +109,11 @@ export class FileUploadService {
     if (buffer.length < signature.length) {
       return false;
     }
-
     for (let i = 0; i < signature.length; i++) {
       if (buffer[i] !== signature[i]) {
         return false;
       }
     }
-
     return true;
   }
 
@@ -103,7 +123,6 @@ export class FileUploadService {
       'image/png': 'png',
       'image/gif': 'gif',
     };
-
     return typeMap[mimetype] || mimetype;
   }
 }
