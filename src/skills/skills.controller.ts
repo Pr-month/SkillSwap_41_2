@@ -10,6 +10,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { TRequestWithUser } from 'src/auth/auth.types';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
@@ -41,14 +42,14 @@ export class SkillsController {
   update(
     @Param('id') id: string,
     @Body() updateSkillDto: UpdateSkillDto,
-    @Request() req,
+    @Request() req: TRequestWithUser,
   ) {
-    return this.skillsService.update(+id, updateSkillDto, req.user);
+    return this.skillsService.update(+id, updateSkillDto, req.user.sub);
   }
   
   @UseGuards(JwtAccessGuard)
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req) {
-    return this.skillsService.remove(+id, req.user);
+  remove(@Param('id') id: string, @Request() req: TRequestWithUser) {
+    return this.skillsService.remove(+id, req.user.sub);
   }
 }

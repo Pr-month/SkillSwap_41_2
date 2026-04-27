@@ -96,10 +96,10 @@ export class SkillsService {
     return skill;
   }
 
-  async update(id: number, updateSkillDto: UpdateSkillDto, user: User): Promise<Skill> {
+  async update(id: number, updateSkillDto: UpdateSkillDto, userId: number): Promise<Skill> {
     const skill = await this.findOne(id);
 
-    if (skill.owner.id !== user.id) {
+    if (skill.owner.id !== userId) {
       throw new ForbiddenException('You can only update your own skills');
     }
 
@@ -124,10 +124,10 @@ export class SkillsService {
     return this.skillRepository.save(skill);
   }
 
-  async remove(id: number, user: User): Promise<void> {
+  async remove(id: number, userId: number): Promise<void> {
     const skill = await this.findOne(id);
 
-    if (skill.owner.id !== user.id) {
+    if (skill.owner.id !== userId) {
       throw new ForbiddenException('You can only delete your own skills');
     }
 
