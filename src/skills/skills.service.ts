@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
+import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Skill } from './entities/skill.entity';
@@ -94,15 +95,32 @@ export class SkillsService {
     return data;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} skill`;
+  async update(id: number, updateSkillDto: UpdateSkillDto, user: User): Promise<Skill> {
+    throw new Error('Update method not implemented yet');
   }
 
-  update(id: number, updateSkillDto: UpdateSkillDto) {
-    return `This action updates a #${id} skill`;
+  async remove(id: number, user: User): Promise<void> {
+    const skill = await this.findOne(id);
+
+    if (skill.owner.id !== user.id) {
+      throw new ForbiddenException('You can only delete your own skills');
+    }
+
+    await this.deleteImagesFiles(skill.images);
+    await this.skillRepository.remove(skill);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} skill`;
+  private async deleteImagesFiles(images: string[]): Promise<void> {
+    if (!images || images.length === 0) return;
+
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    for (const image of images) {
+      try {
+        const filePath = path.join(uploadDir, image);
+        await fs.unlink(filePath);
+      } catch (error) {
+        console.error(`Failed to delete image ${image}:`, (error as Error).message);
+      }
+    }
   }
 }
