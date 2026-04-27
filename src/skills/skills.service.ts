@@ -1,16 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import fs from 'fs/promises';
+import { User } from '../users/entities/user.entity';
+import path from 'path';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Skill } from './entities/skill.entity';
-import { Repository } from 'typeorm';
-import { GetSkillsQueryDto } from './dto/get-skills';
-
-import { Skill } from './entities/skill.entity';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class SkillsService {
@@ -19,7 +16,7 @@ export class SkillsService {
     private readonly skillRepository: Repository<Skill>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async create(dto: CreateSkillDto, userId: number) {
     const [category, owner] = await Promise.all([
@@ -54,7 +51,7 @@ export class SkillsService {
     const { category, owner, search, limit, offset } = query;
 
     // собираем запрос (qb - query builder)
-    const qb = this.skillsRepository
+    const qb = this.skillRepository
       .createQueryBuilder('skill')
       .cache(true) // кэширование
       .leftJoinAndSelect('skill.category', 'category') // внешние связи
@@ -104,7 +101,7 @@ export class SkillsService {
   }
 
   async remove(id: number, user: User): Promise<void> {
-    const skill = await this.findOne(id);
+    const skill = await this.skillRepository.findOneOrFail({ where: { id }, relations: ['owner'] });
 
     if (skill.owner.id !== user.id) {
       throw new ForbiddenException('You can only delete your own skills');
