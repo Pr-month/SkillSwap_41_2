@@ -1,71 +1,74 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { DeepPartial, Repository } from 'typeorm';
-import { Category } from '../categories/entities/category.entity';
-import { User } from '../users/entities/user.entity';
+import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Skill } from './entities/skill.entity';
+import { Repository } from 'typeorm';
+import { GetSkillsQueryDto } from './dto/get-skills';
+
+import { Skill } from './entities/skill.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class SkillsService {
   constructor(
     @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto, user: User): Promise<Skill> {
-    const { categoryId, title, description, images } = createSkillDto;
+  async create(dto: CreateSkillDto, userId: number) {
+    const [category, owner] = await Promise.all([
+      this.skillRepository.findOne({
+        where: { id: dto.categoryId },
+      }),
+      this.userRepository.findOne({
+        where: { id: userId },
+      }),
+    ]);
 
-    const category = await this.categoryRepository.findOne({
-      where: { id: categoryId },
-    });
     if (!category) {
-      throw new BadRequestException(`Category with id ${categoryId} not found`);
+      throw new NotFoundException('Категория не найдена');
     }
 
-    // Явное приведение типа для обхода строгой проверки DeepPartial
-    const skillData: DeepPartial<Skill> = {
-      title,
-      description,
-      images: images ?? [],
-      category,
-      owner: user,
-    };
-    const skill = this.skillRepository.create(skillData);
-    return this.skillRepository.save(skill);
+    if (!owner) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const skill = this.skillRepository.create({
+      title: dto.title,
+      description: dto.description,
+      category: category,
+      images: dto.images ?? [],
+      owner,
+    });
+
+    return await this.skillRepository.save(skill);
   }
 
-  async findAll(query: GetSkillsQueryDto): Promise<{
-    data: Skill[];
-    page: number;
-    totalPages: number;
-  }> {
-    const { categoryId, ownerId, search, page = 1, limit = 20 } = query;
-    const take = limit;
-    const skip = (page - 1) * take;
+  async findAll(query: GetSkillsQueryDto): Promise<Skill[]> {
+    const { category, owner, search, limit, offset } = query;
 
-    const qb = this.skillRepository
+    // собираем запрос (qb - query builder)
+    const qb = this.skillsRepository
       .createQueryBuilder('skill')
-      .leftJoinAndSelect('skill.category', 'category')
+      .cache(true) // кэширование
+      .leftJoinAndSelect('skill.category', 'category') // внешние связи
       .leftJoinAndSelect('skill.owner', 'owner');
 
-    if (categoryId) {
-      qb.andWhere('category.id = :categoryId', { categoryId });
+    // фильтры
+    if (category) {
+      qb.andWhere('category.id = :category', { category });
     }
-    if (ownerId) {
-      qb.andWhere('owner.id = :ownerId', { ownerId });
+
+    if (owner) {
+      qb.andWhere('owner.id = :owner', { owner });
     }
+
     if (search) {
       qb.andWhere(
         '(skill.title ILIKE :search OR skill.description ILIKE :search)',
@@ -73,27 +76,23 @@ export class SkillsService {
       );
     }
 
+    // сортировка (последние навыки)
     qb.orderBy('skill.createdAt', 'DESC');
 
-    const [data, total] = await qb.take(take).skip(skip).getManyAndCount();
-    const totalPages = Math.ceil(total / take);
+    // пагинация / дефолт
+    const take = limit ?? 21;
+    const skip = offset ?? 0;
 
-    if (page > totalPages && totalPages > 0) {
-      throw new NotFoundException('Page exceeds total number of pages');
-    }
+    // LIMIT take OFFSET skip
+    qb.take(take); // количество записей
+    qb.skip(skip); 
 
-    return { data, page, totalPages };
-  }
+    const data = await qb.getMany();
+    const total = await qb.getCount();
 
-  async findOne(id: number): Promise<Skill> {
-    const skill = await this.skillRepository.findOne({
-      where: { id },
-      relations: ['category', 'owner'],
-    });
-    if (!skill) {
-      throw new NotFoundException(`Skill with id ${id} not found`);
-    }
-    return skill;
+    if (skip > total) throw new NotFoundException('Навыки не найдены');
+
+    return data;
   }
 
   async update(id: number, updateSkillDto: UpdateSkillDto, user: User): Promise<Skill> {

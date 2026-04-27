@@ -1,8 +1,8 @@
 import {
-	IsArray,
-	IsNotEmpty,
-	IsNumber,
-	IsString,
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateSkillDto {

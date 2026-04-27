@@ -4,17 +4,19 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
-  Post,
-  Query,
-  Request,
+  Delete,
   UseGuards,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { SkillsService } from './skills.service';
+import { TRequestWithUser } from 'src/auth/auth.types';
+import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
+import { GetSkillsQueryDto } from './dto/get-skills';
 
 @Controller('skills')
 export class SkillsController {
@@ -22,8 +24,11 @@ export class SkillsController {
 
   @UseGuards(JwtAccessGuard)
   @Post()
-  create(@Body() createSkillDto: CreateSkillDto, @Request() req) {
-    return this.skillsService.create(createSkillDto, req.user);
+  create(
+    @Req() req: TRequestWithUser,
+    @Body() createSkillDto: CreateSkillDto
+  ) {
+    return this.skillsService.create(createSkillDto, req.user.sub as number);
   }
 
   @Get()

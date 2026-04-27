@@ -1,31 +1,33 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Max, max, Min } from 'class-validator';
 
 export class GetSkillsQueryDto {
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number = 1;
+  @IsInt({ message: 'category должен быть целым числом' })
+  @Min(1, { message: 'category должен быть больше 0' })
+  category?: number;
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
+  @IsInt({ message: 'owner должен быть целым числом' })
+  @Min(1, { message: 'owner должен быть больше 0' })
+  owner?: number;
 
   @IsOptional()
   @IsString()
-  search?: string;
+  search?: string; // title + description
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  categoryId?: number;
+  @IsInt({ message: 'limit должен быть целым числом' })
+  @Min(1, { message: 'limit должен быть больше 0' })
+  @Max(21, { message: 'limit не должен превышать 24' })
+  limit?: number;
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  ownerId?: number;
+  @IsInt({ message: 'offset должен быть целым числом' })
+  @Min(0, { message: 'offset не должен быть меньше 0' })
+  offset?: number;
 }
