@@ -1,10 +1,9 @@
-import { Category } from 'src/categories/entities/category.entity';
+// import { Category } from 'src/categories/entities/category.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -21,9 +20,10 @@ export class Skill {
   @Column({ type: 'text' })
   description!: string;
 
-  @ManyToOne(() => Category)
-  @JoinColumn({ name: 'categoryId' })
-  category!: Category;
+  // Временно закомментировано
+  // @ManyToOne(() => Category)
+  // @JoinColumn({ name: 'categoryId' })
+  // category!: Category;
 
   @Column('text', { array: true, default: () => "'{}'" })
   images!: string[];

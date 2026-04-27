@@ -8,12 +8,14 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { TRequestWithUser } from 'src/auth/auth.types';
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
+import { GetSkillsQueryDto } from './dto/get-skills';
 
 @Controller('skills')
 export class SkillsController {
@@ -29,8 +31,8 @@ export class SkillsController {
   }
 
   @Get()
-  findAll() {
-    return this.skillsService.findAll();
+  findAll(@Query() query: GetSkillsQueryDto) {
+    return this.skillsService.findAll(query);
   }
 
   @Get(':id')
