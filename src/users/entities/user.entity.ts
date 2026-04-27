@@ -2,39 +2,43 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToMany,
   OneToMany,
-  JoinTable,
+  //ManyToMany,
+  //OneToMany,
+  //JoinTable,
 } from 'typeorm';
-import { Skill } from '../../skills/entities/skill.entity';
-import { Category } from '../../categories/entities/category.entity';
-import { UserRole } from '../enums/user-role.enum';
+//import { Skill } from '../../skills/entities/skill.entity';
+//import { Category } from '../../categories/entities/category.entity';
+import { Exclude } from 'class-transformer';
+import { Gender, UserRole } from '../enums/users.enums';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
 
-  @Column()
+  @Exclude()
+  @Column({ type: 'varchar', length: 255 })
   password!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   about?: string;
 
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   city?: string;
 
-  @Column({ nullable: true })
-  gender?: string;
+  @Column({ nullable: true, type: 'enum', enum: Gender })
+  gender?: Gender;
 
   @Column({ nullable: true })
   avatar?: string;
@@ -42,17 +46,18 @@ export class User {
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills?: Skill[];
 
-  @ManyToMany(() => Category)
-  @JoinTable({ name: 'user_want_to_learn' })
-  wantToLearn?: Category[];
+  //@ManyToMany(() => Category)
+  //@JoinTable({ name: 'user_want_to_learn' })
+  //wantToLearn?: Category[];
 
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'user_favorite_skills' })
-  favoriteSkills?: Skill[];
+  //@ManyToMany(() => Skill)
+  //@JoinTable({ name: 'user_favorite_skills' })
+  //favoriteSkills?: Skill[];
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role!: UserRole;
 
+  @Exclude()
   @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken?: string;
 }

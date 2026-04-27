@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,6 +12,8 @@ import { Response } from 'express';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
+import { TJwtConfig, jwtConfig } from '../config/jwt.config';
+import { StringValue } from 'ms';
 import { LoginDTO } from './dto/login.dto';
 import { TAuthResponse, TTokens } from './auth.types';
 
@@ -19,6 +22,8 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(jwtConfig.KEY)
+    private readonly jwtCfg: TJwtConfig,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
@@ -43,7 +48,8 @@ export class AuthService {
     }
 
     //хешируем пароль
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const salt = this.configService.get<number>('app.hashSalt') || 10;
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
 
     //создаем пользователя
     const { password, birthday, wantToLearn, ...userData } = dto;
@@ -51,7 +57,7 @@ export class AuthService {
       ...userData,
       password: hashedPassword,
       birthdate: birthday ? new Date(birthday) : undefined,
-      wantToLearn: wantToLearn?.map((id) => ({ id })),
+      // wantToLearn временно убираем – Category ещё нет
     });
 
     // сохраняем пользователя в БД
@@ -71,21 +77,37 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(user: User): Promise<TTokens> {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+  private async generateTokens(user: User) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const accessSecret = this.jwtCfg.accessSecret;
+    const refreshSecret = this.jwtCfg.refreshSecret;
+    const accessExpires = this.jwtCfg.accessTokenExpires;
+    const refreshExpires = this.jwtCfg.refreshTokenExpires;
+
+    if (!accessSecret || !refreshSecret) {
+      throw new Error('JWT secrets are not defined in configuration');
+    }
+
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('auth.accessTokenSecret'),
-      expiresIn: this.configService.get('auth.accessTokenExpiresIn'),
+      secret: accessSecret,
+      expiresIn: accessExpires as StringValue,
     });
+
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('auth.refreshTokenSecret'),
-      expiresIn: this.configService.get('auth.refreshTokenExpiresIn'),
+      secret: refreshSecret,
+      expiresIn: refreshExpires as StringValue,
     });
-    // Хешируем и сохраняем refreshToken в БД
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const salt = this.configService.get<number>('app.hashSalt') || 10;
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
     await this.usersRepository.update(user.id, {
       refreshToken: hashedRefreshToken,
     });
+
     return { accessToken, refreshToken };
   }
 

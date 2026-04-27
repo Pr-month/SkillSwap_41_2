@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
+import { TRequestWithRefreshToken } from './auth.types';
 import { LoginDTO } from './dto/login.dto';
 import { AccessTokenGuard } from './guards/accessToken.guard';
 import { Response } from 'express';

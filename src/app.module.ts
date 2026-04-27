@@ -7,20 +7,24 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { databaseConfig, TDatabaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
+import { appConfig } from './config/app.config';
+import { SkillsModule } from './skills/skills.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    UsersModule,
-    AuthModule,
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig],
+      load: [databaseConfig, jwtConfig, appConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
       useFactory: (config: TDatabaseConfig) => config,
     }),
+    UsersModule,
+    AuthModule,
+    SkillsModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

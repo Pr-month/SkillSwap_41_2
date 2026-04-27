@@ -11,7 +11,7 @@ export type TRequestWithUser = Request & {
   user: TJwtPayload;
 };
 
-export type TRefreshRequest = Request & {
+export type TRequestWithRefreshToken = Request & {
   user: TJwtPayload & {
     refreshToken: string;
   };

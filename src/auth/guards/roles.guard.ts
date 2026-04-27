@@ -1,37 +1,38 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from 'src/users/enums/user-role.enum';
-
-const ROLES_KEY = 'roles'; //mock
+import { Roles } from 'src/decorators/roles.decorator';
+import { UserRole } from 'src/users/enums/users.enums';
+import { TRequestWithUser } from '../auth.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<UserRole[]>(
-      ROLES_KEY,
-      context.getHandler(),
-    );
+    const requiredRoles =
+      this.reflector.get<UserRole[]>(Roles, context.getHandler()) ??
+      this.reflector.get<UserRole[]>(Roles, context.getClass());
 
-    if (!requiredRoles) {
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request: TRequestWithUser = context.switchToHttp().getRequest();
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('Not enough rights');
+      throw new UnauthorizedException('Необходима авторизация');
     }
 
-    if (!requiredRoles.includes(user.role)) {
-      throw new ForbiddenException('Not enough rights');
+    const hasRequiredRole = requiredRoles.includes(user.role);
+    if (!hasRequiredRole) {
+      throw new ForbiddenException('Недостаточно прав');
     }
 
     return true;
