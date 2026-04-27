@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryDto, CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class CategoriesService {
@@ -25,7 +25,10 @@ export class CategoriesService {
 
   async findAll() {
      try {
-      const categories = await this.categoryRepository.find({ relations: ['children', 'parent'] });
+      const categories = await this.categoryRepository.find({ 
+         where: { parent: IsNull() },
+        relations: ['children'],
+      });
 
       if (!categories) {
         console.error('Catergories are undefined!');
