@@ -7,20 +7,28 @@ import { AuthController } from './auth.controller';
 import { User } from '../users/entities/user.entity';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { jwtConfig } from '../config/jwt.config';
+import { jwtConfig, TJwtConfig } from '../config/jwt.config';
+import type { StringValue } from 'ms';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     ConfigModule.forFeature(jwtConfig),
-    JwtModule.register({}),
+    JwtModule.registerAsync({
+      inject: [jwtConfig.KEY],
+      useFactory: (config: TJwtConfig) => {
+        const jwt = config;
+        return {
+          secret: jwt.accessSecret,
+          signOptions: {
+            expiresIn: jwt.accessTokenExpires as StringValue,
+          },
+        };
+      },
+    }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtAccessStrategy,
-    JwtRefreshStrategy,
-  ],
+  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
   exports: [JwtModule],
 })
 export class AuthModule {}

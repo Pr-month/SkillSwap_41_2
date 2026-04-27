@@ -16,3 +16,18 @@ export type TRequestWithRefreshToken = Request & {
     refreshToken: string;
   };
 };
+
+export type TLogoutRequest = Request & {
+  user: Pick<User, 'id'>;
+};
+
+export type TTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type TAuthResponse = {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+};
