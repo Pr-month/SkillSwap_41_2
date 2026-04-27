@@ -6,20 +6,28 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
   Query,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { TRequestWithUser } from 'src/auth/auth.types';
+import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { GetSkillsQueryDto } from './dto/get-skills';
 
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
+  @UseGuards(JwtAccessGuard)
   @Post()
-  create(@Body() createSkillDto: CreateSkillDto) {
-    return this.skillsService.create(createSkillDto);
+  create(
+    @Req() req: TRequestWithUser,
+    @Body() createSkillDto: CreateSkillDto
+  ) {
+    return this.skillsService.create(createSkillDto, req.user.sub as number);
   }
 
   @Get()

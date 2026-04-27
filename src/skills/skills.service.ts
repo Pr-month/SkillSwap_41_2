@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,15 +8,45 @@ import { Skill } from './entities/skill.entity';
 import { Repository } from 'typeorm';
 import { GetSkillsQueryDto } from './dto/get-skills';
 
+import { Skill } from './entities/skill.entity';
+import { User } from '../users/entities/user.entity';
+
 @Injectable()
 export class SkillsService {
   constructor(
     @InjectRepository(Skill)
-    private skillsRepository: Repository<Skill>,
+    private readonly skillRepository: Repository<Skill>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
-  create(createSkillDto: CreateSkillDto) {
-    return 'This action adds a new skill';
+  async create(dto: CreateSkillDto, userId: number) {
+    const [category, owner] = await Promise.all([
+      this.skillRepository.findOne({
+        where: { id: dto.categoryId },
+      }),
+      this.userRepository.findOne({
+        where: { id: userId },
+      }),
+    ]);
+
+    if (!category) {
+      throw new NotFoundException('Категория не найдена');
+    }
+
+    if (!owner) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const skill = this.skillRepository.create({
+      title: dto.title,
+      description: dto.description,
+      category: category,
+      images: dto.images ?? [],
+      owner,
+    });
+
+    return await this.skillRepository.save(skill);
   }
 
   async findAll(query: GetSkillsQueryDto): Promise<Skill[]> {
