@@ -5,7 +5,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-} from "typeorm";
+} from 'typeorm';
 
 @Entity('categories')
 export class Category {
@@ -15,7 +15,10 @@ export class Category {
   @Column({ type: 'varchar', length: 50 })
   name!: string;
 
-  @ManyToOne(() => Category, (category) => category.children, { onDelete: 'CASCADE', nullable: true })
+  @ManyToOne(() => Category, (category) => category.children, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   @JoinColumn({ name: 'parent_id' })
   parent?: Category;
 

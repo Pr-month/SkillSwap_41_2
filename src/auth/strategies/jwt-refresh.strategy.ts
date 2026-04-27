@@ -6,7 +6,10 @@ import { TJwtPayload } from '../auth.types';
 import { Request } from 'express';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(@Inject(jwtConfig.KEY) private readonly config: TJwtConfig) {
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
@@ -16,7 +19,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
     });
   }
 
-  validate<T extends { body: { refreshToken: string } }>(req: T, payload: TJwtPayload) {
+  validate<T extends { body: { refreshToken: string } }>(
+    req: T,
+    payload: TJwtPayload,
+  ) {
     return {
       ...payload,
       refreshToken: req.body.refreshToken,

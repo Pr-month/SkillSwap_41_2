@@ -24,10 +24,7 @@ export class SkillsController {
 
   @UseGuards(JwtAccessGuard)
   @Post()
-  create(
-    @Req() req: TRequestWithUser,
-    @Body() createSkillDto: CreateSkillDto
-  ) {
+  create(@Req() req: TRequestWithUser, @Body() createSkillDto: CreateSkillDto) {
     return this.skillsService.create(createSkillDto, req.user.sub as number);
   }
 
@@ -42,7 +39,11 @@ export class SkillsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSkillDto: UpdateSkillDto, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() updateSkillDto: UpdateSkillDto,
+    @Request() req,
+  ) {
     return this.skillsService.update(+id, updateSkillDto, req.user);
   }
 

@@ -85,7 +85,7 @@ export class SkillsService {
 
     // LIMIT take OFFSET skip
     qb.take(take); // количество записей
-    qb.skip(skip); 
+    qb.skip(skip);
 
     const data = await qb.getMany();
     const total = await qb.getCount();
@@ -95,7 +95,11 @@ export class SkillsService {
     return data;
   }
 
-  async update(id: number, updateSkillDto: UpdateSkillDto, user: User): Promise<Skill> {
+  async update(
+    id: number,
+    updateSkillDto: UpdateSkillDto,
+    user: User,
+  ): Promise<Skill> {
     throw new Error('Update method not implemented yet');
   }
 
@@ -119,7 +123,10 @@ export class SkillsService {
         const filePath = path.join(uploadDir, image);
         await fs.unlink(filePath);
       } catch (error) {
-        console.error(`Failed to delete image ${image}:`, (error as Error).message);
+        console.error(
+          `Failed to delete image ${image}:`,
+          (error as Error).message,
+        );
       }
     }
   }
