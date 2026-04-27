@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,21 +18,22 @@ export class SkillsService {
   }
 
   async findAll(query: GetSkillsQueryDto): Promise<Skill[]> {
-    const { categoryId, ownerId, search, limit, offset } = query;
+    const { category, owner, search, limit, offset } = query;
 
-    // собираем запрос
+    // собираем запрос (qb - query builder)
     const qb = this.skillsRepository
       .createQueryBuilder('skill')
-      .leftJoinAndSelect('skill.category', 'category')
+      .cache(true) // кэширование
+      .leftJoinAndSelect('skill.category', 'category') // внешние связи
       .leftJoinAndSelect('skill.owner', 'owner');
 
     // фильтры
-    if (categoryId) {
-      qb.andWhere('category.id = :categoryId', { categoryId });
+    if (category) {
+      qb.andWhere('category.id = :category', { category });
     }
 
-    if (ownerId) {
-      qb.andWhere('owner.id = :ownerId', { ownerId });
+    if (owner) {
+      qb.andWhere('owner.id = :owner', { owner });
     }
 
     if (search) {
@@ -46,13 +47,19 @@ export class SkillsService {
     qb.orderBy('skill.createdAt', 'DESC');
 
     // пагинация / дефолт
-    const take = limit ?? 20;
+    const take = limit ?? 21;
     const skip = offset ?? 0;
 
-    qb.take(take);
-    qb.skip(skip);
+    // LIMIT take OFFSET skip
+    qb.take(take); // количество записей
+    qb.skip(skip); 
 
-    return qb.getMany();
+    const data = await qb.getMany();
+    const total = await qb.getCount();
+
+    if (skip > total) throw new NotFoundException('Навыки не найдены');
+
+    return data;
   }
 
   findOne(id: number) {
