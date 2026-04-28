@@ -1,18 +1,37 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Res,
+} from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { TRequestWithUser } from '../auth/auth.types';
 
 @Controller('requests')
 export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
+  @UseGuards(JwtAccessGuard)
   @Post()
-  create(@Body() createRequestDto: CreateRequestDto) {
-    return this.requestsService.create(createRequestDto);
+  async create(
+    @Res() res: TRequestWithUser,
+    @Body() createRequestDto: CreateRequestDto,
+  ) {
+    return this.requestsService.create(
+      createRequestDto,
+      res.user.sub as number,
+    );
   }
 
-  @Get()
+  @Get('incoming')
   findAll() {
     return this.requestsService.findAll();
   }
