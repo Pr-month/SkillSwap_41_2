@@ -11,6 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserRole } from './enums/users.enums';
 
 @Injectable()
 export class UsersService {
@@ -73,4 +74,31 @@ export class UsersService {
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
+
+  async seedAdmin(): Promise<void> {
+  const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
+  const adminPassword = this.configService.get<string>('ADMIN_PASSWORD');
+
+  if (!adminEmail || !adminPassword) return;
+
+  const existing = await this.usersRepository.findOne({
+    where: { email: adminEmail },
+  });
+
+  if (existing) return;
+
+  const salt = this.configService.get<number>('app.hashSalt') || 10;
+  const hashedPassword = await bcrypt.hash(adminPassword, salt);
+
+  await this.usersRepository.save({
+    email: adminEmail,
+    password: hashedPassword,
+    name: 'Admin',
+    role: UserRole.ADMIN,
+  });
+
+  console.log('Admin created');
 }
+}
+
+
