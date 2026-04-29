@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards, Req } from '@nestjs/common';
+import { TRequestWithUser } from '../auth/auth.types';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
@@ -27,8 +29,19 @@ export class RequestsController {
     return this.requestsService.update(+id, updateRequestDto);
   }
 
+  @UseGuards(JwtAccessGuard)
+  @Get('outgoing')
+  async getOutgoing(@Req() req: TRequestWithUser) {
+    const userId = req.user.sub;
+    return this.requestsService.findOutgoing(userId);
+  }  
+
+  @UseGuards(JwtAccessGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.requestsService.remove(+id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: TRequestWithUser,
+  ): Promise<void> {
+    return this.requestsService.remove(id, req.user);
   }
 }
