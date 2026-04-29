@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { getRepositoryToken } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AppModule } from '../app.module';
