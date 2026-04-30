@@ -9,8 +9,6 @@ import { TJwtPayload } from '../auth/auth.types';
 import { UserRole } from '../users/enums/users.enums';
 import { Request } from './entities/request.entity';
 
-type RequestUser = Pick<TJwtPayload, 'role' | 'sub'>;
-
 @Injectable()
 export class RequestsService {
   constructor(
@@ -33,7 +31,7 @@ export class RequestsService {
     return 'This action adds a new request';
   }
 
-  async remove(id: string, user: RequestUser): Promise<void> {
+  async remove(id: string, user: TJwtPayload): Promise<void> {
     const request = await this.requestsRepository.findOne({
       where: { id },
       relations: {
