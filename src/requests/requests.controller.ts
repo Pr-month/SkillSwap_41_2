@@ -20,7 +20,7 @@ export class RequestsController {
   async getOutgoing(@Req() req: TRequestWithUser) {
     const userId = req.user.sub;
     return this.requestsService.findOutgoing(userId);
-  }  
+  }
 
   @UseGuards(JwtAccessGuard)
   @Delete(':id')
