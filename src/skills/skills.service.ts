@@ -1,16 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import fs from 'fs/promises';
+import { User } from '../users/entities/user.entity';
+import path from 'path';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Skill } from './entities/skill.entity';
-import { Repository } from 'typeorm';
-import { GetSkillsQueryDto } from './dto/get-skills';
-
-import { Skill } from './entities/skill.entity';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class SkillsService {
@@ -19,7 +16,7 @@ export class SkillsService {
     private readonly skillRepository: Repository<Skill>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async create(dto: CreateSkillDto, userId: number) {
     const [category, owner] = await Promise.all([
@@ -54,7 +51,7 @@ export class SkillsService {
     const { category, owner, search, limit, offset } = query;
 
     // собираем запрос (qb - query builder)
-    const qb = this.skillsRepository
+    const qb = this.skillRepository
       .createQueryBuilder('skill')
       .cache(true) // кэширование
       .leftJoinAndSelect('skill.category', 'category') // внешние связи
@@ -95,18 +92,38 @@ export class SkillsService {
     return data;
   }
 
-  async update(
-    id: number,
-    updateSkillDto: UpdateSkillDto,
-    user: User,
-  ): Promise<Skill> {
-    throw new Error('Update method not implemented yet');
-  }
-
-  async remove(id: number, user: User): Promise<void> {
+  async update(id: number, updateSkillDto: UpdateSkillDto, userId: number): Promise<Skill> {
     const skill = await this.findOne(id);
 
-    if (skill.owner.id !== user.id) {
+    if (skill.owner.id !== userId) {
+      throw new ForbiddenException('You can only update your own skills');
+    }
+
+    if (updateSkillDto.categoryId !== undefined) {
+      const category = await this.categoryRepository.findOne({
+        where: { id: updateSkillDto.categoryId },
+      });
+      if (!category) {
+        throw new BadRequestException(`Category with id ${updateSkillDto.categoryId} not found`);
+      }
+      skill.category = category;
+    }
+
+    if (updateSkillDto.title !== undefined) skill.title = updateSkillDto.title;
+    if (updateSkillDto.description !== undefined) skill.description = updateSkillDto.description;
+
+    if (updateSkillDto.images !== undefined) {
+      await this.deleteImagesFiles(skill.images);
+      skill.images = updateSkillDto.images;
+    }
+
+    return this.skillRepository.save(skill);
+  }
+
+  async remove(id: number, userId: number): Promise<void> {
+    const skill = await this.findOne(id);
+
+    if (skill.owner.id !== userId) {
       throw new ForbiddenException('You can only delete your own skills');
     }
 

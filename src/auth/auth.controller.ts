@@ -4,9 +4,9 @@ import { RegisterDTO } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
 import { TRequestWithRefreshToken } from './auth.types';
 import { LoginDTO } from './dto/login.dto';
-import { AccessTokenGuard } from './guards/accessToken.guard';
 import { Response } from 'express';
-import { TLogoutRequest, TRefreshRequest } from './auth.types';
+import { TLogoutRequest } from './auth.types';
+import { JwtAccessGuard } from './guards/jwt-access.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +25,7 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   async refresh(
-    @Req() req: TRefreshRequest,
+    @Req() req: TRequestWithRefreshToken,
     @Res({ passthrough: true }) res: Response,
   ) {
     const userId = req.user.sub;
@@ -45,7 +45,7 @@ export class AuthController {
     return result;
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(JwtAccessGuard)
   @Post('logout')
   async logout(
     @Req() req: TLogoutRequest,
