@@ -15,6 +15,13 @@ export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
   @UseGuards(JwtAccessGuard)
+  @Get('outgoing')
+  async getOutgoing(@Req() req: TRequestWithUser) {
+    const userId = req.user.sub;
+    return this.requestsService.findOutgoing(userId);
+  }  
+
+  @UseGuards(JwtAccessGuard)
   @Delete(':id')
   remove(
     @Param('id', ParseUUIDPipe) id: string,

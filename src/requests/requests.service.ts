@@ -18,6 +18,21 @@ export class RequestsService {
     private readonly requestsRepository: Repository<Request>,
   ) {}
 
+  async findOutgoing(userId: number): Promise<Request[]> {
+    return this.requestsRepository.find({
+      where: {
+        sender: { id: userId }, // заявки, где отправитель – текущий пользователь
+        status: In([RequestStatus.Pending, RequestStatus.InProgress]), // только активные
+      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'], // подгружаем связанные сущности
+      order: { createdAt: 'DESC' }, // сначала новые
+    });
+  }
+
+  create(createRequestDto: CreateRequestDto) {
+    return 'This action adds a new request';
+  }
+
   async remove(id: string, user: RequestUser): Promise<void> {
     const request = await this.requestsRepository.findOne({
       where: { id },
