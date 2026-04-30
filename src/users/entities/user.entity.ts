@@ -3,9 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-//ManyToMany,
-//OneToMany,
-//JoinTable,
+  //ManyToMany,
+  //OneToMany,
+  //JoinTable,
 } from 'typeorm';
 //import { Skill } from '../../skills/entities/skill.entity';
 //import { Category } from '../../categories/entities/category.entity';
@@ -18,14 +18,14 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   name!: string;
 
-  @Column({ type: "varchar", length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
 
   @Exclude()
-  @Column({ type: "varchar", length: 255})
+  @Column({ type: 'varchar', length: 255 })
   password!: string;
 
   @Column({ type: 'text', nullable: true })
@@ -33,7 +33,7 @@ export class User {
 
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
-    
+
   @Column({ type: 'varchar', length: 100, nullable: true })
   city?: string;
 

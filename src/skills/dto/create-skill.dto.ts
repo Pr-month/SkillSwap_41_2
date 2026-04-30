@@ -1,9 +1,4 @@
-import {
-	IsArray,
-	IsNotEmpty,
-	IsNumber,
-	IsString,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsArray, IsNumber } from 'class-validator';
 
 export class CreateSkillDto {
   @IsString()

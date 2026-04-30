@@ -5,7 +5,10 @@ import { jwtConfig, TJwtConfig } from '../../config/jwt.config';
 import { TJwtPayload } from '../auth.types';
 
 @Injectable()
-export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt-access') {
+export class JwtAccessStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-access',
+) {
   constructor(@Inject(jwtConfig.KEY) private readonly config: TJwtConfig) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

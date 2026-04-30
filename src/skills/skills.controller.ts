@@ -23,8 +23,8 @@ export class SkillsController {
 
   @UseGuards(JwtAccessGuard)
   @Post()
-  create(@Body() createSkillDto: CreateSkillDto, @Request() req) {
-    return this.skillsService.create(createSkillDto, req.user);
+  create(@Req() req: TRequestWithUser, @Body() createSkillDto: CreateSkillDto) {
+    return this.skillsService.create(createSkillDto, req.user.sub as number);
   }
 
   @Get()
