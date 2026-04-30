@@ -4,10 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TJwtPayload } from '../auth/auth.types';
 import { UserRole } from '../users/enums/users.enums';
 import { Request } from './entities/request.entity';
+import { CreateRequestDto } from './dto/create-request.dto';
+import { RequestStatus } from './requests.enum';
 
 type RequestUser = Pick<TJwtPayload, 'role' | 'sub'>;
 
