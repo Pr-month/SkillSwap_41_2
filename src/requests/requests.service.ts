@@ -1,42 +1,26 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { TJwtPayload } from '../auth/auth.types';
-import { UserRole } from '../users/enums/users.enums';
-import { Request } from './entities/request.entity';
-
-type RequestUser = Pick<TJwtPayload, 'role' | 'sub'>;
+import { Injectable } from '@nestjs/common';
+import { CreateRequestDto } from './dto/create-request.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
 
 @Injectable()
 export class RequestsService {
-  constructor(
-    @InjectRepository(Request)
-    private readonly requestsRepository: Repository<Request>,
-  ) {}
+  create(createRequestDto: CreateRequestDto) {
+    return 'This action adds a new request';
+  }
 
-  async remove(id: string, user: RequestUser): Promise<void> {
-    const request = await this.requestsRepository.findOne({
-      where: { id },
-      relations: {
-        sender: true,
-      },
-    });
+  findAll() {
+    return `This action returns all requests`;
+  }
 
-    if (!request) {
-      throw new NotFoundException('Заявка не найдена');
-    }
+  findOne(id: number) {
+    return `This action returns a #${id} request`;
+  }
 
-    const isSender = request.sender.id === user.sub;
-    const isAdmin = user.role === UserRole.ADMIN;
+  update(id: number, updateRequestDto: UpdateRequestDto) {
+    return `This action updates a #${id} request`;
+  }
 
-    if (!isSender && !isAdmin) {
-      throw new ForbiddenException('Можно удалить только исходящую заявку');
-    }
-
-    await this.requestsRepository.delete(id);
+  remove(id: number) {
+    return `This action removes a #${id} request`;
   }
 }

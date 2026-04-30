@@ -20,8 +20,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Внутренняя ошибка сервера';
 
-    let errors: unknown;
-
     // 1) EntityNotFoundError -> 404
     if (exception instanceof EntityNotFoundError) {
       status = HttpStatus.NOT_FOUND;
@@ -72,13 +70,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof exceptionResponse === 'object' &&
         exceptionResponse !== null
       ) {
-        const responseBody = exceptionResponse as {
-          message?: string | string[];
-          errors?: unknown;
-        };
-
-        message = responseBody.message ?? exception.message;
-        errors = responseBody.errors;
+        message =
+          (exceptionResponse as { message?: string | string[] }).message ??
+          exception.message;
       } else {
         message = exception.message;
       }
@@ -87,7 +81,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       message,
-      ...(errors !== undefined ? { errors } : {}),
       timestamp: new Date().toISOString(),
       path: request.originalUrl ?? request.url,
     });
