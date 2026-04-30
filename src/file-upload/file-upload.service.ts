@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import * as fs from 'fs/promises';
-
+import Multer from 'multer';
 @Injectable()
 export class FileUploadService {
   private readonly uploadPath = 'public/uploads';
@@ -11,7 +11,7 @@ export class FileUploadService {
     gif: [0x47, 0x49, 0x46, 0x38], // GIF87a или GIF89a
   };
 
-  async handleFileUpload(file: Express.Multer.File) {
+  async handleFileUpload(file: Multer.File) {
     if (!file) {
       throw new BadRequestException('Нет файла для загрузки');
     }
@@ -35,7 +35,7 @@ export class FileUploadService {
     };
   }
 
-  private async saveFile(file: Express.Multer.File): Promise<string> {
+  private async saveFile(file: Multer.File): Promise<string> {
     await this.ensureUploadDirectory();
 
     const fileExtension = file.originalname.split('.').pop();
@@ -59,7 +59,7 @@ export class FileUploadService {
     }
   }
 
-  private async validateFileContent(file: Express.Multer.File): Promise<void> {
+  private async validateFileContent(file: Multer.File): Promise<void> {
     try {
       let fileBuffer: Buffer;
 
