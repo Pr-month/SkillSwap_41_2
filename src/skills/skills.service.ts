@@ -92,18 +92,38 @@ export class SkillsService {
     return data;
   }
 
-  async update(
-    id: number,
-    updateSkillDto: UpdateSkillDto,
-    user: User,
-  ): Promise<Skill> {
-    throw new Error('Update method not implemented yet');
+  async update(id: number, updateSkillDto: UpdateSkillDto, userId: number): Promise<Skill> {
+    const skill = await this.findOne(id);
+
+    if (skill.owner.id !== userId) {
+      throw new ForbiddenException('You can only update your own skills');
+    }
+
+    if (updateSkillDto.categoryId !== undefined) {
+      const category = await this.categoryRepository.findOne({
+        where: { id: updateSkillDto.categoryId },
+      });
+      if (!category) {
+        throw new BadRequestException(`Category with id ${updateSkillDto.categoryId} not found`);
+      }
+      skill.category = category;
+    }
+
+    if (updateSkillDto.title !== undefined) skill.title = updateSkillDto.title;
+    if (updateSkillDto.description !== undefined) skill.description = updateSkillDto.description;
+
+    if (updateSkillDto.images !== undefined) {
+      await this.deleteImagesFiles(skill.images);
+      skill.images = updateSkillDto.images;
+    }
+
+    return this.skillRepository.save(skill);
   }
 
-  async remove(id: number, user: User): Promise<void> {
-    const skill = await this.skillRepository.findOneOrFail({ where: { id }, relations: ['owner'] });
+  async remove(id: number, userId: number): Promise<void> {
+    const skill = await this.findOne(id);
 
-    if (skill.owner.id !== user.id) {
+    if (skill.owner.id !== userId) {
       throw new ForbiddenException('You can only delete your own skills');
     }
 
