@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Res,
+  Req,
 } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
@@ -31,9 +32,10 @@ export class RequestsController {
     );
   }
 
+  @UseGuards(JwtAccessGuard)
   @Get('incoming')
-  findAll() {
-    return this.requestsService.findAll();
+  findAll(@Req() req: TRequestWithUser) {
+    return this.requestsService.findAll(req.user.sub as number);
   }
 
   @Get(':id')

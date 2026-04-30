@@ -71,8 +71,23 @@ export class RequestsService {
     return this.requestsRepository.save(request);
   }
 
-  findAll() {
-    return `This action returns all requests`;
+  async findAll(userId: number) {
+    return this.requestsRepository.find({
+      where: {
+        requestedSkill: {
+          owner: {
+            id: userId,
+          },
+        },
+      },
+      relations: {
+        sender: true,
+        offeredSkill: true,
+        requestedSkill: {
+          owner: true,
+        },
+      },
+    });
   }
 
   findOne(id: number) {
