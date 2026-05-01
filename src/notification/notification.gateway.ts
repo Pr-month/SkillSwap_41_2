@@ -7,6 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
+import { NotificationType, NotificationPayload } from './notification.types';
 
 @WebSocketGateway({
   cors: { origin: '*' }, // Настройте CORS
@@ -41,10 +42,16 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
   }
 
   // Метод для отправки уведомления конкретному пользователю
-  sendNotification(userId: number, message: any) {
+  sendNotification(userId: number, type: NotificationType, data: Record<string, any>) {
     const socketId = this.activeUsers.get(userId);
     if (socketId) {
-      this.server.to(socketId).emit('notification', message);
+      const payload: NotificationPayload = {
+        type,
+        data,
+        timestamp: new Date().toISOString(),
+      };
+      this.server.to(socketId).emit('notification', payload);
+      console.log(` Notification sent to user ${userId}: ${type}`);
     }
   }
 }
