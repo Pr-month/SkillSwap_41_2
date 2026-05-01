@@ -14,8 +14,6 @@ import { NotificationGateway } from '../notification/notification.gateway';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UserRole } from '../users/enums/users.enums';
 import { Request } from './entities/request.entity';
-import { CreateRequestDto } from './dto/create-request.dto';
-import { RequestStatus } from './requests.enum';
 
 type RequestUser = Pick<TJwtPayload, 'role' | 'sub'>;
 

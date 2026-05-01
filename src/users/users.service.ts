@@ -20,7 +20,7 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
+  create(_createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
 

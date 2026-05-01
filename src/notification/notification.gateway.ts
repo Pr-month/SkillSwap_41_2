@@ -4,7 +4,8 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
+import { AuthenticatedSocket } from '../auth/auth.types';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { NotificationType, NotificationPayload } from './notification.types';
@@ -21,7 +22,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
   // Хранилище активных пользователей: userId -> Socket ID
   private activeUsers = new Map<number, string>();
 
-  handleConnection(client: Socket) {
+  handleConnection(client: AuthenticatedSocket) {
     // Если мы здесь, значит, WsJwtGuard пропустил соединение
     const user = client.data.user;
     if (user && user.sub) {
@@ -33,7 +34,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
     }
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: AuthenticatedSocket) {
     const user = client.data.user;
     if (user && user.sub) {
       this.activeUsers.delete(user.sub);

@@ -1,6 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsOptional, IsUUID, IsArray, MaxLength, MinLength, IsInt } from 'class-validator';
-import { CreateSkillDto } from 'src/skills/dto/create-skill.dto';
 
 export class CategoryDto {
   @IsUUID()

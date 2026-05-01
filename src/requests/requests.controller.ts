@@ -6,7 +6,6 @@ import {
   ParseUUIDPipe,
   Req,
   UseGuards,
-  Get,
   Post,
   Patch,
   Body

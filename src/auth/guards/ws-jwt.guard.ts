@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { TJwtConfig, jwtConfig } from '../../config/jwt.config';
 import { Inject } from '@nestjs/common';
+import { AuthenticatedSocket } from '../auth.types';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
@@ -14,7 +15,7 @@ export class WsJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client = context.switchToWs().getClient();
+    const client = context.switchToWs().getClient<AuthenticatedSocket>();
     let token: string | undefined;
 
     // Извлекаем токен из различных источников
