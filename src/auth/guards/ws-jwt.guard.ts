@@ -15,7 +15,7 @@ export class WsJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client = context.switchToWs().getClient<AuthenticatedSocket>();
+    const client: AuthenticatedSocket = context.switchToWs().getClient();
     let token: string | undefined;
 
     // Извлекаем токен из различных источников

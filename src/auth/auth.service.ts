@@ -52,7 +52,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
     //создаем пользователя
-    const { password: _password, birthday, wantToLearn: _wantToLearn, ...userData } = dto;
+    const { birthday, ...userData } = dto;
     const user = this.usersRepository.create({
       ...userData,
       password: hashedPassword,
