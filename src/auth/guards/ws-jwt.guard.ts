@@ -15,7 +15,7 @@ export class WsJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client: AuthenticatedSocket = context.switchToWs().getClient();
+    const client = context.switchToWs().getClient() as AuthenticatedSocket;
     let token: string | undefined;
 
     // Извлекаем токен из различных источников
@@ -48,7 +48,7 @@ export class WsJwtGuard implements CanActivate {
       // Добавляем информацию о пользователе в объект сокета
       client.data.user = payload;
       return true;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Невалидный токен');
     }
   }
