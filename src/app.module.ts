@@ -9,6 +9,7 @@ import { databaseConfig, TDatabaseConfig } from './config/database.config';
 import { jwtConfig } from './config/jwt.config';
 import { appConfig } from './config/app.config';
 import { SkillsModule } from './skills/skills.module';
+import { CategoriesModule } from './categories/categories.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { RequestsModule } from './requests/requests.module';
 import { NotificationModule } from './notification/notification.module';
@@ -26,6 +27,7 @@ import { NotificationModule } from './notification/notification.module';
     UsersModule,
     AuthModule,
     SkillsModule,
+    CategoriesModule,
     FileUploadModule,
     RequestsModule,
     NotificationModule,
