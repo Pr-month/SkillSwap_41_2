@@ -11,6 +11,7 @@ import { appConfig } from './config/app.config';
 import { SkillsModule } from './skills/skills.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { RequestsModule } from './requests/requests.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { RequestsModule } from './requests/requests.module';
     SkillsModule,
     FileUploadModule,
     RequestsModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
