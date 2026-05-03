@@ -9,6 +9,7 @@ import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { jwtConfig, TJwtConfig } from '../config/jwt.config';
 import type { StringValue } from 'ms';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import type { StringValue } from 'ms';
         };
       },
     }),
+    UsersModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
