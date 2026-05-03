@@ -11,6 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserRole } from './enums/users.enums';
 
 @Injectable()
 export class UsersService {
@@ -74,3 +75,5 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 }
+
+
