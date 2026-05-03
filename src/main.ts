@@ -9,9 +9,11 @@ import {
 import { AllExceptionsFilter } from './common/all-exception.filter';
 import { ConfigService } from '@nestjs/config';
 import { appConfig, TAppConfig } from './config/app.config';
+import { UsersService } from './users/users.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   const configService = app.get(ConfigService);
   const config = configService.get<TAppConfig>(appConfig.KEY);
   app.use(cookieParser());

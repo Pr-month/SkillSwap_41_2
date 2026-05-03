@@ -1,9 +1,11 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Req,
   UseGuards,
   Post,
@@ -12,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { TRequestWithUser } from '../auth/auth.types';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 
@@ -48,5 +51,15 @@ export class RequestsController {
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: TRequestWithUser) {
     return this.requestsService.remove(id, req.user);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Patch(':id')
+  updateStatus(
+    @Param('id', ParseUUIDPipe) requestId: string,
+    @Body() dto: UpdateRequestDto,
+    @Req() req: TRequestWithUser,
+  ) {
+    return this.requestsService.updateStatus(requestId, dto, req.user);
   }
 }

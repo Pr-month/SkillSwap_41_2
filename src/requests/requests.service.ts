@@ -13,9 +13,10 @@ import { RequestStatus } from './requests.enum';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UserRole } from '../users/enums/users.enums';
+import { CreateRequestDto } from './dto/create-request.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
 import { Request } from './entities/request.entity';
-
-type RequestUser = Pick<TJwtPayload, 'role' | 'sub'>;
+import { RequestStatus } from './requests.enum';
 
 @Injectable()
 export class RequestsService {
@@ -40,7 +41,11 @@ export class RequestsService {
     });
   }
 
-  async remove(id: string, user: RequestUser): Promise<void> {
+  create(createRequestDto: CreateRequestDto) {
+    return createRequestDto; // заглушка чтобы не было ошибки
+  }
+
+  async remove(id: string, user: TJwtPayload): Promise<void> {
     const request = await this.requestsRepository.findOne({
       where: { id },
       relations: {
@@ -172,4 +177,36 @@ async reject(requestId: string, userId: number) {
 
   return { message: 'Заявка отклонена' };
 }
+  async updateStatus(
+    requestId: string,
+    dto: UpdateRequestDto,
+    user: TJwtPayload,
+  ) {
+    const newStatus: RequestStatus = dto.status;
+
+    if (![RequestStatus.Accepted, RequestStatus.Rejected].includes(newStatus)) {
+      throw new ForbiddenException(
+        'Можно обновить статус только до "accepted" или "rejected"',
+      );
+    }
+
+    const request = await this.requestsRepository.findOne({
+      where: { id: requestId },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Заявка не найдена');
+    }
+
+    const isReceiver = request.receiver.id === user.sub;
+    const isAdmin = user.role === UserRole.ADMIN;
+
+    if (!isReceiver && !isAdmin) {
+      throw new ForbiddenException('Недостаточно прав');
+    }
+
+    request.status = newStatus;
+
+    return await this.requestsRepository.save(request);
+  }
 }
