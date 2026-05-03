@@ -52,6 +52,35 @@ export class SkillsService {
     return { message: 'Навык добавлен в избранное' };
   }
 
+  async removeFromFavorites(skillId: number, userId: number): Promise<{ message: string }> {
+    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
+    if (!skill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    if (!user.favoriteSkills) {
+      throw new NotFoundException('Навык не найден в избранном');
+    }
+
+    const favoriteIndex = user.favoriteSkills.findIndex(fav => fav.id === skillId);
+    if (favoriteIndex === -1) {
+      throw new NotFoundException('Навык не найден в избранном');
+    }
+
+    user.favoriteSkills.splice(favoriteIndex, 1);
+    await this.userRepository.save(user);
+
+    return { message: 'Навык удалён из избранного' };
+  }
+
   async create(dto: CreateSkillDto, userId: number) {
     const [category, owner] = await Promise.all([
       this.categoryRepository.findOne({

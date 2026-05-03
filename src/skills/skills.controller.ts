@@ -26,6 +26,12 @@ export class SkillsController {
   async addToFavorites(@Param('id') id: string, @Req() req: TRequestWithUser) {
     return this.skillsService.addToFavorites(+id, req.user.sub);
   }
+
+  @UseGuards(JwtAccessGuard)
+  @Delete(':id/favorite')
+  async removeFromFavorites(@Param('id') id: string, @Req() req: TRequestWithUser) {
+    return this.skillsService.removeFromFavorites(+id, req.user.sub);
+  }
   
   @UseGuards(JwtAccessGuard)
   @Post()
