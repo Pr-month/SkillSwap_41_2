@@ -1,15 +1,16 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
-  NotFoundException,
+  NotFoundException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import fs from 'fs/promises';
-import { User } from '../users/entities/user.entity';
 import path from 'path';
 import { Repository } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
@@ -25,6 +26,31 @@ export class SkillsService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) { }
+
+  async addToFavorites(skillId: number, userId: number): Promise<{ message: string }> {
+    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
+    if (!skill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const isAlreadyFavorite = user.favoriteSkills?.some(fav => fav.id === skillId);
+    if (isAlreadyFavorite) {
+      throw new ConflictException('Навык уже находится в избранном');
+    }
+
+    user.favoriteSkills = user.favoriteSkills ? [...user.favoriteSkills, skill] : [skill];
+    await this.userRepository.save(user);
+
+    return { message: 'Навык добавлен в избранное' };
+  }
 
   async create(dto: CreateSkillDto, userId: number) {
     const [category, owner] = await Promise.all([
