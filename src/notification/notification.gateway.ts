@@ -1,58 +1,66 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
-import { AuthenticatedSocket } from '../auth/auth.types';
-import { UseGuards } from '@nestjs/common';
-import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
+import { Server, Socket  } from 'socket.io';
+import { WsAuthService } from '../auth/ws-auth.service';
 import { NotificationType, NotificationPayload } from './notification.types';
 
 @WebSocketGateway({
-  cors: { origin: '*' }, // Настройте CORS
+  cors: { origin: '*' },
   namespace: 'notifications',
 })
-@UseGuards(WsJwtGuard)
-export class NotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationGateway {
   @WebSocketServer()
   server!: Server;
 
-  // Хранилище активных пользователей: userId -> Socket ID
-  private activeUsers = new Map<number, string>();
+  constructor(private wsAuthService: WsAuthService) {}
+  async handleConnection(client: Socket) {
+    let token: string | undefined;
 
-  handleConnection(client: AuthenticatedSocket) {
-    // Если мы здесь, значит, WsJwtGuard пропустил соединение
-    const user = client.data.user;
-    if (user && user.sub) {
-      this.activeUsers.set(user.sub, client.id);
-      console.log(`Client connected: ${client.id} (User ID: ${user.sub})`);
-    } else {
-      // На всякий случай, если guard почему-то не сработал
+    // Извлекаем токен из handshake
+    if (client.handshake?.query?.token) {
+      token = client.handshake.query.token as string;
+    } else if (client.handshake?.headers?.authorization) {
+      const authHeader = client.handshake.headers.authorization;
+      const [type, extractedToken] = authHeader.split(' ');
+      if (type === 'Bearer' && extractedToken) {
+        token = extractedToken;
+      }
+    } else if (client.handshake?.auth?.token) {
+      token = client.handshake.auth.token as string;
+    }
+
+    if (!token) {
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const payload = await this.wsAuthService.validateToken(token);
+      const userId = payload.sub;
+      // Добавляем клиента в комнату с именем = его userId
+      client.join(userId.toString());
+      console.log(`Client ${client.id} joined room: ${userId}`);
+    } catch {
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: AuthenticatedSocket) {
-    const user = client.data.user;
-    if (user && user.sub) {
-      this.activeUsers.delete(user.sub);
-      console.log(`Client disconnected: ${client.id} (User ID: ${user.sub})`);
-    }
+  handleDisconnect(client: Socket) {
+    // Клиент автоматически покидает все комнаты при отключении
+    console.log(`Client disconnected: ${client.id}`);
   }
 
   // Метод для отправки уведомления конкретному пользователю
   sendNotification(userId: number, type: NotificationType, data: Record<string, any>) {
-    const socketId = this.activeUsers.get(userId);
-    if (socketId) {
-      const payload: NotificationPayload = {
-        type,
-        data,
-        timestamp: new Date().toISOString(),
-      };
-      this.server.to(socketId).emit('notification', payload);
-      console.log(` Notification sent to user ${userId}: ${type}`);
-    }
+    const payload: NotificationPayload = {
+      type,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+    // Отправляем в комнату с именем userId
+    this.server.to(userId.toString()).emit('notification', payload);
+    console.log(`Notification sent to user ${userId}`);
   }
 }
