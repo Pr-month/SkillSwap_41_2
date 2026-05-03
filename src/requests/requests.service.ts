@@ -7,8 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { TJwtPayload } from '../auth/auth.types';
 import { UserRole } from '../users/enums/users.enums';
-import { Request } from './entities/request.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
+import { Request } from './entities/request.entity';
 import { RequestStatus } from './requests.enum';
 
 @Injectable()
@@ -30,7 +31,7 @@ export class RequestsService {
   }
 
   create(createRequestDto: CreateRequestDto) {
-    return 'This action adds a new request';
+    return createRequestDto; // заглушка чтобы не было ошибки
   }
 
   async remove(id: string, user: TJwtPayload): Promise<void> {
@@ -53,5 +54,38 @@ export class RequestsService {
     }
 
     await this.requestsRepository.delete(id);
+  }
+
+  async updateStatus(
+    requestId: string,
+    dto: UpdateRequestDto,
+    user: TJwtPayload,
+  ) {
+    const newStatus: RequestStatus = dto.status;
+
+    if (![RequestStatus.Accepted, RequestStatus.Rejected].includes(newStatus)) {
+      throw new ForbiddenException(
+        'Можно обновить статус только до "accepted" или "rejected"',
+      );
+    }
+
+    const request = await this.requestsRepository.findOne({
+      where: { id: requestId },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Заявка не найдена');
+    }
+
+    const isReceiver = request.receiver.id === user.sub;
+    const isAdmin = user.role === UserRole.ADMIN;
+
+    if (!isReceiver && !isAdmin) {
+      throw new ForbiddenException('Недостаточно прав');
+    }
+
+    request.status = newStatus;
+
+    return await this.requestsRepository.save(request);
   }
 }
