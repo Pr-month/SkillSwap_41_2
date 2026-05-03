@@ -22,6 +22,12 @@ export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
   @UseGuards(JwtAccessGuard)
+  @Post(':id/favorite')
+  async addToFavorites(@Param('id') id: string, @Req() req: TRequestWithUser) {
+    return this.skillsService.addToFavorites(+id, req.user.sub);
+  }
+  
+  @UseGuards(JwtAccessGuard)
   @Post()
   create(@Req() req: TRequestWithUser, @Body() createSkillDto: CreateSkillDto) {
     return this.skillsService.create(createSkillDto, req.user.sub as number);
