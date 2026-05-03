@@ -11,8 +11,6 @@ import { Request } from './entities/request.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { RequestStatus } from './requests.enum';
 
-type RequestUser = Pick<TJwtPayload, 'role' | 'sub'>;
-
 @Injectable()
 export class RequestsService {
   constructor(
@@ -35,7 +33,7 @@ export class RequestsService {
     return 'This action adds a new request';
   }
 
-  async remove(id: string, user: RequestUser): Promise<void> {
+  async remove(id: string, user: TJwtPayload): Promise<void> {
     const request = await this.requestsRepository.findOne({
       where: { id },
       relations: {
