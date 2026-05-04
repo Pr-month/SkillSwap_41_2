@@ -3,29 +3,30 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import { TJwtPayload } from '../auth/auth.types';
+import { Skill } from '../skills/entities/skill.entity';
+import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { RequestStatus } from './enums/request.enums';
-
-import { Request } from 'src/requests/entities/request.entity';
-import { Skill } from 'src/skills/entities/skill.entity';
+import { Request } from './entities/request.entity';
+import { RequestStatus } from './requests.enum';
 
 @Injectable()
 export class RequestsService {
   constructor(
     @InjectRepository(Request)
-    private requestsRepository: Repository<Request>,
+    private readonly requestsRepository: Repository<Request>,
     @InjectRepository(Skill)
-    private skillRepository: Repository<Skill>,
+    private readonly skillRepository: Repository<Skill>,
   ) {}
 
   async create(dto: CreateRequestDto, userId: number) {
     const offeredSkill = await this.skillRepository.findOne({
       where: { id: dto.offeredSkillId },
       relations: {
-        owner: true, // join для проверки владельца навыка
+        owner: true,
       },
     });
 
@@ -40,7 +41,7 @@ export class RequestsService {
       throw new NotFoundException('Навык не найден');
     }
 
-    const receiver = requestedSkill?.owner;
+    const receiver = requestedSkill.owner;
 
     if (!receiver) {
       throw new NotFoundException('Получатель не найден');
@@ -68,32 +69,83 @@ export class RequestsService {
     return this.requestsRepository.save(request);
   }
 
-  async findAll(userId: number) {
+  async findIncoming(userId: number): Promise<Request[]> {
     return this.requestsRepository.find({
       where: {
         receiver: { id: userId },
+        status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
       },
-      relations: {
-        receiver: true,
-        sender: true,
-        offeredSkill: true,
-        requestedSkill: true,
-      },
-      order: {
-        createdAt: 'DESC', // сортировка по дате создания
-      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: { createdAt: 'DESC' },
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} request`;
+  async findOutgoing(userId: number): Promise<Request[]> {
+    return this.requestsRepository.find({
+      where: {
+        sender: { id: userId },
+        status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  update(id: number, updateRequestDto: UpdateRequestDto) {
-    return `This action updates a #${id} request`;
+  async remove(id: string, user: TJwtPayload): Promise<void> {
+    const request = await this.requestsRepository.findOne({
+      where: { id },
+      relations: {
+        sender: true,
+      },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Заявка не найдена');
+    }
+
+    const isSender = request.sender.id === user.sub;
+    const isAdmin = user.role === UserRole.ADMIN;
+
+    if (!isSender && !isAdmin) {
+      throw new ForbiddenException('Можно удалить только исходящую заявку');
+    }
+
+    await this.requestsRepository.delete(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} request`;
+  async updateStatus(
+    requestId: string,
+    dto: UpdateRequestDto,
+    user: TJwtPayload,
+  ) {
+    const newStatus: RequestStatus = dto.status;
+
+    if (![RequestStatus.ACCEPTED, RequestStatus.REJECTED].includes(newStatus)) {
+      throw new ForbiddenException(
+        'Можно обновить статус только до "accepted" или "rejected"',
+      );
+    }
+
+    const request = await this.requestsRepository.findOne({
+      where: { id: requestId },
+      relations: {
+        receiver: true,
+      },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Заявка не найдена');
+    }
+
+    const isReceiver = request.receiver.id === user.sub;
+    const isAdmin = user.role === UserRole.ADMIN;
+
+    if (!isReceiver && !isAdmin) {
+      throw new ForbiddenException('Недостаточно прав');
+    }
+
+    request.status = newStatus;
+
+    return this.requestsRepository.save(request);
   }
 }

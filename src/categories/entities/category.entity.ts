@@ -20,7 +20,7 @@ export class Category {
     nullable: true,
   })
   @JoinColumn({ name: 'parent_id' })
-  parent?: Category;
+  parent?: Category | null;
 
   @OneToMany(() => Category, (category) => category.parent)
   children?: Category[];

@@ -1,20 +1,20 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
-  Res,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { RequestsService } from './requests.service';
+import { TRequestWithUser } from '../auth/auth.types';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
-import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
-import { TRequestWithUser } from '../auth/auth.types';
+import { RequestsService } from './requests.service';
 
 @Controller('requests')
 export class RequestsController {
@@ -23,33 +23,40 @@ export class RequestsController {
   @UseGuards(JwtAccessGuard)
   @Post()
   async create(
-    @Res() res: TRequestWithUser,
+    @Req() req: TRequestWithUser,
     @Body() createRequestDto: CreateRequestDto,
   ) {
-    return this.requestsService.create(
-      createRequestDto,
-      res.user.sub as number,
-    );
+    return this.requestsService.create(createRequestDto, req.user.sub);
   }
 
   @UseGuards(JwtAccessGuard)
   @Get('incoming')
-  findAll(@Req() req: TRequestWithUser) {
-    return this.requestsService.findAll(req.user.sub as number);
+  async getIncoming(@Req() req: TRequestWithUser) {
+    return this.requestsService.findIncoming(req.user.sub);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.requestsService.findOne(+id);
+  @UseGuards(JwtAccessGuard)
+  @Get('outgoing')
+  async getOutgoing(@Req() req: TRequestWithUser) {
+    return this.requestsService.findOutgoing(req.user.sub);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRequestDto: UpdateRequestDto) {
-    return this.requestsService.update(+id, updateRequestDto);
-  }
-
+  @UseGuards(JwtAccessGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.requestsService.remove(+id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: TRequestWithUser,
+  ): Promise<void> {
+    return this.requestsService.remove(id, req.user);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Patch(':id')
+  updateStatus(
+    @Param('id', ParseUUIDPipe) requestId: string,
+    @Body() dto: UpdateRequestDto,
+    @Req() req: TRequestWithUser,
+  ) {
+    return this.requestsService.updateStatus(requestId, dto, req.user);
   }
 }
