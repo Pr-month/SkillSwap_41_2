@@ -1,9 +1,16 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import fs from 'fs/promises';
-import { User } from '../users/entities/user.entity';
 import path from 'path';
 import { Repository } from 'typeorm';
+import { Category } from '../categories/entities/category.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
@@ -14,13 +21,85 @@ export class SkillsService {
   constructor(
     @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
+
+  async addToFavorites(
+    skillId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+    });
+    if (!skill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const isAlreadyFavorite = user.favoriteSkills?.some(
+      (fav) => fav.id === skillId,
+    );
+    if (isAlreadyFavorite) {
+      throw new ConflictException('Навык уже находится в избранном');
+    }
+
+    user.favoriteSkills = user.favoriteSkills
+      ? [...user.favoriteSkills, skill]
+      : [skill];
+    await this.userRepository.save(user);
+
+    return { message: 'Навык добавлен в избранное' };
+  }
+
+  async removeFromFavorites(
+    skillId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+    });
+    if (!skill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    if (!user.favoriteSkills) {
+      throw new NotFoundException('Навык не найден в избранном');
+    }
+
+    const favoriteIndex = user.favoriteSkills.findIndex(
+      (fav) => fav.id === skillId,
+    );
+    if (favoriteIndex === -1) {
+      throw new NotFoundException('Навык не найден в избранном');
+    }
+
+    user.favoriteSkills.splice(favoriteIndex, 1);
+    await this.userRepository.save(user);
+
+    return { message: 'Навык удалён из избранного' };
+  }
 
   async create(dto: CreateSkillDto, userId: number) {
     const [category, owner] = await Promise.all([
-      this.skillRepository.findOne({
+      this.categoryRepository.findOne({
         where: { id: dto.categoryId },
       }),
       this.userRepository.findOne({
@@ -92,7 +171,24 @@ export class SkillsService {
     return data;
   }
 
-  async update(id: number, updateSkillDto: UpdateSkillDto, userId: number): Promise<Skill> {
+  async findOne(id: number): Promise<Skill> {
+    const skill = await this.skillRepository.findOne({
+      where: { id },
+      relations: ['category', 'owner'],
+    });
+
+    if (!skill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    return skill;
+  }
+
+  async update(
+    id: number,
+    updateSkillDto: UpdateSkillDto,
+    userId: number,
+  ): Promise<Skill> {
     const skill = await this.findOne(id);
 
     if (skill.owner.id !== userId) {
@@ -104,13 +200,17 @@ export class SkillsService {
         where: { id: updateSkillDto.categoryId },
       });
       if (!category) {
-        throw new BadRequestException(`Category with id ${updateSkillDto.categoryId} not found`);
+        throw new BadRequestException(
+          `Category with id ${updateSkillDto.categoryId} not found`,
+        );
       }
       skill.category = category;
     }
 
     if (updateSkillDto.title !== undefined) skill.title = updateSkillDto.title;
-    if (updateSkillDto.description !== undefined) skill.description = updateSkillDto.description;
+    if (updateSkillDto.description !== undefined) {
+      skill.description = updateSkillDto.description;
+    }
 
     if (updateSkillDto.images !== undefined) {
       await this.deleteImagesFiles(skill.images);

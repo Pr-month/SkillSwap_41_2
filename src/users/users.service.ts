@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserRole } from './enums/users.enums';
 
 @Injectable()
 export class UsersService {
@@ -20,8 +22,21 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async create(dto: CreateUserDto): Promise<User> {
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: dto.email },
+    });
+    if (existingUser) {
+      throw new ConflictException('Пользователь с таким email уже существует');
+    }
+
+    const salt = this.configService.get<number>('app.hashSalt') ?? 10;
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
+    const user = this.usersRepository.create({
+      ...dto,
+      password: hashedPassword,
+    });
+    return this.usersRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {

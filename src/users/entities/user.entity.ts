@@ -1,17 +1,17 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  OneToMany,
-  //ManyToMany,
+  Entity,
   //OneToMany,
-  //JoinTable,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 //import { Skill } from '../../skills/entities/skill.entity';
 //import { Category } from '../../categories/entities/category.entity';
 import { Exclude } from 'class-transformer';
-import { Gender, UserRole } from '../enums/users.enums';
 import { Skill } from 'src/skills/entities/skill.entity';
+import { Gender, UserRole } from '../enums/users.enums';
 
 @Entity('users')
 export class User {
@@ -50,9 +50,9 @@ export class User {
   //@JoinTable({ name: 'user_want_to_learn' })
   //wantToLearn?: Category[];
 
-  //@ManyToMany(() => Skill)
-  //@JoinTable({ name: 'user_favorite_skills' })
-  //favoriteSkills?: Skill[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'user_favorite_skills' })
+  favoriteSkills?: Skill[];
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role!: UserRole;

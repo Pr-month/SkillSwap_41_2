@@ -7,7 +7,7 @@ import {
   Patch,
   Post,
   Query,
-  Request,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { TRequestWithUser } from 'src/auth/auth.types';
@@ -20,6 +20,21 @@ import { SkillsService } from './skills.service';
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
+
+  @UseGuards(JwtAccessGuard)
+  @Post(':id/favorite')
+  async addToFavorites(@Param('id') id: string, @Req() req: TRequestWithUser) {
+    return this.skillsService.addToFavorites(+id, req.user.sub);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Delete(':id/favorite')
+  async removeFromFavorites(
+    @Param('id') id: string,
+    @Req() req: TRequestWithUser,
+  ) {
+    return this.skillsService.removeFromFavorites(+id, req.user.sub);
+  }
 
   @UseGuards(JwtAccessGuard)
   @Post()
@@ -42,14 +57,14 @@ export class SkillsController {
   update(
     @Param('id') id: string,
     @Body() updateSkillDto: UpdateSkillDto,
-    @Request() req: TRequestWithUser,
+    @Req() req: TRequestWithUser,
   ) {
     return this.skillsService.update(+id, updateSkillDto, req.user.sub);
   }
-  
+
   @UseGuards(JwtAccessGuard)
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req: TRequestWithUser) {
+  remove(@Param('id') id: string, @Req() req: TRequestWithUser) {
     return this.skillsService.remove(+id, req.user.sub);
   }
 }

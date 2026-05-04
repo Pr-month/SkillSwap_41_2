@@ -150,5 +150,4 @@ export class AuthService {
     await this.usersRepository.update(userId, { refreshToken: () => 'NULL' });
     return { message: 'Успешный выход' };
   }
-
 }
