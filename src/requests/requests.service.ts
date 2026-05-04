@@ -71,18 +71,16 @@ export class RequestsService {
   async findAll(userId: number) {
     return this.requestsRepository.find({
       where: {
-        requestedSkill: {
-          owner: {
-            id: userId,
-          },
-        },
+        receiver: { id: userId },
       },
       relations: {
+        receiver: true,
         sender: true,
         offeredSkill: true,
-        requestedSkill: {
-          owner: true,
-        },
+        requestedSkill: true,
+      },
+      order: {
+        createdAt: 'DESC', // сортировка по дате создания
       },
     });
   }
