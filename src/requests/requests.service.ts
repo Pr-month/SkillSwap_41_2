@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -6,7 +7,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { TJwtPayload } from '../auth/auth.types';
+import { NotificationGateway } from '../notification/notification.gateway';
 import { Skill } from '../skills/entities/skill.entity';
+import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
@@ -18,55 +21,79 @@ export class RequestsService {
   constructor(
     @InjectRepository(Request)
     private readonly requestsRepository: Repository<Request>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     @InjectRepository(Skill)
-    private readonly skillRepository: Repository<Skill>,
+    private readonly skillsRepository: Repository<Skill>,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
-  async create(dto: CreateRequestDto, userId: number) {
-    const offeredSkill = await this.skillRepository.findOne({
+  async create(userId: number, dto: CreateRequestDto) {
+    const receiver = await this.usersRepository.findOne({
+      where: { id: dto.receiverId },
+    });
+    if (!receiver) throw new NotFoundException('Получатель не найден');
+
+    const offeredSkill = await this.skillsRepository.findOne({
       where: { id: dto.offeredSkillId },
-      relations: {
-        owner: true,
-      },
+      relations: ['owner'],
     });
-
-    const requestedSkill = await this.skillRepository.findOne({
-      where: { id: dto.requestedSkillId },
-      relations: {
-        owner: true,
-      },
-    });
-
-    if (!offeredSkill || !requestedSkill) {
-      throw new NotFoundException('Навык не найден');
+    if (!offeredSkill) {
+      throw new NotFoundException('Предлагаемый навык не найден');
     }
-
-    const receiver = requestedSkill.owner;
-
-    if (!receiver) {
-      throw new NotFoundException('Получатель не найден');
-    }
-
     if (offeredSkill.owner.id !== userId) {
-      throw new ForbiddenException('Нельзя предлагать чужой навык');
+      throw new ForbiddenException('Вы можете предлагать только свои навыки');
     }
 
-    if (requestedSkill.owner.id === userId) {
+    const requestedSkill = await this.skillsRepository.findOne({
+      where: { id: dto.requestedSkillId },
+      relations: ['owner'],
+    });
+    if (!requestedSkill) {
+      throw new NotFoundException('Запрашиваемый навык не найден');
+    }
+    if (requestedSkill.owner.id !== receiver.id) {
       throw new ForbiddenException(
-        'Нельзя запрашивать навык, который у вас уже есть',
+        'Запрашиваемый навык должен принадлежать получателю',
+      );
+    }
+
+    const existing = await this.requestsRepository.findOne({
+      where: {
+        sender: { id: userId },
+        receiver: { id: receiver.id },
+        offeredSkill: { id: offeredSkill.id },
+        requestedSkill: { id: requestedSkill.id },
+        status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+      },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        'Такая заявка уже существует и не завершена',
       );
     }
 
     const request = this.requestsRepository.create({
       sender: { id: userId },
-      receiver,
+      receiver: { id: receiver.id },
       offeredSkill,
       requestedSkill,
       status: RequestStatus.PENDING,
       isRead: false,
     });
+    const saved = await this.requestsRepository.save(request);
 
-    return this.requestsRepository.save(request);
+    const sender = await this.usersRepository.findOne({ where: { id: userId } });
+    const senderName = sender?.name ?? 'Пользователь';
+
+    this.notificationGateway.sendNotification(receiver.id, 'new_request', {
+      requestId: saved.id,
+      senderName,
+      offeredSkillTitle: offeredSkill.title,
+      requestedSkillTitle: requestedSkill.title,
+    });
+
+    return saved;
   }
 
   async findIncoming(userId: number): Promise<Request[]> {
@@ -89,6 +116,73 @@ export class RequestsService {
       relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async accept(requestId: string, userId: number) {
+    const request = await this.requestsRepository.findOne({
+      where: { id: requestId },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+    });
+    if (!request) throw new NotFoundException('Заявка не найдена');
+    if (request.receiver.id !== userId) {
+      throw new ForbiddenException('Только получатель может принять заявку');
+    }
+    if (request.status !== RequestStatus.PENDING) {
+      throw new BadRequestException('Заявка уже обработана');
+    }
+
+    request.status = RequestStatus.ACCEPTED;
+    await this.requestsRepository.save(request);
+
+    const receiver = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+    const receiverName = receiver?.name ?? 'Получатель';
+
+    this.notificationGateway.sendNotification(
+      request.sender.id,
+      'request_accepted',
+      {
+        requestId: request.id,
+        receiverName,
+        offeredSkillTitle: request.offeredSkill.title,
+      },
+    );
+
+    return { message: 'Заявка принята' };
+  }
+
+  async reject(requestId: string, userId: number) {
+    const request = await this.requestsRepository.findOne({
+      where: { id: requestId },
+      relations: ['sender', 'receiver'],
+    });
+    if (!request) throw new NotFoundException('Заявка не найдена');
+    if (request.receiver.id !== userId) {
+      throw new ForbiddenException('Только получатель может отклонить заявку');
+    }
+    if (request.status !== RequestStatus.PENDING) {
+      throw new BadRequestException('Заявка уже обработана');
+    }
+
+    request.status = RequestStatus.REJECTED;
+    await this.requestsRepository.save(request);
+
+    const receiver = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+    const receiverName = receiver?.name ?? 'Получатель';
+
+    this.notificationGateway.sendNotification(
+      request.sender.id,
+      'request_rejected',
+      {
+        requestId: request.id,
+        receiverName,
+      },
+    );
+
+    return { message: 'Заявка отклонена' };
   }
 
   async remove(id: string, user: TJwtPayload): Promise<void> {

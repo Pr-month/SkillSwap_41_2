@@ -22,11 +22,8 @@ export class RequestsController {
 
   @UseGuards(JwtAccessGuard)
   @Post()
-  async create(
-    @Req() req: TRequestWithUser,
-    @Body() createRequestDto: CreateRequestDto,
-  ) {
-    return this.requestsService.create(createRequestDto, req.user.sub);
+  create(@Req() req: TRequestWithUser, @Body() dto: CreateRequestDto) {
+    return this.requestsService.create(req.user.sub, dto);
   }
 
   @UseGuards(JwtAccessGuard)
@@ -37,16 +34,25 @@ export class RequestsController {
 
   @UseGuards(JwtAccessGuard)
   @Get('outgoing')
-  async getOutgoing(@Req() req: TRequestWithUser) {
+  getOutgoing(@Req() req: TRequestWithUser) {
     return this.requestsService.findOutgoing(req.user.sub);
   }
 
   @UseGuards(JwtAccessGuard)
+  @Patch(':id/accept')
+  accept(@Param('id', ParseUUIDPipe) id: string, @Req() req: TRequestWithUser) {
+    return this.requestsService.accept(id, req.user.sub);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Patch(':id/reject')
+  reject(@Param('id', ParseUUIDPipe) id: string, @Req() req: TRequestWithUser) {
+    return this.requestsService.reject(id, req.user.sub);
+  }
+
+  @UseGuards(JwtAccessGuard)
   @Delete(':id')
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: TRequestWithUser,
-  ): Promise<void> {
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: TRequestWithUser) {
     return this.requestsService.remove(id, req.user);
   }
 

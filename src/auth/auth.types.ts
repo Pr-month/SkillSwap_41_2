@@ -1,5 +1,6 @@
 import { User } from '../users/entities/user.entity';
 import { Request } from 'express';
+import { Socket } from 'socket.io';
 
 type UserBase = Pick<User, 'email' | 'name' | 'role'>;
 
@@ -31,3 +32,9 @@ export type TAuthResponse = {
   accessToken: string;
   refreshToken: string;
 };
+
+export interface AuthenticatedSocket extends Socket {
+  data: {
+    user: TJwtPayload;
+  };
+}

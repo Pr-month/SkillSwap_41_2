@@ -1,11 +1,15 @@
-import { IsInt } from 'class-validator';
+import { IsInt, IsNotEmpty } from 'class-validator';
 
 export class CreateRequestDto {
-  // Навык, предложенный пользователю
   @IsInt()
-  offeredSkillId: number;
+  @IsNotEmpty()
+  receiverId!: number;
 
-  // Навык, запрашиваемый пользователем
   @IsInt()
-  requestedSkillId: number;
+  @IsNotEmpty()
+  offeredSkillId!: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  requestedSkillId!: number;
 }
