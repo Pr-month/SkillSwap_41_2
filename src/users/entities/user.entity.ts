@@ -1,18 +1,15 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  //ManyToMany,
-  //OneToMany,
-  //JoinTable,
-} from 'typeorm';
-//import { Skill } from '../../skills/entities/skill.entity';
-//import { Category } from '../../categories/entities/category.entity';
 import { Exclude } from 'class-transformer';
-import { Gender, UserRole } from '../enums/users.enums';
-import { Skill } from 'src/skills/entities/skill.entity';
 import { Request } from 'src/requests/entities/request.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Gender, UserRole } from '../enums/users.enums';
 
 @Entity('users')
 export class User {
@@ -47,13 +44,9 @@ export class User {
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills?: Skill[];
 
-  //@ManyToMany(() => Category)
-  //@JoinTable({ name: 'user_want_to_learn' })
-  //wantToLearn?: Category[];
-
-  //@ManyToMany(() => Skill)
-  //@JoinTable({ name: 'user_favorite_skills' })
-  //favoriteSkills?: Skill[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'user_favorite_skills' })
+  favoriteSkills?: Skill[];
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role!: UserRole;
@@ -63,8 +56,8 @@ export class User {
   refreshToken?: string;
 
   @OneToMany(() => Request, (request) => request.sender)
-  sentRequests: Request[];
+  sentRequests!: Request[];
 
   @OneToMany(() => Request, (request) => request.receiver)
-  receivedRequests: Request[];
+  receivedRequests!: Request[];
 }
