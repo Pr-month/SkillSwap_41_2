@@ -2,7 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-  ConflictException
+  ConflictException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,7 +25,7 @@ export class UsersService {
   async create(dto: CreateUserDto): Promise<User> {
     const existingUser = await this.usersRepository.findOne({
       where: { email: dto.email },
-    })
+    });
     if (existingUser) {
       throw new ConflictException('Пользователь с таким email уже существует');
     }
@@ -35,8 +35,8 @@ export class UsersService {
     const user = this.usersRepository.create({
       ...dto,
       password: hashedPassword,
-    })
-    return this.usersRepository.save(user)
+    });
+    return this.usersRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {
@@ -89,5 +89,3 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 }
-
-

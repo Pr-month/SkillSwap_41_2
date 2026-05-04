@@ -1,15 +1,15 @@
-import { IsUUID, IsNotEmpty } from 'class-validator';
+import { IsInt, IsNotEmpty } from 'class-validator';
 
 export class CreateRequestDto {
-  @IsUUID()
+  @IsInt()
   @IsNotEmpty()
-  receiverId!: number;   // ID получателя (кому отправляем заявку)
+  receiverId!: number;
 
-  @IsUUID()
+  @IsInt()
   @IsNotEmpty()
-  offeredSkillId!: number;   // ID навыка, который предлагает отправитель
+  offeredSkillId!: number;
 
-  @IsUUID()
+  @IsInt()
   @IsNotEmpty()
-  requestedSkillId!: number; // ID навыка, который хочет получить отправитель
+  requestedSkillId!: number;
 }

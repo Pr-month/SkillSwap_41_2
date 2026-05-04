@@ -1,4 +1,4 @@
-import { UserRole } from '../users/enums/users.enums'
+import { UserRole } from '../users/enums/users.enums';
 
 export interface ISeedUser {
   name: string;
@@ -19,5 +19,5 @@ export const seedTestUsers: ISeedUser[] = [
     email: 'Aleksandr@test.local',
     password: 'Password1',
     role: UserRole.USER,
-  }
-]
+  },
+];

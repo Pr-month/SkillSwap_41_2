@@ -1,5 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsString, IsOptional, IsUUID, IsArray, MaxLength, MinLength, IsInt } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsUUID,
+  IsArray,
+  MaxLength,
+  MinLength,
+  IsInt,
+} from 'class-validator';
+import { CreateSkillDto } from 'src/skills/dto/create-skill.dto';
 
 export class CategoryDto {
   @IsUUID()
@@ -11,11 +20,11 @@ export class CategoryDto {
   name!: string;
 
   @IsOptional()
-  parent?: {id: string, name: string};
-  
+  parent?: { id: string; name: string };
+
   @IsOptional()
   @IsArray()
-  children?: {id: string, name: string}[];
+  children?: { id: string; name: string }[];
 }
 
 export class CreateCategoryDto {
