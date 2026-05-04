@@ -18,10 +18,10 @@ export class Request {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.id, { eager: true })
+  @ManyToOne(() => User, (user) => user.sentRequests)
   sender: User;
 
-  @ManyToOne(() => User, (user) => user.id, { eager: true })
+  @ManyToOne(() => User, (user) => user.receivedRequests)
   receiver: User;
 
   @Column({
@@ -31,10 +31,10 @@ export class Request {
   })
   status: RequestStatus;
 
-  @ManyToOne(() => Skill, { eager: true })
+  @ManyToOne(() => Skill, (skill) => skill.offeredInRequests)
   offeredSkill: Skill;
 
-  @ManyToOne(() => Skill, { eager: true })
+  @ManyToOne(() => Skill, (skill) => skill.requestedInRequests)
   requestedSkill: Skill;
 
   @Column({ default: false })

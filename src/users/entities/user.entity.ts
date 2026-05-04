@@ -12,6 +12,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { Gender, UserRole } from '../enums/users.enums';
 import { Skill } from 'src/skills/entities/skill.entity';
+import { Request } from 'src/requests/entities/request.entity';
 
 @Entity('users')
 export class User {
@@ -60,4 +61,10 @@ export class User {
   @Exclude()
   @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken?: string;
+
+  @OneToMany(() => Request, (request) => request.sender)
+  sentRequests: Request[];
+
+  @OneToMany(() => Request, (request) => request.receiver)
+  receivedRequests: Request[];
 }
