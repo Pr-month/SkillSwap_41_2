@@ -3,7 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import fs from 'fs/promises';
@@ -25,10 +25,15 @@ export class SkillsService {
     private readonly categoryRepository: Repository<Category>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
 
-  async addToFavorites(skillId: number, userId: number): Promise<{ message: string }> {
-    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
+  async addToFavorites(
+    skillId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+    });
     if (!skill) {
       throw new NotFoundException('Навык не найден');
     }
@@ -41,19 +46,28 @@ export class SkillsService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    const isAlreadyFavorite = user.favoriteSkills?.some(fav => fav.id === skillId);
+    const isAlreadyFavorite = user.favoriteSkills?.some(
+      (fav) => fav.id === skillId,
+    );
     if (isAlreadyFavorite) {
       throw new ConflictException('Навык уже находится в избранном');
     }
 
-    user.favoriteSkills = user.favoriteSkills ? [...user.favoriteSkills, skill] : [skill];
+    user.favoriteSkills = user.favoriteSkills
+      ? [...user.favoriteSkills, skill]
+      : [skill];
     await this.userRepository.save(user);
 
     return { message: 'Навык добавлен в избранное' };
   }
 
-  async removeFromFavorites(skillId: number, userId: number): Promise<{ message: string }> {
-    const skill = await this.skillRepository.findOne({ where: { id: skillId } });
+  async removeFromFavorites(
+    skillId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+    });
     if (!skill) {
       throw new NotFoundException('Навык не найден');
     }
@@ -70,7 +84,9 @@ export class SkillsService {
       throw new NotFoundException('Навык не найден в избранном');
     }
 
-    const favoriteIndex = user.favoriteSkills.findIndex(fav => fav.id === skillId);
+    const favoriteIndex = user.favoriteSkills.findIndex(
+      (fav) => fav.id === skillId,
+    );
     if (favoriteIndex === -1) {
       throw new NotFoundException('Навык не найден в избранном');
     }

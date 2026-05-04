@@ -29,10 +29,13 @@ export class SkillsController {
 
   @UseGuards(JwtAccessGuard)
   @Delete(':id/favorite')
-  async removeFromFavorites(@Param('id') id: string, @Req() req: TRequestWithUser) {
+  async removeFromFavorites(
+    @Param('id') id: string,
+    @Req() req: TRequestWithUser,
+  ) {
     return this.skillsService.removeFromFavorites(+id, req.user.sub);
   }
-  
+
   @UseGuards(JwtAccessGuard)
   @Post()
   create(@Req() req: TRequestWithUser, @Body() createSkillDto: CreateSkillDto) {
@@ -58,7 +61,7 @@ export class SkillsController {
   ) {
     return this.skillsService.update(+id, updateSkillDto, req.user.sub);
   }
-  
+
   @UseGuards(JwtAccessGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: TRequestWithUser) {

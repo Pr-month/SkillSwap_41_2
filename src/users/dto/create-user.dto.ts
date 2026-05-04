@@ -1,4 +1,13 @@
-import { IsDate, IsEmail, IsEnum, IsOptional, IsString, IsUrl, Matches, MinLength } from 'class-validator';
+import {
+  IsDate,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Matches,
+  MinLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Gender } from '../enums/users.enums';
 
