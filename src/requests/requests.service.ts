@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -26,37 +25,38 @@ export class RequestsService {
   ) {}
 
   async create(dto: CreateRequestDto, userId: number) {
-    // Проврка существования получателя
-    const receiver = await this.userRepository.findOne({
-      where: { id: dto.receiverId },
-    });
-
-    if (!receiver) {
-      throw new NotFoundException('Получатель не найден');
-    }
-
-    // Проврка существования навыков
     const offeredSkill = await this.skillRepository.findOne({
       where: { id: dto.offeredSkillId },
       relations: {
-        owner: true, // для проверки владельца
+        owner: true, // join для проверки владельца навыка
       },
     });
 
     const requestedSkill = await this.skillRepository.findOne({
       where: { id: dto.requestedSkillId },
+      relations: {
+        owner: true,
+      },
     });
 
     if (!offeredSkill || !requestedSkill) {
       throw new NotFoundException('Навык не найден');
     }
 
+    const receiver = requestedSkill?.owner;
+
+    if (!receiver) {
+      throw new NotFoundException('Получатель не найден');
+    }
+
     if (offeredSkill.owner.id !== userId) {
       throw new ForbiddenException('Нельзя предлагать чужой навык');
     }
 
-    if (dto.receiverId === userId) {
-      throw new BadRequestException('Нельзя отправить заявку самому себе');
+    if (requestedSkill.owner.id === userId) {
+      throw new ForbiddenException(
+        'Нельзя запрашивать навык, который у вас уже есть',
+      );
     }
 
     const request = this.requestsRepository.create({
