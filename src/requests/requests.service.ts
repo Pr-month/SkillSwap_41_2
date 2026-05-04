@@ -9,15 +9,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestStatus } from './enums/request.enums';
 
-import { User } from 'src/users/entities/user.entity';
 import { Request } from 'src/requests/entities/request.entity';
 import { Skill } from 'src/skills/entities/skill.entity';
 
 @Injectable()
 export class RequestsService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     @InjectRepository(Request)
     private requestsRepository: Repository<Request>,
     @InjectRepository(Skill)
