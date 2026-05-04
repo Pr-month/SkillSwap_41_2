@@ -6,11 +6,13 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { TRequestWithUser } from '../auth/auth.types';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestsService } from './requests.service';
 
@@ -19,10 +21,24 @@ export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
   @UseGuards(JwtAccessGuard)
+  @Post()
+  async create(
+    @Req() req: TRequestWithUser,
+    @Body() createRequestDto: CreateRequestDto,
+  ) {
+    return this.requestsService.create(createRequestDto, req.user.sub);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Get('incoming')
+  async getIncoming(@Req() req: TRequestWithUser) {
+    return this.requestsService.findIncoming(req.user.sub);
+  }
+
+  @UseGuards(JwtAccessGuard)
   @Get('outgoing')
   async getOutgoing(@Req() req: TRequestWithUser) {
-    const userId = req.user.sub;
-    return this.requestsService.findOutgoing(userId);
+    return this.requestsService.findOutgoing(req.user.sub);
   }
 
   @UseGuards(JwtAccessGuard)

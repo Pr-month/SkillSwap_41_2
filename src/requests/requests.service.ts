@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { TJwtPayload } from '../auth/auth.types';
+import { Skill } from '../skills/entities/skill.entity';
 import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
@@ -17,21 +18,77 @@ export class RequestsService {
   constructor(
     @InjectRepository(Request)
     private readonly requestsRepository: Repository<Request>,
+    @InjectRepository(Skill)
+    private readonly skillRepository: Repository<Skill>,
   ) {}
+
+  async create(dto: CreateRequestDto, userId: number) {
+    const offeredSkill = await this.skillRepository.findOne({
+      where: { id: dto.offeredSkillId },
+      relations: {
+        owner: true,
+      },
+    });
+
+    const requestedSkill = await this.skillRepository.findOne({
+      where: { id: dto.requestedSkillId },
+      relations: {
+        owner: true,
+      },
+    });
+
+    if (!offeredSkill || !requestedSkill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    const receiver = requestedSkill.owner;
+
+    if (!receiver) {
+      throw new NotFoundException('Получатель не найден');
+    }
+
+    if (offeredSkill.owner.id !== userId) {
+      throw new ForbiddenException('Нельзя предлагать чужой навык');
+    }
+
+    if (requestedSkill.owner.id === userId) {
+      throw new ForbiddenException(
+        'Нельзя запрашивать навык, который у вас уже есть',
+      );
+    }
+
+    const request = this.requestsRepository.create({
+      sender: { id: userId },
+      receiver,
+      offeredSkill,
+      requestedSkill,
+      status: RequestStatus.PENDING,
+      isRead: false,
+    });
+
+    return this.requestsRepository.save(request);
+  }
+
+  async findIncoming(userId: number): Promise<Request[]> {
+    return this.requestsRepository.find({
+      where: {
+        receiver: { id: userId },
+        status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 
   async findOutgoing(userId: number): Promise<Request[]> {
     return this.requestsRepository.find({
       where: {
-        sender: { id: userId }, // заявки, где отправитель – текущий пользователь
-        status: In([RequestStatus.Pending, RequestStatus.InProgress]), // только активные
+        sender: { id: userId },
+        status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
       },
-      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'], // подгружаем связанные сущности
-      order: { createdAt: 'DESC' }, // сначала новые
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: { createdAt: 'DESC' },
     });
-  }
-
-  create(createRequestDto: CreateRequestDto) {
-    return createRequestDto; // заглушка чтобы не было ошибки
   }
 
   async remove(id: string, user: TJwtPayload): Promise<void> {
@@ -63,7 +120,7 @@ export class RequestsService {
   ) {
     const newStatus: RequestStatus = dto.status;
 
-    if (![RequestStatus.Accepted, RequestStatus.Rejected].includes(newStatus)) {
+    if (![RequestStatus.ACCEPTED, RequestStatus.REJECTED].includes(newStatus)) {
       throw new ForbiddenException(
         'Можно обновить статус только до "accepted" или "rejected"',
       );
@@ -71,6 +128,9 @@ export class RequestsService {
 
     const request = await this.requestsRepository.findOne({
       where: { id: requestId },
+      relations: {
+        receiver: true,
+      },
     });
 
     if (!request) {
@@ -86,6 +146,6 @@ export class RequestsService {
 
     request.status = newStatus;
 
-    return await this.requestsRepository.save(request);
+    return this.requestsRepository.save(request);
   }
 }

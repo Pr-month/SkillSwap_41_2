@@ -1,16 +1,14 @@
+import { Exclude } from 'class-transformer';
+import { Request } from 'src/requests/entities/request.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
 import {
   Column,
   Entity,
-  //OneToMany,
   JoinTable,
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-//import { Skill } from '../../skills/entities/skill.entity';
-//import { Category } from '../../categories/entities/category.entity';
-import { Exclude } from 'class-transformer';
-import { Skill } from 'src/skills/entities/skill.entity';
 import { Gender, UserRole } from '../enums/users.enums';
 
 @Entity('users')
@@ -46,10 +44,6 @@ export class User {
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills?: Skill[];
 
-  //@ManyToMany(() => Category)
-  //@JoinTable({ name: 'user_want_to_learn' })
-  //wantToLearn?: Category[];
-
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_favorite_skills' })
   favoriteSkills?: Skill[];
@@ -60,4 +54,10 @@ export class User {
   @Exclude()
   @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken?: string;
+
+  @OneToMany(() => Request, (request) => request.sender)
+  sentRequests!: Request[];
+
+  @OneToMany(() => Request, (request) => request.receiver)
+  receivedRequests!: Request[];
 }
