@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users.enums';
 import { TRequestWithUser } from '../auth.types';
 
