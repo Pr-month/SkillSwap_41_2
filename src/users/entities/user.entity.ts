@@ -6,10 +6,12 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Gender, UserRole } from '../enums/users.enums';
+import { City } from 'src/cities/entities/city.entity';
 
 @Entity('users')
 export class User {
@@ -32,8 +34,8 @@ export class User {
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  city?: string;
+  @ManyToOne(() => City, { nullable: true })
+  city?: City;
 
   @Column({ nullable: true, type: 'enum', enum: Gender })
   gender?: Gender;
