@@ -1,9 +1,14 @@
-import { PartialType } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import { RequestStatus } from '../requests.enum';
 import { CreateRequestDto } from './create-request.dto';
 
 export class UpdateRequestDto extends PartialType(CreateRequestDto) {
+  @ApiProperty({
+    description: 'Новый статус заявки',
+    enum: RequestStatus,
+    example: RequestStatus.ACCEPTED,
+  })
   @IsEnum(RequestStatus)
   status: RequestStatus;
 }
