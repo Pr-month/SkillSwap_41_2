@@ -16,28 +16,8 @@ export class NotificationGateway {
 
   constructor(private wsAuthService: WsAuthService) {}
   async handleConnection(client: Socket) {
-    let token: string | undefined;
-
-    // Извлекаем токен из handshake
-    if (client.handshake?.query?.token) {
-      token = client.handshake.query.token as string;
-    } else if (client.handshake?.headers?.authorization) {
-      const authHeader = client.handshake.headers.authorization;
-      const [type, extractedToken] = authHeader.split(' ');
-      if (type === 'Bearer' && extractedToken) {
-        token = extractedToken;
-      }
-    } else if (client.handshake?.auth?.token) {
-      token = client.handshake.auth.token as string;
-    }
-
-    if (!token) {
-      client.disconnect();
-      return;
-    }
-
     try {
-      const payload = await this.wsAuthService.validateToken(token);
+      const payload = await this.wsAuthService.authenticateSocket(client);
       const userId = payload.sub;
       // Добавляем клиента в комнату с именем = его userId
       client.join(userId.toString());
