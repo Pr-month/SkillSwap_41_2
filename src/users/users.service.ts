@@ -35,8 +35,9 @@ export class UsersService {
 
     const salt = this.configService.get<number>('app.hashSalt') ?? 10;
     const hashedPassword = await bcrypt.hash(dto.password, salt);
+    const { city, ...userData } = dto;
     const user = this.usersRepository.create({
-      ...dto,
+      ...userData,
       password: hashedPassword,
     });
     return this.usersRepository.save(user);
