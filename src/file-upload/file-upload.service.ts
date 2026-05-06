@@ -7,7 +7,7 @@ export interface MulterFile {
   encoding: string;
   mimetype: string;
   size: number;
-  buffer: Buffer;
+  buffer?: Buffer;
   path?: string;
   destination?: string;
   filename?: string;
