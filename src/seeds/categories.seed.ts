@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
+import { databaseConfig } from '../config/database.config';
 
 interface SeedCreateCategory {
   name: string;
@@ -10,12 +11,7 @@ interface SeedCreateCategory {
 export const CategoriesData: SeedCreateCategory[] = [ { name: 'Творчество и искусство', children: [ 'Управление командой', 'Маркетинг и реклама', 'Продажи и переговоры', 'Личный бренд', 'Резюме и собеседование', 'Тайм-менеджмент', 'Проектное управление', 'Предпринимательство', ], }, { name: 'IT и программирование', children: [ 'Frontend', 'Backend', 'DevOps', 'Мобильная разработка', 'GameDev', ], }, { name: 'Дизайн и UX/UI', children: ['Графический дизайн', 'UX/UI', 'Motion-дизайн', 'Web-дизайн'], }, { name: 'Финансы и бухгалтерия', children: [ 'Личная финансовая грамотность', 'Бухгалтерия и налоги', 'Инвестиции', ], }, { name: 'Маркетинг и продажи', children: ['Таргетинг', 'Контекстная реклама', 'SEO', 'Email-маркетинг'], }, { name: 'Образование и обучение', children: ['Методика преподавания', 'Онлайн-курсы', 'Педагогика'], }, { name: 'Языки', children: [ 'Английский язык', 'Немецкий язык', 'Французский язык', 'Испанский язык', 'Китайский язык', 'Русский язык', ], }, { name: 'Музыкальные инструменты', children: [ 'Гитара', 'Фортепиано', 'Скрипка', 'Ударные', 'Вокал', 'Бас-гитара', 'Саксофон', ], }, ];
 
 const AppDataSource = new DataSource({
-  type: 'postgres',
-  host: process.env.DATABASE_HOST,
-  port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-  username: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME,
+  ...databaseConfig(),
   entities: [Category],
 });
 
