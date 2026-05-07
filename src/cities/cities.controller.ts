@@ -32,6 +32,11 @@ export class CitiesController {
     return this.citiesService.findAll();
   }
 
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.citiesService.findOne(+id);
+  }
+
   @UseGuards(JwtAccessGuard, RolesGuard)
   @Roles([UserRole.ADMIN])
   @Patch(':id')

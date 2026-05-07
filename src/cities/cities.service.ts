@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCityDto } from './dto/create-city.dto';
@@ -13,22 +17,35 @@ export class CitiesService {
   ) {}
 
   async create(createCityDto: CreateCityDto) {
-    const city = this.cityRepository.create({
-      name: createCityDto.name,
-      country: createCityDto.country,
-      region: createCityDto.region,
+    const existing = await this.cityRepository.findOne({
+      where: {
+        name: createCityDto.name,
+      },
     });
 
-    return await this.cityRepository.save(city);
+    if (existing) {
+      throw new ConflictException('Такой город уже существует');
+    }
+
+    const city = this.cityRepository.create(createCityDto);
+    return this.cityRepository.save(city);
   }
 
   async findAll() {
-    try {
-      return this.cityRepository.find();
-    } catch (error) {
-      console.error(' Error in findAll:', error);
-      throw error;
+    const cities = await this.cityRepository.find({
+      order: { name: 'ASC' },
+    });
+
+    if (cities.length === 0) {
+      throw new NotFoundException('Города не найдены');
     }
+
+    return cities;
+  }
+
+  async findOne(id: number) {
+    const city = await this.cityRepository.findOneOrFail({ where: { id } });
+    return city;
   }
 
   async update(id: number, updateCityDto: UpdateCityDto) {
