@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('cities')
+@Index(['name'], { unique: true })
 export class City {
   @PrimaryGeneratedColumn()
   id: number;
