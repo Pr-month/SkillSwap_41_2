@@ -17,7 +17,7 @@ async function bootstrap() {
     let createdUser = 0;
     let skippedUser = 0;
 
-    for ( const userData of seedTestUsers ) {
+    for (const userData of seedTestUsers) {
       const existingUser = await usersRepository.findOne({
         where: { email: userData.email },
       });
@@ -32,11 +32,13 @@ async function bootstrap() {
         email: userData.email,
         password: hashedPassword,
         role: userData.role,
-      })
+      });
       createdUser++;
       console.log(`user ${userData.email} created`);
     }
-    console.log(`seeding finished. Created users ${createdUser}, skipped users ${skippedUser}`);
+    console.log(
+      `seeding finished. Created users ${createdUser}, skipped users ${skippedUser}`,
+    );
   } catch (error) {
     console.error('seeding finished error', error);
     process.exitCode = 1;

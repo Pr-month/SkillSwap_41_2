@@ -16,27 +16,57 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { SkillsService } from './skills.service';
+import {
+  ApiAddToFavorites,
+  ApiCreateSkill,
+  ApiFindAllSkills,
+  ApiFindOneSkill,
+  ApiRemoveFromFavorites,
+  ApiRemoveSkill,
+  ApiUpdateSkill,
+} from './skills.swagger';
 
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
+  @ApiAddToFavorites()
+  @UseGuards(JwtAccessGuard)
+  @Post(':id/favorite')
+  async addToFavorites(@Param('id') id: string, @Req() req: TRequestWithUser) {
+    return this.skillsService.addToFavorites(+id, req.user.sub);
+  }
+
+  @ApiRemoveFromFavorites()
+  @UseGuards(JwtAccessGuard)
+  @Delete(':id/favorite')
+  async removeFromFavorites(
+    @Param('id') id: string,
+    @Req() req: TRequestWithUser,
+  ) {
+    return this.skillsService.removeFromFavorites(+id, req.user.sub);
+  }
+
+  @ApiCreateSkill()
   @UseGuards(JwtAccessGuard)
   @Post()
   create(@Req() req: TRequestWithUser, @Body() createSkillDto: CreateSkillDto) {
     return this.skillsService.create(createSkillDto, req.user.sub as number);
   }
 
+  @ApiFindAllSkills()
   @Get()
   findAll(@Query() query: GetSkillsQueryDto) {
     return this.skillsService.findAll(query);
   }
 
+  @ApiFindOneSkill()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.skillsService.findOne(+id);
   }
 
+  @ApiUpdateSkill()
   @UseGuards(JwtAccessGuard)
   @Patch(':id')
   update(
@@ -46,7 +76,8 @@ export class SkillsController {
   ) {
     return this.skillsService.update(+id, updateSkillDto, req.user.sub);
   }
-  
+
+  @ApiRemoveSkill()
   @UseGuards(JwtAccessGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: TRequestWithUser) {

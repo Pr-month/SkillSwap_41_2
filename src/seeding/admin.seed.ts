@@ -20,10 +20,10 @@ async function seedAdmin() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
 
-if (!email || !password) {
-  console.error('ADMIN_EMAIL или ADMIN_PASSWORD не заданы');
-  process.exit(1);
-}
+  if (!email || !password) {
+    console.error('ADMIN_EMAIL или ADMIN_PASSWORD не заданы');
+    process.exit(1);
+  }
 
   const existing = await repo.findOne({ where: { email } });
   if (existing) {
