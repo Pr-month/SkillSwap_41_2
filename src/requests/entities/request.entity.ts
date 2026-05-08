@@ -1,5 +1,3 @@
-import { Skill } from '../../skills/entities/skill.entity';
-import { User } from '../../users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,6 +5,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Skill } from '../../skills/entities/skill.entity';
+import { User } from '../../users/entities/user.entity';
 import { RequestStatus } from '../requests.enum';
 
 @Entity('requests')
@@ -17,23 +17,27 @@ export class Request {
   @CreateDateColumn()
   createdAt!: Date;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, (user) => user.sentRequests, { nullable: false })
   sender!: User;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, (user) => user.receivedRequests, { nullable: false })
   receiver!: User;
 
   @Column({
     type: 'enum',
     enum: RequestStatus,
-    default: RequestStatus.Pending,
+    default: RequestStatus.PENDING,
   })
   status!: RequestStatus;
 
-  @ManyToOne(() => Skill, { nullable: false })
+  @ManyToOne(() => Skill, (skill) => skill.offeredInRequests, {
+    nullable: false,
+  })
   offeredSkill!: Skill;
 
-  @ManyToOne(() => Skill, { nullable: false })
+  @ManyToOne(() => Skill, (skill) => skill.requestedInRequests, {
+    nullable: false,
+  })
   requestedSkill!: Skill;
 
   @Column({ default: false })

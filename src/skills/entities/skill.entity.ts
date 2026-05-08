@@ -6,9 +6,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Request } from 'src/requests/entities/request.entity';
 
 @Entity('skills')
 export class Skill {
@@ -40,4 +42,10 @@ export class Skill {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+  @OneToMany(() => Request, (request) => request.offeredSkill)
+  offeredInRequests: Request[];
+
+  @OneToMany(() => Request, (request) => request.requestedSkill)
+  requestedInRequests: Request[];
 }

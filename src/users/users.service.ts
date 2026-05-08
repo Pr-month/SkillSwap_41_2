@@ -7,12 +7,15 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UserRole } from './enums/users.enums';
+import { FindUsersQueryDto } from './dto/get-users.dto';
+import { of } from 'rxjs';
+import { off } from 'process';
 
 @Injectable()
 export class UsersService {
@@ -32,15 +35,59 @@ export class UsersService {
 
     const salt = this.configService.get<number>('app.hashSalt') ?? 10;
     const hashedPassword = await bcrypt.hash(dto.password, salt);
+    const { city, ...userData } = dto;
     const user = this.usersRepository.create({
-      ...dto,
+      ...userData,
       password: hashedPassword,
     });
     return this.usersRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findAll(query: FindUsersQueryDto) {
+    // limit = сколько записей вернуть
+    // offset = номер страницы
+    // search = строка для поиска #по имени или email#
+    const { limit, search, offset } = query;
+
+    // take = сколько записей вернуть
+    // skip = сколько записей пропустить (для пагинации)
+    const take = limit || 10;
+    const skip = offset ? (offset - 1) * take : 0;
+
+    // SQL запрос, алиас таблицы - user
+    const qb = this.usersRepository.createQueryBuilder('user');
+
+    // Фильтрация по имени или email, если search передан
+    // ILike - для case-insensitive
+    // % - это wildcard, поиск по подстроке
+    if (search) {
+      qb.where('user.name ILIKE :search OR user.email ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    // users - массив найденных пользователей
+    // total - общее количество пользователей, подходящих под фильтр (без учета пагинации)
+    // альтеранива - getManyAndCount() : [users, total]
+    const users = await qb.skip(skip).take(take).getMany();
+    const total = await qb.getCount();
+
+    // totalPages - общее количество страниц c округлением в большую сторону
+    const totalPages = Math.ceil(total / take);
+
+    if (total > 0 && offset > totalPages) {
+      throw new NotFoundException('Страница не найдена');
+    }
+
+    return {
+      data: users,
+      meta: {
+        total,
+        offset,
+        limit,
+        totalPages,
+      },
+    };
   }
 
   async findById(id: number): Promise<User> {

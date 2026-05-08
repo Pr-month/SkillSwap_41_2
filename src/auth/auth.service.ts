@@ -9,13 +9,14 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
 import { TJwtConfig, jwtConfig } from '../config/jwt.config';
 import { StringValue } from 'ms';
 import { LoginDTO } from './dto/login.dto';
 import { TAuthResponse, TTokens } from './auth.types';
+import { City } from 'src/cities/entities/city.entity';
 
 @Injectable()
 export class AuthService {
@@ -52,11 +53,12 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
     //создаем пользователя
-    const { password, birthday, wantToLearn, ...userData } = dto;
+    const { birthday, city, ...userData } = dto;
     const user = this.usersRepository.create({
       ...userData,
       password: hashedPassword,
       birthdate: birthday ? new Date(birthday) : undefined,
+      city: city ? ({ id: Number(city) } as DeepPartial<City>) : undefined
       // wantToLearn временно убираем – Category ещё нет
     });
 

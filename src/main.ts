@@ -9,7 +9,7 @@ import {
 import { AllExceptionsFilter } from './common/all-exception.filter';
 import { ConfigService } from '@nestjs/config';
 import { appConfig, TAppConfig } from './config/app.config';
-import { UsersService } from './users/users.service';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -42,6 +42,17 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Swagger
+  const configSwagger = new DocumentBuilder()
+    .setTitle('SkillUp')
+    .setDescription('Описание API SkillUp')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, configSwagger);
+  SwaggerModule.setup('api', app, document);
+
   await app.listen(config?.port ?? 3000);
 }
 void bootstrap();
