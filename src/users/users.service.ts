@@ -7,12 +7,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { FindUsersQueryDto } from './dto/get-users.dto';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Injectable()
 export class UsersService {
@@ -36,6 +37,7 @@ export class UsersService {
     const user = this.usersRepository.create({
       ...userData,
       password: hashedPassword,
+      wantToLearn: dto.wantToLearn?.map(id => ({ id } as any)) 
     });
     return this.usersRepository.save(user);
   }

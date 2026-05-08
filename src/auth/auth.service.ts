@@ -58,8 +58,8 @@ export class AuthService {
       ...userData,
       password: hashedPassword,
       birthdate: birthday ? new Date(birthday) : undefined,
-      city: city ? ({ id: Number(city) } as DeepPartial<City>) : undefined
-      // wantToLearn временно убираем – Category ещё нет
+      city: city ? ({ id: Number(city) } as DeepPartial<City>) : undefined,
+      wantToLearn: userData.wantToLearn?.map(id => ({ id } as any))
     });
 
     // сохраняем пользователя в БД
