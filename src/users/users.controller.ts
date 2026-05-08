@@ -6,14 +6,12 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { TRequestWithUser } from 'src/auth/auth.types';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -23,11 +21,6 @@ import { FindUsersQueryDto } from './dto/get-users.dto';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
 
   @Get()
   findAll(@Query() query: FindUsersQueryDto) {
