@@ -1,15 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-	ApiBearerAuth,
-	ApiBody,
-	ApiCreatedResponse,
-	ApiExtraModels,
-	ApiOkResponse,
-	ApiOperation,
-	ApiParam,
-	ApiQuery,
-	ApiResponse,
-	getSchemaPath
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  getSchemaPath
 } from '@nestjs/swagger';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
@@ -402,5 +402,65 @@ export function ApiRemoveFromFavorites() {
     }),
     UnauthorizedResponse,
     NotFoundResponse,
+  );
+}
+
+export function ApiFindSimilar() {
+  return applyDecorators(
+    ApiOperation({
+      summary: 'Похожие предложения',
+      description: 'Возвращает список пользователей, у которых есть навыки в той же категории, что и указанный навык.',
+    }),
+    ApiParam({ 
+      name: 'id', 
+      type: Number, 
+      description: 'ID навыка', 
+      example: 42 
+    }),
+    ApiOkResponse({
+      description: 'Список пользователей успешно получен',
+      schema: {
+        type: 'object',
+        properties: {
+          users: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { 
+                  type: 'number', 
+                  example: 5 
+                },
+                name: { 
+                  type: 'string', 
+                  example: 'Анна Смирнова' 
+                },
+                avatar: { 
+                  type: 'string', 
+                  example: 'https://example.com/avatar.jpg', 
+                  nullable: true 
+                },
+              },
+            },
+          },
+        },
+        example: {
+          users: [
+            { 
+              id: 5, 
+              name: 'Анна Смирнова', 
+              avatar: null 
+            },
+            { 
+              id: 12, 
+              name: 'Иван Петров', 
+              avatar: '/uploads/avatar.png' 
+            },
+          ],
+        },
+      },
+    }),
+    NotFoundResponse,
+    BadRequestResponse,
   );
 }

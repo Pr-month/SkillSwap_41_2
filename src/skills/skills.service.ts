@@ -231,6 +231,31 @@ export class SkillsService {
     await this.skillRepository.remove(skill);
   }
 
+  async findSimilarUsers(skillId: number): Promise<{ users: Partial<User>[] }> {
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+      relations: ['category'],
+    });
+    if (!skill) {
+      throw new NotFoundException('Навык не найден');
+    }
+
+    const categoryId = skill.category.id;
+
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .innerJoin('user.skills', 'skill')
+      .innerJoin('skill.category', 'category')
+      .where('category.id = :categoryId', { categoryId })
+      .groupBy('user.id')
+      .select(['user.id', 'user.name', 'user.avatar'])
+      .orderBy('user.name', 'ASC')
+      .limit(10)
+      .getRawMany();
+
+    return { users };
+  }
+
   private async deleteImagesFiles(images: string[]): Promise<void> {
     if (!images || images.length === 0) return;
 
