@@ -7,15 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { ILike, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { UserRole } from './enums/users.enums';
 import { FindUsersQueryDto } from './dto/get-users.dto';
-import { of } from 'rxjs';
-import { off } from 'process';
 
 @Injectable()
 export class UsersService {
