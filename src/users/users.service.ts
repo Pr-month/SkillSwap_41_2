@@ -131,8 +131,12 @@ export class UsersService {
 
     return { message: 'Пароль успешно обновлен.' };
   }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  
+  async remove(id: number): Promise<void> {
+  const user = await this.usersRepository.findOne({ where: { id } });
+  if (!user) {
+    throw new NotFoundException('Пользователь не найден');
   }
+  await this.usersRepository.remove(user);
+}
 }

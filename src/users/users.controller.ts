@@ -11,6 +11,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserRole } from './enums/users.enums';
 import { TRequestWithUser } from 'src/auth/auth.types';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -41,6 +44,8 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAccessGuard, RolesGuard)
+  @Roles([UserRole.ADMIN])
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
   }
