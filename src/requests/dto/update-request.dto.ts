@@ -10,5 +10,5 @@ export class UpdateRequestDto extends PartialType(CreateRequestDto) {
     example: RequestStatus.ACCEPTED,
   })
   @IsEnum(RequestStatus)
-  status: RequestStatus;
+  status: RequestStatus | undefined;
 }
