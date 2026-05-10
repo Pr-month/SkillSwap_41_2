@@ -6,10 +6,13 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Gender, UserRole } from '../enums/users.enums';
+import { City } from 'src/cities/entities/city.entity';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Entity('users')
 export class User {
@@ -32,8 +35,8 @@ export class User {
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  city?: string;
+  @ManyToOne(() => City, { nullable: true })
+  city?: City;
 
   @Column({ nullable: true, type: 'enum', enum: Gender })
   gender?: Gender;
@@ -60,4 +63,12 @@ export class User {
 
   @OneToMany(() => Request, (request) => request.receiver)
   receivedRequests!: Request[];
+
+  @ManyToMany(() => Category, (category) => category.usersWhoWantToLearn)
+  @JoinTable({
+    name: "wantToLearn",
+    joinColumn: { name: "user_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "category_id", referencedColumnName: "id" }
+  })
+  wantToLearn?: Category[];
 }
