@@ -21,6 +21,7 @@ import {
   ApiCreateSkill,
   ApiFindAllSkills,
   ApiFindOneSkill,
+  ApiFindSimilar,
   ApiRemoveFromFavorites,
   ApiRemoveSkill,
   ApiUpdateSkill,
@@ -82,5 +83,11 @@ export class SkillsController {
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: TRequestWithUser) {
     return this.skillsService.remove(+id, req.user.sub);
+  }
+
+  @ApiFindSimilar()
+  @Get(':id/similar')
+  async findSimilar(@Param('id') id: string) {
+    return this.skillsService.findSimilarUsers(+id);
   }
 }
