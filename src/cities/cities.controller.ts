@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -13,8 +14,7 @@ import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserRole } from 'src/users/enums/users.enums';
 import { CitiesService } from './cities.service';
-import { CreateCityDto } from './dto/create-city.dto';
-import { UpdateCityDto } from './dto/update-city.dto';
+import { CreateCityDto, GetCitiesDto, UpdateCityDto } from './dto/city.dto';
 
 @Controller('cities')
 export class CitiesController {
@@ -35,6 +35,14 @@ export class CitiesController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.citiesService.findOne(+id);
+  }
+
+  @Get('search')
+  async findAllWithFilters(@Query() query: GetCitiesDto) {
+    return await this.citiesService.findAllWithFilters(
+      query.search,
+      query.limit,
+    );
   }
 
   @UseGuards(JwtAccessGuard, RolesGuard)

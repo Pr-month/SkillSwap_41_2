@@ -5,8 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateCityDto } from './dto/create-city.dto';
-import { UpdateCityDto } from './dto/update-city.dto';
+import { CreateCityDto, UpdateCityDto } from './dto/city.dto';
 import { City } from './entities/city.entity';
 
 @Injectable()
@@ -41,6 +40,22 @@ export class CitiesService {
     }
 
     return cities;
+  }
+
+  async findAllWithFilters(search?: string, limit?: number): Promise<City[]> {
+    const qb = this.cityRepository.createQueryBuilder('city');
+
+    qb.select(['city.id', 'city.name']);
+
+    if (search && search.trim()) {
+      qb.where('city.name ILIKE :search', { search: `%${search.trim()}%` });
+    }
+
+    if (limit !== undefined && limit > 0) {
+      qb.take(limit);
+    }
+
+    return qb.getMany();
   }
 
   async findOne(id: number) {
