@@ -15,33 +15,26 @@ const AppDataSource = new DataSource({
 async function seedAdmin() {
   await AppDataSource.initialize();
 
-  const repo = AppDataSource.getRepository(User);
+  const userRepo = AppDataSource.getRepository(User);
 
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
+  const adminEmail = process.env.ADMIN_EMAIL!;
+  const password = process.env.ADMIN_PASSWORD!;
 
-  if (!email || !password) {
-    console.error('ADMIN_EMAIL или ADMIN_PASSWORD не заданы');
-    process.exit(1);
-  }
-
-  const existing = await repo.findOne({ where: { email } });
-  if (existing) {
+  let admin = await userRepo.findOne({ where: { email: adminEmail } });
+  if (!admin) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    admin = await userRepo.save({
+      email: adminEmail,
+      password: hashedPassword,
+      name: 'Admin',
+      role: UserRole.ADMIN,
+    });
+    console.log('Admin создан');
+  } else {
     console.log('Admin уже существует');
-    return;
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  await repo.save({
-    email,
-    password: hashedPassword,
-    name: 'Admin',
-    role: UserRole.ADMIN,
-  });
-
-  console.log('Admin создан');
-
+  console.log('Сидинг админа успешно завершен');
   await AppDataSource.destroy();
 }
 

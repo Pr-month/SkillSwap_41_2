@@ -64,6 +64,7 @@ describe('SkillsService', () => {
           useValue: {
             findOne: jest.fn(),
             save: jest.fn(),
+            createQueryBuilder: jest.fn(),
           },
         },
       ],
@@ -431,6 +432,83 @@ describe('SkillsService', () => {
       const otherUserId = 999;
       await expect(service.remove(skillId, otherUserId)).rejects.toThrow(ForbiddenException);
       expect(skillRepository.remove).not.toHaveBeenCalled();
+    });
+  });
+
+  // тестирование поиска похожих навыков
+  describe('findSimilarUsers', () => {
+    const skillId = 100;
+
+    it('Должен вернуться список пользователей с навыками в той же категории', async () => {
+      const mockSkillWithCategory = {
+        ...mockSkill,
+        category: { id: 5, name: 'Programming' },
+      };
+      skillRepository.findOne.mockResolvedValue(mockSkillWithCategory);
+
+      const rawUsers = [
+        { user_id: 1, user_name: 'Alice', user_avatar: 'alice.jpg' },
+        { user_id: 2, user_name: 'Bob', user_avatar: null },
+      ];
+
+      const queryBuilder = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockImplementation(() => Promise.resolve(rawUsers)),
+      } as any;
+
+      jest.spyOn(userRepository, 'createQueryBuilder').mockReturnValue(queryBuilder);
+
+      const result = await service.findSimilarUsers(skillId);
+
+      expect(skillRepository.findOne).toHaveBeenCalledWith({
+        where: { id: skillId },
+        relations: ['category'],
+      });
+      expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+      expect(queryBuilder.innerJoin).toHaveBeenCalledWith('user.skills', 'skill');
+      expect(queryBuilder.innerJoin).toHaveBeenCalledWith('skill.category', 'category');
+      expect(queryBuilder.where).toHaveBeenCalledWith('category.id = :categoryId', { categoryId: 5 });
+      expect(queryBuilder.limit).toHaveBeenCalledWith(10);
+      expect(result).toEqual({
+        users: rawUsers.map(u => ({
+          id: u.user_id,
+          name: u.user_name,
+          avatar: u.user_avatar,
+        })),
+      });
+    });
+
+    it('Должен вернуться пустой массив, если в категории нет других пользователей', async () => {
+      const mockSkillWithCategory = {
+        ...mockSkill,
+        category: { id: 5, name: 'Programming' },
+      };
+      skillRepository.findOne.mockResolvedValue(mockSkillWithCategory);
+
+      const queryBuilder = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockImplementation(() => Promise.resolve([])),
+      } as any;
+
+      jest.spyOn(userRepository, 'createQueryBuilder').mockReturnValue(queryBuilder);
+
+      const result = await service.findSimilarUsers(skillId);
+      expect(result).toEqual({ users: [] });
+    });
+
+    it('Должна вернуться ошибка NotFound, если навык не найден', async () => {
+      skillRepository.findOne.mockResolvedValue(null);
+      await expect(service.findSimilarUsers(999)).rejects.toThrow(NotFoundException);
     });
   });
 
