@@ -30,19 +30,7 @@ export class CitiesService {
     return this.cityRepository.save(city);
   }
 
-  async findAll() {
-    const cities = await this.cityRepository.find({
-      order: { name: 'ASC' },
-    });
-
-    if (cities.length === 0) {
-      throw new NotFoundException('Города не найдены');
-    }
-
-    return cities;
-  }
-
-  async findAllWithFilters(search?: string, limit?: number): Promise<City[]> {
+  async findAll(search?: string, limit?: number): Promise<City[]> {
     const qb = this.cityRepository.createQueryBuilder('city');
 
     qb.select(['city.id', 'city.name']);
@@ -51,9 +39,11 @@ export class CitiesService {
       qb.where('city.name ILIKE :search', { search: `%${search.trim()}%` });
     }
 
-    if (limit !== undefined && limit > 0) {
-      qb.take(limit);
-    }
+    const MAX_LIMIT = 100;
+    const safeLimit = limit ? Math.min(limit, MAX_LIMIT) : undefined;
+    if (safeLimit) qb.take(safeLimit);
+
+    qb.orderBy('city.name', 'ASC');
 
     return qb.getMany();
   }

@@ -28,21 +28,13 @@ export class CitiesController {
   }
 
   @Get()
-  findAll() {
-    return this.citiesService.findAll();
+  async findAll(@Query() query: GetCitiesDto) {
+    return this.citiesService.findAll(query.search, query.limit);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.citiesService.findOne(+id);
-  }
-
-  @Get('search')
-  async findAllWithFilters(@Query() query: GetCitiesDto) {
-    return await this.citiesService.findAllWithFilters(
-      query.search,
-      query.limit,
-    );
   }
 
   @UseGuards(JwtAccessGuard, RolesGuard)
