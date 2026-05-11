@@ -7,15 +7,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { ILike, Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { UserRole } from './enums/users.enums';
 import { FindUsersQueryDto } from './dto/get-users.dto';
-import { of } from 'rxjs';
-import { off } from 'process';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +21,8 @@ export class UsersService {
     private configService: ConfigService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async create(dto: CreateUserDto): Promise<User> {
@@ -36,9 +36,19 @@ export class UsersService {
     const salt = this.configService.get<number>('app.hashSalt') ?? 10;
     const hashedPassword = await bcrypt.hash(dto.password, salt);
     const { city, ...userData } = dto;
+    
+    let categories: Category[] = [];
+    if (dto.wantToLearn?.length) {
+      categories = await this.categoryRepository.findBy({ id: In(dto.wantToLearn) });
+      if (categories.length !== dto.wantToLearn.length) {
+        throw new NotFoundException('Одна или несколько категорий не найдены');
+      }
+    } 
+
     const user = this.usersRepository.create({
       ...userData,
       password: hashedPassword,
+      wantToLearn: categories
     });
     return this.usersRepository.save(user);
   }
@@ -104,11 +114,20 @@ export class UsersService {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
 
-    // обновляем только переданные поля
-    Object.assign(user, updateUserDto);
+    const {wantToLearn, ...data} = updateUserDto
+
+    if (wantToLearn) {
+      const categories = await this.categoryRepository.findBy({ id: In(wantToLearn) });
+      if (categories.length !== wantToLearn.length) {
+        throw new NotFoundException('Одна или несколько категорий не найдены');
+      }
+      user.wantToLearn = categories;
+    }
+
+    Object.assign(user, data);
     const savedUser = await this.usersRepository.save(user);
 
-    return savedUser; // возвращаем весь объект, включая password и refreshToken (но они не будут отправлены, если не настроено)
+    return savedUser;
   }
 
   async updatePassword(
@@ -131,8 +150,12 @@ export class UsersService {
 
     return { message: 'Пароль успешно обновлен.' };
   }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  
+  async remove(id: number): Promise<void> {
+  const user = await this.usersRepository.findOne({ where: { id } });
+  if (!user) {
+    throw new NotFoundException('Пользователь не найден');
   }
+  await this.usersRepository.remove(user);
+}
 }

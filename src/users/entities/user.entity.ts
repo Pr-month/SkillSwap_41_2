@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { Gender, UserRole } from '../enums/users.enums';
 import { City } from 'src/cities/entities/city.entity';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Entity('users')
 export class User {
@@ -62,4 +63,12 @@ export class User {
 
   @OneToMany(() => Request, (request) => request.receiver)
   receivedRequests!: Request[];
+
+  @ManyToMany(() => Category, (category) => category.usersWhoWantToLearn)
+  @JoinTable({
+    name: "wantToLearn",
+    joinColumn: { name: "user_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "category_id", referencedColumnName: "id" }
+  })
+  wantToLearn?: Category[];
 }
