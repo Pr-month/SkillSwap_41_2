@@ -9,7 +9,18 @@ import {
 import { AllExceptionsFilter } from './common/all-exception.filter';
 import { ConfigService } from '@nestjs/config';
 import { appConfig, TAppConfig } from './config/app.config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  DocumentBuilder,
+  SwaggerDocumentOptions,
+  SwaggerModule,
+} from '@nestjs/swagger';
+import { UsersModule } from './users/users.module';
+import { SkillsModule } from './skills/skills.module';
+import { RequestsModule } from './requests/requests.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { CitiesModule } from './cities/cities.module';
+import { CategoriesModule } from './categories/categories.module';
+import { AuthModule } from './auth/auth.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -45,13 +56,63 @@ async function bootstrap() {
 
   // Swagger
   const configSwagger = new DocumentBuilder()
-    .setTitle('SkillUp')
-    .setDescription('Описание API SkillUp')
+    .setTitle('SkillSwap API')
+    .setDescription('Описание API SkillSwap')
     .setVersion('1.0')
     .addBearerAuth()
+    .addCookieAuth('refresh_token')
     .build();
-  const document = SwaggerModule.createDocument(app, configSwagger);
-  SwaggerModule.setup('api', app, document);
+  const options: SwaggerDocumentOptions = {
+    include: [
+      AuthModule,
+      CategoriesModule,
+      CitiesModule,
+      FileUploadModule,
+      RequestsModule,
+      SkillsModule,
+      UsersModule,
+    ],
+    deepScanRoutes: true, // глубокое сканирование маршрутов
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+  };
+  const documentFactory = SwaggerModule.createDocument(
+    app,
+    configSwagger,
+    options,
+  );
+  SwaggerModule.setup('docs', app, documentFactory, {
+    jsonDocumentUrl: 'swagger/json',
+    ui: process.env.NODE_ENV !== 'production',
+    raw: ['json'],
+    customSiteTitle: 'SkillSwap API Docs',
+    swaggerOptions: {
+      persistAuthorization: true, // сохранять авторизацию при обновлении страницы
+      docExpansion: 'none', // list, full, none
+    },
+    customCss: `
+      .topbar { 
+        display: none;
+      }
+      
+      .swagger-ui .info {
+        margin: 10px 0;
+      }
+
+      .swagger-ui .wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .swagger-ui table.model tbody tr td:first-of-type {
+        padding: 1em 1em 0 2em;
+      }
+
+      .swagger-ui .prop {
+        display: block;
+        margin-left: 1em;
+      }
+    `,
+  });
 
   await app.listen(config?.port ?? 3000);
 }
