@@ -14,7 +14,7 @@ import { CategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { UserRole } from 'src/users/enums/users.enums';
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import {
   ApiCategoriesDelete,
   ApiCategoriesGetAll,
