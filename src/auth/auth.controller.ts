@@ -7,11 +7,18 @@ import { LoginDTO } from './dto/login.dto';
 import { Response } from 'express';
 import { TLogoutRequest } from './auth.types';
 import { JwtAccessGuard } from './guards/jwt-access.guard';
+import {
+  ApiAuthLogin,
+  ApiAuthLogout,
+  ApiAuthRefresh,
+  ApiAuthRegister,
+} from './auth.swagger';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiAuthRegister()
   @Post('register')
   async register(
     @Body() registerDTO: RegisterDTO,
@@ -22,6 +29,7 @@ export class AuthController {
     return result;
   }
 
+  @ApiAuthRefresh()
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   async refresh(
@@ -35,6 +43,7 @@ export class AuthController {
     return result;
   }
 
+  @ApiAuthLogin()
   @Post('login')
   async login(
     @Body() loginDTO: LoginDTO,
@@ -45,6 +54,7 @@ export class AuthController {
     return result;
   }
 
+  @ApiAuthLogout()
   @UseGuards(JwtAccessGuard)
   @Post('logout')
   async logout(

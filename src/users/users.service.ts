@@ -7,12 +7,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { UserRole } from './enums/users.enums';
+import { FindUsersQueryDto } from './dto/get-users.dto';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,8 @@ export class UsersService {
     private configService: ConfigService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async create(dto: CreateUserDto): Promise<User> {
@@ -32,15 +35,69 @@ export class UsersService {
 
     const salt = this.configService.get<number>('app.hashSalt') ?? 10;
     const hashedPassword = await bcrypt.hash(dto.password, salt);
+    const { city, ...userData } = dto;
+    
+    let categories: Category[] = [];
+    if (dto.wantToLearn?.length) {
+      categories = await this.categoryRepository.findBy({ id: In(dto.wantToLearn) });
+      if (categories.length !== dto.wantToLearn.length) {
+        throw new NotFoundException('Одна или несколько категорий не найдены');
+      }
+    } 
+
     const user = this.usersRepository.create({
-      ...dto,
+      ...userData,
       password: hashedPassword,
+      wantToLearn: categories
     });
     return this.usersRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findAll(query: FindUsersQueryDto) {
+    // limit = сколько записей вернуть
+    // offset = номер страницы
+    // search = строка для поиска #по имени или email#
+    const { limit, search, offset } = query;
+
+    // take = сколько записей вернуть
+    // skip = сколько записей пропустить (для пагинации)
+    const take = limit || 10;
+    const skip = offset ? (offset - 1) * take : 0;
+
+    // SQL запрос, алиас таблицы - user
+    const qb = this.usersRepository.createQueryBuilder('user');
+
+    // Фильтрация по имени или email, если search передан
+    // ILike - для case-insensitive
+    // % - это wildcard, поиск по подстроке
+    if (search) {
+      qb.where('user.name ILIKE :search OR user.email ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    // users - массив найденных пользователей
+    // total - общее количество пользователей, подходящих под фильтр (без учета пагинации)
+    // альтеранива - getManyAndCount() : [users, total]
+    const users = await qb.skip(skip).take(take).getMany();
+    const total = await qb.getCount();
+
+    // totalPages - общее количество страниц c округлением в большую сторону
+    const totalPages = Math.ceil(total / take);
+
+    if (total > 0 && offset > totalPages) {
+      throw new NotFoundException('Страница не найдена');
+    }
+
+    return {
+      data: users,
+      meta: {
+        total,
+        offset,
+        limit,
+        totalPages,
+      },
+    };
   }
 
   async findById(id: number): Promise<User> {
@@ -57,11 +114,20 @@ export class UsersService {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
 
-    // обновляем только переданные поля
-    Object.assign(user, updateUserDto);
+    const {wantToLearn, ...data} = updateUserDto
+
+    if (wantToLearn) {
+      const categories = await this.categoryRepository.findBy({ id: In(wantToLearn) });
+      if (categories.length !== wantToLearn.length) {
+        throw new NotFoundException('Одна или несколько категорий не найдены');
+      }
+      user.wantToLearn = categories;
+    }
+
+    Object.assign(user, data);
     const savedUser = await this.usersRepository.save(user);
 
-    return savedUser; // возвращаем весь объект, включая password и refreshToken (но они не будут отправлены, если не настроено)
+    return savedUser;
   }
 
   async updatePassword(
@@ -84,8 +150,12 @@ export class UsersService {
 
     return { message: 'Пароль успешно обновлен.' };
   }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  
+  async remove(id: number): Promise<void> {
+  const user = await this.usersRepository.findOne({ where: { id } });
+  if (!user) {
+    throw new NotFoundException('Пользователь не найден');
   }
+  await this.usersRepository.remove(user);
+}
 }

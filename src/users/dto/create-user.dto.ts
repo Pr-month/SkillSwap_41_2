@@ -1,10 +1,13 @@
 import {
+  IsArray,
+  IsAscii,
   IsDate,
   IsEmail,
   IsEnum,
   IsOptional,
   IsString,
   IsUrl,
+  IsUUID,
   Matches,
   MinLength,
 } from 'class-validator';
@@ -13,17 +16,17 @@ import { Gender } from '../enums/users.enums';
 
 export class CreateUserDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @MinLength(8)
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)/, {
     message: 'Пароль должен содержать как минимум одну букву и одну цифру.',
   })
-  password: string;
+  password!: string;
 
   @IsOptional()
   @IsString()
@@ -45,4 +48,9 @@ export class CreateUserDto {
   @IsOptional()
   @IsUrl()
   avatar?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true, message: "Каждый элемент должен быть валидным UUID" })
+  wantToLearn?: string[]; 
 }

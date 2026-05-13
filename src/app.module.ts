@@ -12,6 +12,8 @@ import { SkillsModule } from './skills/skills.module';
 import { CategoriesModule } from './categories/categories.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { RequestsModule } from './requests/requests.module';
+import { NotificationModule } from './notification/notification.module';
+import { CitiesModule } from './cities/cities.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { RequestsModule } from './requests/requests.module';
     CategoriesModule,
     FileUploadModule,
     RequestsModule,
+    NotificationModule,
+    CitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

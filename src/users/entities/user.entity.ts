@@ -1,17 +1,18 @@
+import { Exclude } from 'class-transformer';
+import { Request } from 'src/requests/entities/request.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
 import {
   Column,
   Entity,
-  //OneToMany,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-//import { Skill } from '../../skills/entities/skill.entity';
-//import { Category } from '../../categories/entities/category.entity';
-import { Exclude } from 'class-transformer';
-import { Skill } from 'src/skills/entities/skill.entity';
 import { Gender, UserRole } from '../enums/users.enums';
+import { City } from 'src/cities/entities/city.entity';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Entity('users')
 export class User {
@@ -34,8 +35,8 @@ export class User {
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  city?: string;
+  @ManyToOne(() => City, { nullable: true })
+  city?: City;
 
   @Column({ nullable: true, type: 'enum', enum: Gender })
   gender?: Gender;
@@ -45,10 +46,6 @@ export class User {
 
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills?: Skill[];
-
-  //@ManyToMany(() => Category)
-  //@JoinTable({ name: 'user_want_to_learn' })
-  //wantToLearn?: Category[];
 
   @ManyToMany(() => Skill)
   @JoinTable({ name: 'user_favorite_skills' })
@@ -60,4 +57,18 @@ export class User {
   @Exclude()
   @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken?: string;
+
+  @OneToMany(() => Request, (request) => request.sender)
+  sentRequests!: Request[];
+
+  @OneToMany(() => Request, (request) => request.receiver)
+  receivedRequests!: Request[];
+
+  @ManyToMany(() => Category, (category) => category.usersWhoWantToLearn)
+  @JoinTable({
+    name: "wantToLearn",
+    joinColumn: { name: "user_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "category_id", referencedColumnName: "id" }
+  })
+  wantToLearn?: Category[];
 }
