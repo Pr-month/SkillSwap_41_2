@@ -212,7 +212,7 @@ export class RequestsService {
     dto: UpdateRequestDto,
     user: TJwtPayload,
   ) {
-    const newStatus: RequestStatus = dto.status;
+    const newStatus = dto.status as RequestStatus;
 
     if (![RequestStatus.ACCEPTED, RequestStatus.REJECTED].includes(newStatus)) {
       throw new ForbiddenException(
