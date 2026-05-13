@@ -67,10 +67,11 @@ export class AuthService {
     // генерируем токены
     const tokens = await this.generateTokens(savedUser);
 
+    // === Дублирование генерации токенов ===
     //хешируем и сохраняем в бд
-    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
-    savedUser.refreshToken = hashedRefreshToken;
-    await this.usersRepository.save(savedUser);
+    // const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+    // savedUser.refreshToken = hashedRefreshToken;
+    // await this.usersRepository.save(savedUser);
 
     return {
       user: savedUser,
