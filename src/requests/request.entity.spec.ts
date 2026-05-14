@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
-import { Request } from '../src/requests/entities/request.entity';
-import { RequestStatus } from '../src/requests/enums/request.enums';
+import { Request } from './entities/request.entity';
+import { RequestStatus } from './enums/request.enums';
 import { User } from 'src/users/entities/user.entity';
 import { Skill } from 'src/skills/entities/skill.entity';
 

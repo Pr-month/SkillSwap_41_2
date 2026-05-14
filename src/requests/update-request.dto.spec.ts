@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
-import { UpdateRequestDto } from '../src/requests/dto/update-request.dto';
-import { RequestStatus } from '../src/requests/enums/request.enums';
+import { UpdateRequestDto } from './dto/update-request.dto';
+import { RequestStatus } from './enums/request.enums';
 
 describe('UpdateRequestDto', () => {
   let dto: UpdateRequestDto;
