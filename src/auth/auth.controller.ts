@@ -1,7 +1,6 @@
 import { Controller, Post, Body, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dto/register.dto';
-import { RefreshTokenGuard } from './guards/refreshToken.guard';
 import { TRequestWithRefreshToken } from './auth.types';
 import { LoginDTO } from './dto/login.dto';
 import { Response } from 'express';
@@ -13,6 +12,7 @@ import {
   ApiAuthRefresh,
   ApiAuthRegister,
 } from './auth.swagger';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -30,7 +30,7 @@ export class AuthController {
   }
 
   @ApiAuthRefresh()
-  @UseGuards(RefreshTokenGuard)
+  @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   async refresh(
     @Req() req: TRequestWithRefreshToken,

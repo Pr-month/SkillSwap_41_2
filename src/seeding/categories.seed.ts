@@ -2,6 +2,10 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { databaseConfig } from '../config/database.config';
+import { User } from 'src/users/entities/user.entity';
+import { City } from 'src/cities/entities/city.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
+import { Request } from 'src/requests/entities/request.entity';
 
 interface SeedCreateCategory {
   name: string;
@@ -12,7 +16,7 @@ export const CategoriesData: SeedCreateCategory[] = [ { name: 'Творчест�
 
 const AppDataSource = new DataSource({
   ...databaseConfig(),
-  entities: [Category],
+  entities: [Category, User, City, Skill, Request],
 });
 
 async function seedCategories() {
