@@ -12,6 +12,11 @@ import { Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from 'src/common/all-exception.filter';
 import { RegisterDTO } from 'src/auth/dto/register.dto';
+import { Repository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
+
+let userRepository: Repository<User>
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -31,6 +36,8 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User))
 
     app.use(cookieParser());
     app.useGlobalInterceptors(
@@ -62,6 +69,7 @@ describe('AuthController (e2e)', () => {
     await app.init();
   });
 
+  // ===== Registration =====
   it('/auth/register (POST) => should register a new user', async () => {
     const res = await request(app.getHttpServer())
       .post('/auth/register')
@@ -82,6 +90,7 @@ describe('AuthController (e2e)', () => {
       .expect(409);
   });
 
+  // ===== Login =====
   it('/auth/login (POST) => should login a user', async () => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
@@ -95,7 +104,7 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     accessToken = res.body.accessToken;
-    refreshToken = res.headers['set-cookie'][0]
+    refreshToken = res.body.refreshToken || res.headers['set-cookie'][0];
   });
 
   it('/auth/login (POST) => should fail with wrong password', async () => {
@@ -108,27 +117,34 @@ describe('AuthController (e2e)', () => {
       .expect(401);
   });
 
+  // ===== Refresh =====
   it('/auth/refresh (POST) => should refresh tokens', async () => {
+    console.log('====== Refresh token cookie ======:', refreshToken);
 
     const res = await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Cookie', refreshToken.split(';')[0])
+      .send({
+        refreshToken,
+      })
       .expect(201);
 
     expect(res.body).toHaveProperty('accessToken');
     // expect(res.headers['set-cookie']).toBeDefined();
 
     accessToken = res.body.accessToken;
-    refreshToken = res.headers['set-cookie'][0]
+    refreshToken = res.body.refreshToken || res.headers['set-cookie'][0];
   });
 
   it('/auth/refresh (POST) => should fail with invalid refresh token', async () => {
     await request(app.getHttpServer())
       .post('/auth/refresh')
-      .set('Cookie', 'refreshToken=invalidtoken')
+      .send({
+        refreshToken: 'invalidtoken',
+      })
       .expect(401);
   });
 
+  // ===== Logout =====
   it('/auth/logout (POST) => should logout a user', async () => {
     const res = await request(app.getHttpServer())
       .post('/auth/logout')
@@ -136,6 +152,14 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(res.body).toEqual({ message: 'Успешный выход' });
+
+    const testUser = await userRepository.findOne({
+      where: {
+        email: registerUserDto.email,
+      },
+    });
+
+    expect(testUser?.refreshToken).toBeNull();
   });
 
   it('/auth/logout (POST) => should fail with invalid access token', async () => {
