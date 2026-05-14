@@ -6,10 +6,12 @@ import { Skill } from '../skills/entities/skill.entity';
 import { Category } from '../categories/entities/category.entity';
 import { UserRole } from '../users/enums/users.enums';
 import { databaseConfig } from '../config/database.config';
+import { Request } from '../requests/entities/request.entity';
+import { City } from 'src/cities/entities/city.entity';
 
 const AppDataSource = new DataSource({
   ...databaseConfig(),
-  entities: [User, Skill, Category],
+  entities: [User, Skill, Category, Request, City],
 });
 
 async function seedAdmin() {
