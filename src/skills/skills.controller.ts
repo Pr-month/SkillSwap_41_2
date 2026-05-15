@@ -13,7 +13,7 @@ import {
 import { TRequestWithUser } from 'src/auth/auth.types';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { CreateSkillDto } from './dto/create-skill.dto';
-import { GetSkillsQueryDto } from './dto/get-skills';
+import { GetSkillsQueryDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { SkillsService } from './skills.service';
 import {
