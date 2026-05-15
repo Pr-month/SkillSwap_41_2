@@ -56,7 +56,7 @@ export class User {
 
   @Exclude()
   @Column({ type: 'varchar', length: 255, nullable: true })
-  refreshToken?: string;
+  refreshToken?: string | null;
 
   @OneToMany(() => Request, (request) => request.sender)
   sentRequests!: Request[];
