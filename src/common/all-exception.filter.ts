@@ -16,10 +16,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost): void {
-    if (exception instanceof Error) {
-      this.logger.error(exception.message, exception.stack);
-    } else {
-      this.logger.error('Unknown exception', String(exception));
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      process.env.NODE_ENV !== 'test'
+    ) {
+      if (exception instanceof Error) {
+        this.logger.error(exception.message, exception.stack);
+      } else {
+        this.logger.error('Unknown exception', String(exception));
+      }
     }
 
     const ctx = host.switchToHttp();
