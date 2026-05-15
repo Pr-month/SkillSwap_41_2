@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CategoriesService } from './categories.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Category } from './entities/category.entity';
-import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CategoriesService } from './categories.service';
+import { Category } from './entities/category.entity';
 
 describe('CategoriesService', () => {
   let service: CategoriesService;
@@ -48,18 +48,18 @@ describe('CategoriesService', () => {
         name: 'Frontend',
       };
 
-      repository.create.mockReturnValue(savedCategory as Category);
+      repository.create.mockReturnValue(savedCategory);
 
-      repository.save.mockResolvedValue(savedCategory as Category);
+      repository.save.mockResolvedValue(savedCategory);
 
       const result = await service.create(dto);
 
-      expect(repository.create).toHaveBeenCalledWith({
+      expect(repository.create.bind(repository)).toHaveBeenCalledWith({
         name: dto.name,
         parent: null,
       });
 
-      expect(repository.save).toHaveBeenCalled();
+      expect(repository.save.bind(repository)).toHaveBeenCalled();
 
       expect(result).toEqual(savedCategory);
     });
@@ -74,11 +74,11 @@ describe('CategoriesService', () => {
         },
       ];
 
-      repository.find.mockResolvedValue(categories as Category[]);
+      repository.find.mockResolvedValue(categories);
 
       const result = await service.findAll();
 
-      expect(repository.find).toHaveBeenCalled();
+      expect(repository.find.bind(repository)).toHaveBeenCalled();
 
       expect(result).toEqual(categories);
     });
@@ -91,11 +91,11 @@ describe('CategoriesService', () => {
         name: 'Frontend',
       };
 
-      repository.findOne.mockResolvedValue(category as Category);
+      repository.findOne.mockResolvedValue(category);
 
       const result = await service.findOne(1);
 
-      expect(repository.findOne).toHaveBeenCalledWith({
+      expect(repository.findOne.bind(repository)).toHaveBeenCalledWith({
         where: { id: 1 },
         relations: ['children', 'parent'],
       });
@@ -106,9 +106,7 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -128,17 +126,17 @@ describe('CategoriesService', () => {
         name: 'Backend',
       };
 
-      repository.findOne.mockResolvedValue(category as Category);
+      repository.findOne.mockResolvedValue(category);
 
-      repository.save.mockResolvedValue(updatedCategory as Category);
+      repository.save.mockResolvedValue(updatedCategory);
 
       const result = await service.update(1, updateDto);
 
-      expect(repository.findOne).toHaveBeenCalledWith({
+      expect(repository.findOne.bind(repository)).toHaveBeenCalledWith({
         where: { id: 1 },
       });
 
-      expect(repository.save).toHaveBeenCalled();
+      expect(repository.save.bind(repository)).toHaveBeenCalled();
 
       expect(result).toEqual(updatedCategory);
     });
@@ -146,9 +144,9 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.update(1, { name: 'New name' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update(1, { name: 'New name' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -159,13 +157,13 @@ describe('CategoriesService', () => {
         name: 'Frontend',
       };
 
-      repository.findOne.mockResolvedValue(category as Category);
+      repository.findOne.mockResolvedValue(category);
 
-      repository.remove.mockResolvedValue(category as Category);
+      repository.remove.mockResolvedValue(category);
 
       const result = await service.remove(1);
 
-      expect(repository.remove).toHaveBeenCalledWith(category);
+      expect(repository.remove.bind(repository)).toHaveBeenCalledWith(category);
 
       expect(result).toEqual({
         message: `Категория "Frontend" успешно удалена`,
@@ -175,9 +173,7 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove(1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove(1)).rejects.toThrow(NotFoundException);
     });
   });
 });
