@@ -158,13 +158,13 @@ describe('RequestsService', () => {
       await expect(service.create(userId, dto)).rejects.toThrow(NotFoundException);
     });
 
-    it('Должна вернуться ошибка NotFound, если запрашиваемый навык не найден', async () => {
+    it('Должна вернуться ошибка NotFound, если предлагаемый навык не найден', async () => {
       userRepository.findOne.mockResolvedValue(mockReceiver);
       skillRepository.findOne.mockResolvedValueOnce(mockOfferedSkill);
       skillRepository.findOne.mockResolvedValueOnce(null);
 
       await expect(service.create(userId, dto)).rejects.toThrow(NotFoundException);
-      await expect(service.create(userId, dto)).rejects.toThrow('Запрашиваемый навык не найден');
+      await expect(service.create(userId, dto)).rejects.toThrow('Предлагаемый навык не найден');
       
       expect(requestRepository.save).not.toHaveBeenCalled();
     });
@@ -211,7 +211,10 @@ describe('RequestsService', () => {
       expect(requestRepository.find).toHaveBeenCalledWith({
         where: {
           receiver: { id: 2 },
-          status: expect.arrayContaining([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+          status: expect.objectContaining({
+            _type: 'in',
+            _value: expect.arrayContaining([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+          }),
         },
         relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
         order: { createdAt: 'DESC' },
@@ -235,7 +238,10 @@ describe('RequestsService', () => {
       expect(requestRepository.find).toHaveBeenCalledWith({
         where: {
           sender: { id: 1 },
-          status: expect.arrayContaining([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+          status: expect.objectContaining({
+            _type: 'in',
+            _value: expect.arrayContaining([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+          }),
         },
         relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
         order: { createdAt: 'DESC' },
