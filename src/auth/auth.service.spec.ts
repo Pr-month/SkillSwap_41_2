@@ -8,6 +8,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { jwtConfig } from 'src/config/jwt.config';
+import { Response } from 'express';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(), //.mockResolvedValue('hashedPassword'),
@@ -74,8 +75,7 @@ describe('AuthService', () => {
       mockUserRepository.findOne.mockResolvedValue(null); // No existing user
       mockConfigService.get.mockReturnValue(10); // Hash salt
 
-      (bcrypt.hash as jest.Mock)
-        .mockResolvedValueOnce('hashed-password') // Mock hashed password
+      (bcrypt.hash as jest.Mock).mockResolvedValueOnce('hashed-password'); // Mock hashed password
 
       mockUserRepository.create.mockReturnValue({
         name: 'Test User',
@@ -215,13 +215,15 @@ describe('AuthService', () => {
 
   describe('setRefreshTokenCookie', () => {
     it('should set cookie', () => {
+      const cookieMock = jest.fn();
+
       const res = {
-        cookie: jest.fn(),
-      };
+        cookie: cookieMock,
+      } as unknown as Response;
 
-      service.setRefreshTokenCookie(res as any, 'refresh-token');
+      service.setRefreshTokenCookie(res, 'refresh-token');
 
-      expect(res.cookie).toHaveBeenCalledWith(
+      expect(cookieMock).toHaveBeenCalledWith(
         'refreshToken',
         'refresh-token',
         expect.objectContaining({
