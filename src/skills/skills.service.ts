@@ -251,12 +251,12 @@ export class SkillsService {
       .select(['user.id', 'user.name', 'user.avatar'])
       .orderBy('user.name', 'ASC')
       .limit(10)
-      .getRawMany();
+      .getMany();
 
     return { users };
   }
 
-  private async deleteImagesFiles(images: string[]): Promise<void> {
+  async deleteImagesFiles(images: string[]): Promise<void> {
     if (!images || images.length === 0) return;
 
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
