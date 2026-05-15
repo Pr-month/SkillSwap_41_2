@@ -251,7 +251,7 @@ export class SkillsService {
       .select(['user.id', 'user.name', 'user.avatar'])
       .orderBy('user.name', 'ASC')
       .limit(10)
-      .getRawMany();
+      .getMany();
 
     return { users };
   }
