@@ -9,14 +9,13 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
-import { DeepPartial, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RegisterDTO } from './dto/register.dto';
 import { TJwtConfig, jwtConfig } from '../config/jwt.config';
 import { StringValue } from 'ms';
 import { LoginDTO } from './dto/login.dto';
 import { TAuthResponse, TTokens } from './auth.types';
-import { City } from 'src/cities/entities/city.entity';
 
 @Injectable()
 export class AuthService {
@@ -58,20 +57,14 @@ export class AuthService {
       ...userData,
       password: hashedPassword,
       birthdate: birthday ? new Date(birthday) : undefined,
-      city: city ? ({ id: Number(city) } as DeepPartial<City>) : undefined,
-      wantToLearn: userData.wantToLearn?.map(id => ({ id } as any))
+      city: city ? { id: Number(city) } : undefined,
+      wantToLearn: userData.wantToLearn?.map((id) => ({ id })),
     });
 
     // сохраняем пользователя в БД
     const savedUser = await this.usersRepository.save(user);
     // генерируем токены
     const tokens = await this.generateTokens(savedUser);
-
-    // === Дублирование генерации токенов ===
-    //хешируем и сохраняем в бд
-    // const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
-    // savedUser.refreshToken = hashedRefreshToken;
-    // await this.usersRepository.save(savedUser);
 
     return {
       user: savedUser,
@@ -80,7 +73,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(user: User) {
+  private async generateTokens(user: User): Promise<TTokens> {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -150,7 +143,9 @@ export class AuthService {
   }
 
   async logout(userId: number) {
-    await this.usersRepository.update(userId, { refreshToken: () => 'NULL' });
+    await this.usersRepository.update(userId, {
+      refreshToken: null,
+    });
     return { message: 'Успешный выход' };
   }
 }
