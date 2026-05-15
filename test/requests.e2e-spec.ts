@@ -21,7 +21,7 @@ describe('RequestsController (e2e)', () => {
     canActivate(context: ExecutionContext) {
       const req = context.switchToHttp().getRequest<TRequestWithUser>();
       req.user = {
-        name: 'user-1',
+        name: 'user',
         sub: 1,
         email: 'user1@example.com',
         role: UserRole.USER,
@@ -62,6 +62,6 @@ describe('RequestsController (e2e)', () => {
       .expect(200)
       .expect([{ id: 'request-1' }]);
 
-    expect(requestsServiceMock.findOutgoing).toHaveBeenCalledWith('user-1');
+    expect(requestsServiceMock.findOutgoing).toHaveBeenCalledWith(1);
   });
 });
