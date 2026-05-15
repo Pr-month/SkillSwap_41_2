@@ -1,25 +1,26 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import {
   BadRequestException,
   ClassSerializerInterceptor,
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from './../src/app.module';
-import { describe, beforeEach, it } from '@jest/globals';
 import { Reflector } from '@nestjs/core';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import request from 'supertest';
 import cookieParser from 'cookie-parser';
+import { Repository } from 'typeorm';
+import { describe, it } from '@jest/globals';
+import { AppModule } from './../src/app.module';
 import { AllExceptionsFilter } from 'src/common/all-exception.filter';
 import { RegisterDTO } from 'src/auth/dto/register.dto';
-import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { getRepositoryToken } from '@nestjs/typeorm';
-
-let userRepository: Repository<User>
 
 describe('AuthController (e2e)', () => {
+  let userRepository: Repository<User>;
   let app: INestApplication;
+  let accessToken: string;
+  let refreshToken: string;
 
   const registerUserDto: RegisterDTO = {
     name: 'test_user',
@@ -27,17 +28,16 @@ describe('AuthController (e2e)', () => {
     password: 'Password123!',
   };
 
-  let accessToken: string;
-  let refreshToken: string;
-
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    userRepository = moduleFixture.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
 
-    userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User))
+    app = moduleFixture.createNestApplication();
 
     app.use(cookieParser());
     app.useGlobalInterceptors(
@@ -69,6 +69,10 @@ describe('AuthController (e2e)', () => {
     await app.init();
   });
 
+  afterAll(async () => {
+    await app.close();
+  });
+
   // ===== Registration =====
   it('/auth/register (POST) => should register a new user', async () => {
     const res = await request(app.getHttpServer())
@@ -80,7 +84,7 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     accessToken = res.body.accessToken;
-    refreshToken = res.headers['set-cookie'][0]
+    refreshToken = res.headers['set-cookie'][0];
   });
 
   it('/auth/register (POST) => should fail duplicate email', async () => {
