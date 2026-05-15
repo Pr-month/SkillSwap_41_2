@@ -54,12 +54,12 @@ describe('CategoriesService', () => {
 
       const result = await service.create(dto);
 
-      expect(repository.create.bind(repository)).toHaveBeenCalledWith({
+      expect(repository.create).toHaveBeenCalledWith({
         name: dto.name,
         parent: null,
       });
 
-      expect(repository.save.bind(repository)).toHaveBeenCalled();
+      expect(repository.save).toHaveBeenCalled();
 
       expect(result).toEqual(savedCategory);
     });
@@ -78,7 +78,7 @@ describe('CategoriesService', () => {
 
       const result = await service.findAll();
 
-      expect(repository.find.bind(repository)).toHaveBeenCalled();
+      expect(repository.find).toHaveBeenCalled();
 
       expect(result).toEqual(categories);
     });
@@ -95,7 +95,7 @@ describe('CategoriesService', () => {
 
       const result = await service.findOne(1);
 
-      expect(repository.findOne.bind(repository)).toHaveBeenCalledWith({
+      expect(repository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
         relations: ['children', 'parent'],
       });
@@ -132,11 +132,11 @@ describe('CategoriesService', () => {
 
       const result = await service.update(1, updateDto);
 
-      expect(repository.findOne.bind(repository)).toHaveBeenCalledWith({
+      expect(repository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
       });
 
-      expect(repository.save.bind(repository)).toHaveBeenCalled();
+      expect(repository.save).toHaveBeenCalled();
 
       expect(result).toEqual(updatedCategory);
     });
@@ -163,7 +163,7 @@ describe('CategoriesService', () => {
 
       const result = await service.remove(1);
 
-      expect(repository.remove.bind(repository)).toHaveBeenCalledWith(category);
+      expect(repository.remove).toHaveBeenCalledWith(category);
 
       expect(result).toEqual({
         message: `Категория "Frontend" успешно удалена`,
