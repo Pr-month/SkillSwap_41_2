@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateCityDto, UpdateCityDto } from './dto/city.dto';
+import { CreateCityDto } from './dto/create-city.dto';
+import { UpdateCityDto } from './dto/update.city.dto';
 import { City } from './entities/city.entity';
 
 @Injectable()
@@ -39,9 +40,8 @@ export class CitiesService {
       qb.where('city.name ILIKE :search', { search: `%${search.trim()}%` });
     }
 
-    const MAX_LIMIT = 100;
-    const safeLimit = limit ? Math.min(limit, MAX_LIMIT) : undefined;
-    if (safeLimit) qb.take(safeLimit);
+    const take = limit ?? 64;
+    qb.take(take);
 
     qb.orderBy('city.name', 'ASC');
 

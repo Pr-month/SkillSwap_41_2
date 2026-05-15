@@ -11,10 +11,10 @@ import {
 @Index(['name'], { unique: true })
 export class City {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar', length: 100 })
-  name: string;
+  name!: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   country?: string;
@@ -23,8 +23,8 @@ export class City {
   region?: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }
