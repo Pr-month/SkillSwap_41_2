@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
-import { GetSkillsQueryDto } from './dto/get-skills';
+import { GetSkillsQueryDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
 import { SkillsService } from './skills.service';

@@ -22,7 +22,7 @@ export class GetSkillsQueryDto {
   @Type(() => Number)
   @IsInt({ message: 'limit должен быть целым числом' })
   @Min(1, { message: 'limit должен быть больше 0' })
-  @Max(21, { message: 'limit не должен превышать 24' })
+  @Max(21, { message: 'limit не должен превышать 21' })
   limit?: number;
 
   @IsOptional()
