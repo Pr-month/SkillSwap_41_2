@@ -1,9 +1,22 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/unbound-method */
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as fs from 'fs/promises';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -23,8 +36,17 @@ describe('SkillsService', () => {
   let userRepository: jest.Mocked<Repository<User>>;
 
   // тестовые данные
-  const mockCategory: Category = { id: 1, name: 'Test Category', parent: null, children: [] } as Category;
-  const mockUser: User = { id: 10, name: 'John Doe', email: 'john@example.com' } as User;
+  const mockCategory: Category = {
+    id: 1,
+    name: 'Test Category',
+    parent: null,
+    children: [],
+  };
+  const mockUser: User = {
+    id: 10,
+    name: 'John Doe',
+    email: 'john@example.com',
+  } as User;
   const mockSkill: Skill = {
     id: 100,
     title: 'Test Skill',
@@ -36,7 +58,7 @@ describe('SkillsService', () => {
     updatedAt: new Date(),
     offeredInRequests: [],
     requestedInRequests: [],
-  } as Skill;
+  };
 
   // перед каждым тестом инициализируем сервис
   beforeEach(async () => {
@@ -88,35 +110,40 @@ describe('SkillsService', () => {
 
     it('Навык должен добавиться в Избранное, если его в нем еще нет', async () => {
       skillRepository.findOne.mockResolvedValue(mockSkill);
-      userRepository.findOne.mockResolvedValue({ ...mockUser, favoriteSkills: [] } as User);
+      userRepository.findOne.mockResolvedValue({
+        ...mockUser,
+        favoriteSkills: [],
+      });
 
       const result = await service.addToFavorites(skillId, userId);
 
-      expect(skillRepository.findOne).toHaveBeenCalledWith({ 
-        where: { 
-          id: skillId 
-        } 
+      expect(skillRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: skillId,
+        },
       });
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { 
-          id: userId 
+        where: {
+          id: userId,
         },
         relations: ['favoriteSkills'],
       });
       expect(userRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ 
-          favoriteSkills: expect.arrayContaining([mockSkill]) 
+        expect.objectContaining({
+          favoriteSkills: expect.arrayContaining([mockSkill]),
         }),
       );
-      expect(result).toEqual({ 
-        message: 'Навык добавлен в избранное' 
+      expect(result).toEqual({
+        message: 'Навык добавлен в избранное',
       });
     });
 
     it('Должна вернуться ошибка NotFound, если пытаемся добавить в Избранное несуществующий навык', async () => {
       skillRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.addToFavorites(skillId, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.addToFavorites(skillId, userId)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(userRepository.findOne).not.toHaveBeenCalled();
     });
 
@@ -124,16 +151,20 @@ describe('SkillsService', () => {
       skillRepository.findOne.mockResolvedValue(mockSkill);
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.addToFavorites(skillId, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.addToFavorites(skillId, userId)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(userRepository.save).not.toHaveBeenCalled();
     });
 
     it('Должна вернуться ошибка Conflict, если пытаемся добавить в Избранное навык, который уже в нем есть', async () => {
       const userWithFavorite = { ...mockUser, favoriteSkills: [mockSkill] };
       skillRepository.findOne.mockResolvedValue(mockSkill);
-      userRepository.findOne.mockResolvedValue(userWithFavorite as User);
+      userRepository.findOne.mockResolvedValue(userWithFavorite);
 
-      await expect(service.addToFavorites(skillId, userId)).rejects.toThrow(ConflictException);
+      await expect(service.addToFavorites(skillId, userId)).rejects.toThrow(
+        ConflictException,
+      );
       expect(userRepository.save).not.toHaveBeenCalled();
     });
   });
@@ -146,7 +177,7 @@ describe('SkillsService', () => {
     it('Навык должен удалиться из Избранного, если он в нем есть', async () => {
       const userWithFavorite = { ...mockUser, favoriteSkills: [mockSkill] };
       skillRepository.findOne.mockResolvedValue(mockSkill);
-      userRepository.findOne.mockResolvedValue(userWithFavorite as User);
+      userRepository.findOne.mockResolvedValue(userWithFavorite);
 
       const result = await service.removeFromFavorites(skillId, userId);
 
@@ -159,30 +190,44 @@ describe('SkillsService', () => {
     it('Должна вернуться ошибка NotFound, если пытаемся удалить из Избранного несуществующий навык', async () => {
       skillRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.removeFromFavorites(skillId, userId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeFromFavorites(skillId, userId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('Должна вернуться ошибка NotFound, если навык пытается удалить из Избранного несуществующий пользователь', async () => {
       skillRepository.findOne.mockResolvedValue(mockSkill);
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.removeFromFavorites(skillId, userId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeFromFavorites(skillId, userId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('Должна вернуться ошибка NotFound, если у пользователя нет Избранного', async () => {
       skillRepository.findOne.mockResolvedValue(mockSkill);
-      userRepository.findOne.mockResolvedValue({ ...mockUser, favoriteSkills: undefined } as User);
+      userRepository.findOne.mockResolvedValue({
+        ...mockUser,
+        favoriteSkills: undefined,
+      });
 
-      await expect(service.removeFromFavorites(skillId, userId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeFromFavorites(skillId, userId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('Должна вернуться ошибка NotFound, если пытаемся удалить из Избранного навык, которого нет в Избранном', async () => {
       const anotherSkill = { ...mockSkill, id: 999 };
-      const userWithOtherFavorite = { ...mockUser, favoriteSkills: [anotherSkill] };
+      const userWithOtherFavorite = {
+        ...mockUser,
+        favoriteSkills: [anotherSkill],
+      };
       skillRepository.findOne.mockResolvedValue(mockSkill);
-      userRepository.findOne.mockResolvedValue(userWithOtherFavorite as User);
+      userRepository.findOne.mockResolvedValue(userWithOtherFavorite);
 
-      await expect(service.removeFromFavorites(skillId, userId)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeFromFavorites(skillId, userId),
+      ).rejects.toThrow(NotFoundException);
       expect(userRepository.save).not.toHaveBeenCalled();
     });
   });
@@ -205,15 +250,15 @@ describe('SkillsService', () => {
 
       const result = await service.create(dto, userId);
 
-      expect(categoryRepository.findOne).toHaveBeenCalledWith({ 
-        where: { 
-          id: dto.categoryId 
-        } 
+      expect(categoryRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: dto.categoryId,
+        },
       });
-      expect(userRepository.findOne).toHaveBeenCalledWith({ 
-        where: { 
-          id: userId 
-        } 
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: userId,
+        },
       });
       expect(skillRepository.create).toHaveBeenCalledWith({
         title: dto.title,
@@ -230,7 +275,9 @@ describe('SkillsService', () => {
       categoryRepository.findOne.mockResolvedValue(null);
       userRepository.findOne.mockResolvedValue(mockUser);
 
-      await expect(service.create(dto, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.create(dto, userId)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(skillRepository.create).not.toHaveBeenCalled();
     });
 
@@ -238,14 +285,16 @@ describe('SkillsService', () => {
       categoryRepository.findOne.mockResolvedValue(mockCategory);
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(dto, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.create(dto, userId)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(skillRepository.create).not.toHaveBeenCalled();
     });
   });
 
   // тестируем получение списка всех навыков
   describe('findAll', () => {
-    let queryBuilder: any;
+    let queryBuilder: jest.Mocked<SelectQueryBuilder<Skill>>;
 
     beforeEach(() => {
       queryBuilder = {
@@ -257,7 +306,7 @@ describe('SkillsService', () => {
         skip: jest.fn().mockReturnThis(),
         getMany: jest.fn(),
         getCount: jest.fn(),
-      };
+      } as unknown as jest.Mocked<SelectQueryBuilder<Skill>>;
       skillRepository.createQueryBuilder.mockReturnValue(queryBuilder);
     });
 
@@ -284,12 +333,17 @@ describe('SkillsService', () => {
         offset: 20,
       };
       queryBuilder.getMany.mockResolvedValue([]);
-      queryBuilder.getCount.mockResolvedValue(0);
+      queryBuilder.getCount.mockResolvedValue(100);
 
       await service.findAll(query);
 
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith('category.id = :category', { category: 5 });
-      expect(queryBuilder.andWhere).toHaveBeenCalledWith('owner.id = :owner', { owner: 10 });
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+        'category.id = :category',
+        { category: 5 },
+      );
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith('owner.id = :owner', {
+        owner: 10,
+      });
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         '(skill.title ILIKE :search OR skill.description ILIKE :search)',
         { search: '%test%' },
@@ -335,6 +389,7 @@ describe('SkillsService', () => {
 
     beforeEach(() => {
       jest.spyOn(service, 'findOne').mockResolvedValue(mockSkill);
+      skillRepository.save.mockResolvedValue(mockSkill);
     });
 
     afterEach(() => {
@@ -342,66 +397,78 @@ describe('SkillsService', () => {
     });
 
     it('Должны обновиться заголовок и описание навыка', async () => {
-      const updateDto: UpdateSkillDto = { 
-        title: 'Updated Title', 
-        description: 'Updated Desc' 
+      const updateDto: UpdateSkillDto = {
+        title: 'Updated Title',
+        description: 'Updated Desc',
       };
 
       const result = await service.update(skillId, updateDto, userId);
 
       expect(service.findOne).toHaveBeenCalledWith(skillId);
-      expect(skillRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-        title: 'Updated Title',
-        description: 'Updated Desc',
-      }));
-      expect(result).toBeDefined();
+      expect(skillRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Updated Title',
+          description: 'Updated Desc',
+        }),
+      );
+      expect(result).toEqual(mockSkill);
     });
 
     it('Должна поменяться категория навыка', async () => {
       const updateDto: UpdateSkillDto = { categoryId: 2 };
-      const newCategory = { 
-        id: 2, 
-        name: 'New Cat' 
-      };
-      categoryRepository.findOne.mockResolvedValue(newCategory as Category);
+      const newCategory = {
+        id: 2,
+        name: 'New Cat',
+      } as Category;
+      categoryRepository.findOne.mockResolvedValue(newCategory);
 
       const result = await service.update(skillId, updateDto, userId);
 
-      expect(categoryRepository.findOne).toHaveBeenCalledWith({ 
-        where: { 
-          id: 2 
-        } 
+      expect(categoryRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 2,
+        },
       });
-      expect(skillRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-        category: newCategory,
-      }));
+      expect(skillRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: newCategory,
+        }),
+      );
+      expect(result).toEqual(mockSkill);
     });
 
     it('Должна вернуться ошибка BadRequest, если категория не существует', async () => {
       const updateDto: UpdateSkillDto = { categoryId: 999 };
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update(skillId, updateDto, userId)).rejects.toThrow(BadRequestException);
+      await expect(service.update(skillId, updateDto, userId)).rejects.toThrow(
+        BadRequestException,
+      );
       expect(skillRepository.save).not.toHaveBeenCalled();
     });
 
     it('Старые картинки должны замениться на новые', async () => {
-      const updateDto: UpdateSkillDto = { 
-        images: ['new1.jpg', 'new2.jpg'] 
+      const updateDto: UpdateSkillDto = {
+        images: ['new1.jpg', 'new2.jpg'],
       };
       mockedFs.unlink.mockResolvedValue(undefined);
 
       const result = await service.update(skillId, updateDto, userId);
 
       expect(mockedFs.unlink).toHaveBeenCalledTimes(2);
-      expect(skillRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-        images: ['new1.jpg', 'new2.jpg'],
-      }));
+      expect(skillRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          images: ['new1.jpg', 'new2.jpg'],
+        }),
+      );
+      expect(result).toEqual(mockSkill);
     });
 
     it('Должна вернуться ошибка Forbidden, если обновить навык пытается не владелец', async () => {
       const otherUserId = 999;
-      await expect(service.update(skillId, {}, otherUserId)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(skillId, {}, otherUserId)).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(skillRepository.save).not.toHaveBeenCalled();
     });
   });
@@ -430,7 +497,9 @@ describe('SkillsService', () => {
 
     it('Должна вернуться ошибка Forbidden, если удалить навык пытается не владелец', async () => {
       const otherUserId = 999;
-      await expect(service.remove(skillId, otherUserId)).rejects.toThrow(ForbiddenException);
+      await expect(service.remove(skillId, otherUserId)).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(skillRepository.remove).not.toHaveBeenCalled();
     });
   });
@@ -446,9 +515,9 @@ describe('SkillsService', () => {
       };
       skillRepository.findOne.mockResolvedValue(mockSkillWithCategory);
 
-      const rawUsers = [
-        { user_id: 1, user_name: 'Alice', user_avatar: 'alice.jpg' },
-        { user_id: 2, user_name: 'Bob', user_avatar: null },
+      const users = [
+        { id: 1, name: 'Alice', avatar: 'alice.jpg' },
+        { id: 2, name: 'Bob', avatar: null },
       ];
 
       const queryBuilder = {
@@ -458,10 +527,12 @@ describe('SkillsService', () => {
         select: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockImplementation(() => Promise.resolve(rawUsers)),
-      } as any;
+        getMany: jest.fn().mockImplementation(() => Promise.resolve(users)),
+      } as unknown as jest.Mocked<SelectQueryBuilder<User>>;
 
-      jest.spyOn(userRepository, 'createQueryBuilder').mockReturnValue(queryBuilder);
+      jest
+        .spyOn(userRepository, 'createQueryBuilder')
+        .mockReturnValue(queryBuilder);
 
       const result = await service.findSimilarUsers(skillId);
 
@@ -470,17 +541,20 @@ describe('SkillsService', () => {
         relations: ['category'],
       });
       expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
-      expect(queryBuilder.innerJoin).toHaveBeenCalledWith('user.skills', 'skill');
-      expect(queryBuilder.innerJoin).toHaveBeenCalledWith('skill.category', 'category');
-      expect(queryBuilder.where).toHaveBeenCalledWith('category.id = :categoryId', { categoryId: 5 });
+      expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
+        'user.skills',
+        'skill',
+      );
+      expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
+        'skill.category',
+        'category',
+      );
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'category.id = :categoryId',
+        { categoryId: 5 },
+      );
       expect(queryBuilder.limit).toHaveBeenCalledWith(10);
-      expect(result).toEqual({
-        users: rawUsers.map(u => ({
-          id: u.user_id,
-          name: u.user_name,
-          avatar: u.user_avatar,
-        })),
-      });
+      expect(result).toEqual({ users });
     });
 
     it('Должен вернуться пустой массив, если в категории нет других пользователей', async () => {
@@ -497,10 +571,12 @@ describe('SkillsService', () => {
         select: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockImplementation(() => Promise.resolve([])),
-      } as any;
+        getMany: jest.fn().mockImplementation(() => Promise.resolve([])),
+      } as unknown as jest.Mocked<SelectQueryBuilder<User>>;
 
-      jest.spyOn(userRepository, 'createQueryBuilder').mockReturnValue(queryBuilder);
+      jest
+        .spyOn(userRepository, 'createQueryBuilder')
+        .mockReturnValue(queryBuilder);
 
       const result = await service.findSimilarUsers(skillId);
       expect(result).toEqual({ users: [] });
@@ -508,7 +584,9 @@ describe('SkillsService', () => {
 
     it('Должна вернуться ошибка NotFound, если навык не найден', async () => {
       skillRepository.findOne.mockResolvedValue(null);
-      await expect(service.findSimilarUsers(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findSimilarUsers(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -516,19 +594,26 @@ describe('SkillsService', () => {
   describe('Тестирование функции удаления файлов', () => {
     it('Должна удалиться каждая картинка либо записать ошибка в лог', async () => {
       const images = ['img1.jpg', 'img2.png'];
-      mockedFs.unlink.mockRejectedValueOnce(new Error('ENOENT')).mockResolvedValueOnce(undefined);
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(jest.fn());
+      mockedFs.unlink
+        .mockRejectedValueOnce(new Error('ENOENT'))
+        .mockResolvedValueOnce(undefined);
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(jest.fn());
 
-      await (service as any).deleteImagesFiles(images);
+      await service.deleteImagesFiles(images);
 
       expect(mockedFs.unlink).toHaveBeenCalledTimes(2);
-      expect(consoleSpy).toHaveBeenCalledWith('Не удалось удалить файл img1.jpg:', 'ENOENT');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to delete image img1.jpg:',
+        'ENOENT',
+      );
       consoleSpy.mockRestore();
     });
 
     it('Ничего не должно произойти, если массив с картинками пуст или не задан', async () => {
-      await (service as any).deleteImagesFiles([]);
-      await (service as any).deleteImagesFiles(undefined);
+      await service.deleteImagesFiles([]);
+      await service.deleteImagesFiles(undefined as unknown as string[]);
       expect(mockedFs.unlink).not.toHaveBeenCalled();
     });
   });
