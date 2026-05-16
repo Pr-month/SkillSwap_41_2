@@ -26,8 +26,7 @@
     "seed:test:skills": "ts-node -r tsconfig-paths/register src/seeding/seed-test-skills.ts",
     "seed:users": "ts-node -r tsconfig-paths/register src/seeding/seed-test-users.ts",
     "db:clean": "ts-node -r tsconfig-paths/register src/seeding/clean-db.ts",
-    "seed:test": "dotenv -e .env.test.local -- ts-node -r tsconfig-paths/register src/seeding/seed-test-master.ts",
-    "seed:test:master": "dotenv -e .env.test.local -- ts-node -r tsconfig-paths/register src/seeding/seed-test-master.ts",
+    "seed:all": "dotenv -e .env.test.local -- ts-node -r tsconfig-paths/register src/seeding/seed.ts",
     "db:create": "ts-node -r tsconfig-paths/register src/seeding/create-test-db.ts"
   },
   "dependencies": {
