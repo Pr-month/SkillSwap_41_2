@@ -2,13 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { DataSource } from 'typeorm';
-import { resetDatabase } from './setup-e2e';
 import { seedTestUsers } from '../src/seeding/seed-test-users.data';
 
 describe('CategoriesController (e2e)', () => {
   let app: INestApplication;
-  let dataSource: DataSource;
   let adminToken: string;
   let userToken: string;
 
@@ -21,20 +18,6 @@ describe('CategoriesController (e2e)', () => {
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
 
-    dataSource = module.get<DataSource>(DataSource);
-    await resetDatabase(dataSource);
-
-    // Сидируем админа
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email: process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD,
-        name: 'Admin',
-        role: 'admin',
-      });
-
-    // Логинимся как админ — получаем токен
     const adminLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
@@ -43,15 +26,12 @@ describe('CategoriesController (e2e)', () => {
       });
     adminToken = adminLogin.body.accessToken;
 
-    // Логинимся как обычный юзер
-    const userData = seedTestUsers[0];
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(userData);
-
     const userLogin = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ email: userData.email, password: userData.password });
+      .send({
+        email: seedTestUsers[0].email,
+        password: seedTestUsers[0].password,
+      });
     userToken = userLogin.body.accessToken;
   });
 
@@ -60,38 +40,41 @@ describe('CategoriesController (e2e)', () => {
   });
 
   describe('GET /categories', () => {
-    it('should return empty array initially', async () => {
+    it('should return not empty array', async () => {
       const res = await request(app.getHttpServer())
         .get('/categories')
         .expect(200);
 
-      expect(res.body).toEqual([]);
+      expect(res.body).toBeInstanceOf(Array);
+      expect(res.body.length).toBeGreaterThan(0);
     });
   });
 
   describe('POST /categories', () => {
     it('should create category if admin', async () => {
+      const name = `Test category ${Date.now()}`;
+
       const res = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'IT и программирование' })
+        .send({ name })
         .expect(201);
 
-      expect(res.body).toMatchObject({ name: 'IT и программирование' });
+      expect(res.body).toMatchObject({ name });
     });
 
     it('should return 403 if user is not admin', async () => {
       await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ name: 'Дизайн' })
+        .send({ name: `Test category ${Date.now()}` })
         .expect(403);
     });
 
     it('should return 401 if not authenticated', async () => {
       await request(app.getHttpServer())
         .post('/categories')
-        .send({ name: 'Дизайн' })
+        .send({ name: `Test category ${Date.now()}` })
         .expect(401);
     });
 
@@ -106,18 +89,19 @@ describe('CategoriesController (e2e)', () => {
 
   describe('GET /categories/:id', () => {
     it('should return category by id', async () => {
-      // Создаём категорию
+      const name = `Test category ${Date.now()}`;
+
       const created = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Языки' })
+        .send({ name })
         .expect(201);
 
       const res = await request(app.getHttpServer())
         .get(`/categories/${created.body.id}`)
         .expect(200);
 
-      expect(res.body).toMatchObject({ name: 'Языки' });
+      expect(res.body).toMatchObject({ name });
     });
 
     it('should return 404 if category not found', async () => {
@@ -132,29 +116,31 @@ describe('CategoriesController (e2e)', () => {
       const created = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Старое название' })
+        .send({ name: `Test category ${Date.now()}` })
         .expect(201);
+
+      const updatedName = `Updated category ${Date.now()}`;
 
       const res = await request(app.getHttpServer())
         .patch(`/categories/${created.body.id}`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Новое название' })
+        .send({ name: updatedName })
         .expect(200);
 
-      expect(res.body).toMatchObject({ name: 'Новое название' });
+      expect(res.body).toMatchObject({ name: updatedName });
     });
 
     it('should return 403 if user is not admin', async () => {
       const created = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Категория для патча' })
+        .send({ name: `Test category ${Date.now()}` })
         .expect(201);
 
       await request(app.getHttpServer())
         .patch(`/categories/${created.body.id}`)
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ name: 'Попытка изменить' })
+        .send({ name: `Updated ${Date.now()}` })
         .expect(403);
     });
   });
@@ -164,7 +150,7 @@ describe('CategoriesController (e2e)', () => {
       const created = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Удаляемая категория' })
+        .send({ name: `Test category ${Date.now()}` })
         .expect(201);
 
       await request(app.getHttpServer())
@@ -181,7 +167,7 @@ describe('CategoriesController (e2e)', () => {
       const created = await request(app.getHttpServer())
         .post('/categories')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ name: 'Защищённая категория' })
+        .send({ name: `Test category ${Date.now()}` })
         .expect(201);
 
       await request(app.getHttpServer())
