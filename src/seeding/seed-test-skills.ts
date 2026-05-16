@@ -1,21 +1,22 @@
-import 'dotenv/config'; 
 import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import 'dotenv/config';
 import { Repository } from 'typeorm';
 import { AppModule } from '../app.module';
-import { User } from '../users/entities/user.entity';
-import { Skill } from '../skills/entities/skill.entity';
 import { Category } from '../categories/entities/category.entity';
-import { seedTestUsers } from './seed-test-users.data';
+import { Skill } from '../skills/entities/skill.entity';
+import { User } from '../users/entities/user.entity';
 import { seedTestSkills } from './seed-test-skills.data';
+import { seedTestUsers } from './seed-test-users.data';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
   try {
     const userRepo = app.get<Repository<User>>(getRepositoryToken(User));
     const skillRepo = app.get<Repository<Skill>>(getRepositoryToken(Skill));
-    const categoryRepo = app.get<Repository<Category>>(getRepositoryToken(Category));
+    const categoryRepo = app.get<Repository<Category>>(
+      getRepositoryToken(Category),
+    );
 
     const adminEmail = process.env.ADMIN_EMAIL;
     const admin = await userRepo.findOne({ where: { email: adminEmail } });
@@ -28,14 +29,20 @@ async function bootstrap() {
     for (const userData of seedTestUsers) {
       const user = await userRepo.findOne({ where: { email: userData.email } });
       if (!user) {
-        throw new Error(`User ${userData.email} not found. Run seed-test-users.ts first`);
+        throw new Error(
+          `User ${userData.email} not found. Run seed-test-users.ts first`,
+        );
       }
       testUsers.push(user);
     }
 
     // --- Категории ---
-    const backendCat = await categoryRepo.findOne({ where: { name: 'Backend' } });
-    const frontendCat = await categoryRepo.findOne({ where: { name: 'Frontend' } });
+    const backendCat = await categoryRepo.findOne({
+      where: { name: 'Backend' },
+    });
+    const frontendCat = await categoryRepo.findOne({
+      where: { name: 'Frontend' },
+    });
     if (!backendCat || !frontendCat) {
       throw new Error('Categories not found. Run categories.seed.ts first');
     }
@@ -50,7 +57,9 @@ async function bootstrap() {
     for (let i = 0; i < seedTestSkills.length; i++) {
       const skillData = seedTestSkills[i];
 
-      const exists = await skillRepo.findOne({ where: { title: skillData.title } });
+      const exists = await skillRepo.findOne({
+        where: { title: skillData.title },
+      });
       if (exists) {
         skippedSkill++;
         console.log(`skill "${skillData.title}" already exists`);
@@ -76,4 +85,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Fatal error during seeding:', err);
+  process.exit(1);
+});
