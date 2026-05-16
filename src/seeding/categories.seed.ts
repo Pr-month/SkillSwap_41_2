@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { databaseConfig } from '../config/database.config';
