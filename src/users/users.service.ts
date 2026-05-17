@@ -1,13 +1,13 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
-  ConflictException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { DeepPartial, In, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,20 +35,22 @@ export class UsersService {
 
     const salt = this.configService.get<number>('app.hashSalt') ?? 10;
     const hashedPassword = await bcrypt.hash(dto.password, salt);
-    const { city, ...userData } = dto;
-    
+
     let categories: Category[] = [];
     if (dto.wantToLearn?.length) {
-      categories = await this.categoryRepository.findBy({ id: In(dto.wantToLearn) });
+      categories = await this.categoryRepository.findBy({
+        id: In(dto.wantToLearn),
+      });
       if (categories.length !== dto.wantToLearn.length) {
         throw new NotFoundException('Одна или несколько категорий не найдены');
       }
-    } 
+    }
 
     const user = this.usersRepository.create({
-      ...userData,
+      ...dto,
+      city: undefined,
       password: hashedPassword,
-      wantToLearn: categories
+      wantToLearn: categories,
     });
     return this.usersRepository.save(user);
   }
@@ -114,10 +116,12 @@ export class UsersService {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
 
-    const {wantToLearn, ...data} = updateUserDto
+    const { wantToLearn, ...data } = updateUserDto;
 
     if (wantToLearn) {
-      const categories = await this.categoryRepository.findBy({ id: In(wantToLearn) });
+      const categories = await this.categoryRepository.findBy({
+        id: In(wantToLearn),
+      });
       if (categories.length !== wantToLearn.length) {
         throw new NotFoundException('Одна или несколько категорий не найдены');
       }
@@ -125,9 +129,8 @@ export class UsersService {
     }
 
     Object.assign(user, data);
-    const savedUser = await this.usersRepository.save(user);
 
-    return savedUser;
+    return await this.usersRepository.save(user);
   }
 
   async updatePassword(
@@ -144,18 +147,18 @@ export class UsersService {
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid old password');
     const salt = this.configService.get<number>('app.hashSalt') || 10;
-    const hashedPassword = await bcrypt.hash(dto.newPassword, salt);
-    user.password = hashedPassword;
+
+    user.password = await bcrypt.hash(dto.newPassword, salt);
     await this.usersRepository.save(user);
 
     return { message: 'Пароль успешно обновлен.' };
   }
-  
+
   async remove(id: number): Promise<void> {
-  const user = await this.usersRepository.findOne({ where: { id } });
-  if (!user) {
-    throw new NotFoundException('Пользователь не найден');
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    await this.usersRepository.remove(user);
   }
-  await this.usersRepository.remove(user);
-}
 }

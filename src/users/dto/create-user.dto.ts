@@ -1,6 +1,5 @@
 import {
   IsArray,
-  IsAscii,
   IsDate,
   IsEmail,
   IsEnum,
@@ -51,6 +50,9 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true, message: "Каждый элемент должен быть валидным UUID" })
-  wantToLearn?: string[]; 
+  @IsUUID('all', {
+    each: true,
+    message: 'Каждый элемент должен быть валидным UUID',
+  })
+  wantToLearn?: string[];
 }
