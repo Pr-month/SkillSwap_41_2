@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CategoriesService } from './categories.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Category } from './entities/category.entity';
-import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CategoriesService } from './categories.service';
+import { Category } from './entities/category.entity';
 
 describe('CategoriesService', () => {
   let service: CategoriesService;
@@ -48,9 +48,9 @@ describe('CategoriesService', () => {
         name: 'Frontend',
       };
 
-      repository.create.mockReturnValue(savedCategory as Category);
+      repository.create.mockReturnValue(savedCategory);
 
-      repository.save.mockResolvedValue(savedCategory as Category);
+      repository.save.mockResolvedValue(savedCategory);
 
       const result = await service.create(dto);
 
@@ -74,7 +74,7 @@ describe('CategoriesService', () => {
         },
       ];
 
-      repository.find.mockResolvedValue(categories as Category[]);
+      repository.find.mockResolvedValue(categories);
 
       const result = await service.findAll();
 
@@ -91,7 +91,7 @@ describe('CategoriesService', () => {
         name: 'Frontend',
       };
 
-      repository.findOne.mockResolvedValue(category as Category);
+      repository.findOne.mockResolvedValue(category);
 
       const result = await service.findOne(1);
 
@@ -106,9 +106,7 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -128,9 +126,9 @@ describe('CategoriesService', () => {
         name: 'Backend',
       };
 
-      repository.findOne.mockResolvedValue(category as Category);
+      repository.findOne.mockResolvedValue(category);
 
-      repository.save.mockResolvedValue(updatedCategory as Category);
+      repository.save.mockResolvedValue(updatedCategory);
 
       const result = await service.update(1, updateDto);
 
@@ -146,9 +144,9 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.update(1, { name: 'New name' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update(1, { name: 'New name' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -159,9 +157,9 @@ describe('CategoriesService', () => {
         name: 'Frontend',
       };
 
-      repository.findOne.mockResolvedValue(category as Category);
+      repository.findOne.mockResolvedValue(category);
 
-      repository.remove.mockResolvedValue(category as Category);
+      repository.remove.mockResolvedValue(category);
 
       const result = await service.remove(1);
 
@@ -175,9 +173,7 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       repository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove(1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove(1)).rejects.toThrow(NotFoundException);
     });
   });
 });
