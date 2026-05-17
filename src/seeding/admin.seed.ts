@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.entity';

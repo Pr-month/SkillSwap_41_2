@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
-import { CategoryDto, UpdateCategoryDto } from './dto/category.dto';
+import { CategoryDto, CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { UserRole } from 'src/users/enums/users.enums';
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -32,7 +32,7 @@ export class CategoriesController {
   @UseGuards(JwtAccessGuard, RolesGuard)
   @Roles([UserRole.ADMIN])
   @Post()
-  create(@Body() createCategoryDto: CategoryDto) {
+  create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
   }
 
