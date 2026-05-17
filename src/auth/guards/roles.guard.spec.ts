@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   ExecutionContext,
   ForbiddenException,
@@ -5,10 +6,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { UserRole } from '../../users/enums/users.enums';
 import { RolesGuard } from './roles.guard';
-import { Roles } from '../decorators/roles.decorator';
 
 type TestRequest = {
   user?: {
@@ -16,11 +15,7 @@ type TestRequest = {
   };
 };
 
-const createExecutionContext = (
-  request: TestRequest,
-  handlerRoles?: UserRole[],
-  classRoles?: UserRole[],
-): ExecutionContext =>
+const createExecutionContext = (request: TestRequest): ExecutionContext =>
   ({
     switchToHttp: () => ({
       getRequest: () => request,
