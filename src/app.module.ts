@@ -14,11 +14,12 @@ import { FileUploadModule } from './file-upload/file-upload.module';
 import { RequestsModule } from './requests/requests.module';
 import { NotificationModule } from './notification/notification.module';
 import { CitiesModule } from './cities/cities.module';
+import { uploadConfig } from './config/upload.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig, appConfig],
+      load: [databaseConfig, jwtConfig, appConfig, uploadConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
