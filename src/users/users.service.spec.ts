@@ -1,18 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { NotFoundException, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { FindUsersQueryDto } from './dto/get-users.dto';
+import { Category } from '../categories/entities/category.entity';
 import * as bcrypt from 'bcrypt';
-//import { UserRole } from './enums/users.enums';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let repo: Repository<User>;
-  let configService: ConfigService;
 
   const mockRepo = {
     findOne: jest.fn(),
@@ -23,8 +24,12 @@ describe('UsersService', () => {
     createQueryBuilder: jest.fn(),
   };
 
+  const mockCategoryRepo = {
+    findBy: jest.fn(),
+  };
+
   const mockConfigService = {
-    get: jest.fn().mockReturnValue(10), 
+    get: jest.fn().mockReturnValue(10),
   };
 
   beforeEach(async () => {
@@ -36,6 +41,10 @@ describe('UsersService', () => {
           useValue: mockRepo,
         },
         {
+          provide: getRepositoryToken(Category),
+          useValue: mockCategoryRepo,
+        },
+        {
           provide: ConfigService,
           useValue: mockConfigService,
         },
@@ -43,8 +52,6 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    repo = module.get<Repository<User>>(getRepositoryToken(User));
-    configService = module.get<ConfigService>(ConfigService);
 
     jest.clearAllMocks();
   });
@@ -87,7 +94,11 @@ describe('UsersService', () => {
 
   describe('update', () => {
     it('должен обновить и вернуть пользователя', async () => {
-      const existingUser = { id: 1, name: 'Old Name', email: 'old@test.com' } as User;
+      const existingUser = {
+        id: 1,
+        name: 'Old Name',
+        email: 'old@test.com',
+      } as User;
       const updateDto = { name: 'New Name' };
       const savedUser = { ...existingUser, ...updateDto };
 
@@ -118,9 +129,8 @@ describe('UsersService', () => {
 
       const result = await service.updatePassword(1, dto);
       expect(result.message).toBe('Пароль успешно обновлен.');
-      expect(mockRepo.save).toHaveBeenCalled();
-      const savedUser = (mockRepo.save as jest.Mock).mock.calls[0][0];
-      const isNewHash = await bcrypt.compare('newPass1', savedUser.password);
+      expect(mockRepo.save).toHaveBeenCalledWith(user);
+      const isNewHash = await bcrypt.compare('newPass1', user.password);
       expect(isNewHash).toBe(true);
     });
 
@@ -132,14 +142,20 @@ describe('UsersService', () => {
       mockRepo.findOne.mockResolvedValue(user);
 
       await expect(
-        service.updatePassword(1, { oldPassword: 'wrongOld', newPassword: 'newPass1' }),
+        service.updatePassword(1, {
+          oldPassword: 'wrongOld',
+          newPassword: 'newPass1',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('должен выбросить NotFoundException, если пользователь не найден', async () => {
       mockRepo.findOne.mockResolvedValue(null);
       await expect(
-        service.updatePassword(1, { oldPassword: 'any', newPassword: 'newPass1' }),
+        service.updatePassword(1, {
+          oldPassword: 'any',
+          newPassword: 'newPass1',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -162,17 +178,23 @@ describe('UsersService', () => {
     });
 
     it('должен выбросить ConflictException, если email уже существует', async () => {
-      mockRepo.findOne.mockResolvedValue({ id: 2 } as User);
+      mockRepo.findOne.mockResolvedValue({ id: 2 });
       await expect(
-        service.create({ name: 'D', email: 'dup@test.com', password: 'pass1A' }),
+        service.create({
+          name: 'D',
+          email: 'dup@test.com',
+          password: 'pass1A',
+        }),
       ).rejects.toThrow(ConflictException);
     });
   });
 
-
   describe('findAll', () => {
     it('должен вернуть пагинированный список пользователей', async () => {
-      const users = [{ id: 1, name: 'User1' }, { id: 2, name: 'User2' }] as User[];
+      const users = [
+        { id: 1, name: 'User1' },
+        { id: 2, name: 'User2' },
+      ] as User[];
       const query: FindUsersQueryDto = { limit: 10, offset: 1, search: '' };
 
       const mockQb = {
