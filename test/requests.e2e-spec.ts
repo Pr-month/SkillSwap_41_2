@@ -28,6 +28,14 @@ interface CreateRequestResponse {
   };
 }
 
+interface OutgoingRequestResponse {
+  id: string;
+  senderId: string;
+  offeredSkill: {
+    title: string;
+  };
+}
+
 describe('RequestsController (E2E with Pre‑seeded Data)', () => {
   let app: INestApplication;
   let authService: AuthService;
@@ -220,6 +228,9 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
 
   describe('GET /requests/outgoing', () => {
     it('должен вернуть исходящие заявки пользователя', async () => {
+      if (!testUser) {
+        throw new Error('Test user is not defined');
+      }
       // Сначала создаём заявку
       const createRequestDto = {
         requestedSkillId: requestedSkill.id,
@@ -236,11 +247,13 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(response.body).toBeInstanceOf(Array);
-      expect(response.body.length).toBeGreaterThanOrEqual(1);
-      expect(response.body[0]).toHaveProperty('id');
-      expect(response.body[0].senderId).toBe(testUser.id);
-      expect(response.body[0].offeredSkill.title).toBe(offeredSkill.title);
+      const body = response.body as OutgoingRequestResponse[];
+
+      expect(body).toBeInstanceOf(Array);
+      expect(body.length).toBeGreaterThanOrEqual(1);
+      expect(body[0]).toHaveProperty('id');
+      expect(body[0].senderId).toBe(testUser.id);
+      expect(body[0].offeredSkill.title).toBe(offeredSkill.title);
     });
   });
 
@@ -268,8 +281,11 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
       const response = await request(app.getHttpServer())
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenR}`)
-        .send(createRequestDto);
-      requestId = response.body.id;
+        .send(createRequestDto)
+        .expect(201);
+
+      const body = response.body as CreateRequestResponse;
+      requestId = body.id; // Теперь безопасно
     });
 
     it('должен обновить статус заявки на "accepted"', async () => {
@@ -281,6 +297,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
         .send(updateDto)
         .expect(200);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(response.body.status).toBe(RequestStatus.ACCEPTED);
     });
 
@@ -318,6 +335,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
         .post('/requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send(createRequestDto);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       requestId = response.body.id;
     });
 
