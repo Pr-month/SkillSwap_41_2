@@ -1,6 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { describe, beforeEach, it, expect, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  it,
+  expect,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import { WsJwtGuard } from './ws-jwt.guard';
 import { WsAuthService } from '../ws-auth.service';
 import { AuthenticatedSocket } from '../auth.types';
@@ -19,21 +26,27 @@ const createMockClient = (): AuthenticatedSocket => {
 
 describe('WsJwtGuard', () => {
   let guard: WsJwtGuard;
-  let wsAuthService: { authenticateSocket: jest.MockedFunction<(client: any) => Promise<TJwtPayload>> };
-
-  const mockPayload: TJwtPayload = { 
-    sub: 1, 
-    email: 'test@test.com', 
-    name: 'Test', 
-    role: UserRole.USER,  
+  let wsAuthService: {
+    authenticateSocket: jest.MockedFunction<
+      (client: any) => Promise<TJwtPayload>
+    >;
   };
 
-  const mockExecutionContext = (client: AuthenticatedSocket): ExecutionContext =>
+  const mockPayload: TJwtPayload = {
+    sub: 1,
+    email: 'test@test.com',
+    name: 'Test',
+    role: UserRole.USER,
+  };
+
+  const mockExecutionContext = (
+    client: AuthenticatedSocket,
+  ): ExecutionContext =>
     ({
       switchToWs: jest.fn().mockReturnValue({
         getClient: jest.fn().mockReturnValue(client),
       }),
-    } as unknown as ExecutionContext);
+    }) as unknown as ExecutionContext;
 
   beforeEach(async () => {
     const mockWsAuthService = {
@@ -48,7 +61,7 @@ describe('WsJwtGuard', () => {
     }).compile();
 
     guard = module.get<WsJwtGuard>(WsJwtGuard);
-    wsAuthService = module.get(WsAuthService) as any;
+    wsAuthService = module.get(WsAuthService);
   });
 
   afterEach(() => {
@@ -78,7 +91,9 @@ describe('WsJwtGuard', () => {
       const error = new UnauthorizedException('Отсутствует токен авторизации');
       wsAuthService.authenticateSocket.mockRejectedValue(error);
 
-      await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(wsAuthService.authenticateSocket).toHaveBeenCalledWith(client);
       expect(client.data.user).toBeUndefined();
     });
@@ -89,7 +104,9 @@ describe('WsJwtGuard', () => {
       const error = new UnauthorizedException('Невалидный токен');
       wsAuthService.authenticateSocket.mockRejectedValue(error);
 
-      await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(wsAuthService.authenticateSocket).toHaveBeenCalledWith(client);
     });
   });
