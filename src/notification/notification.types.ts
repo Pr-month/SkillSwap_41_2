@@ -1,10 +1,10 @@
-export type NotificationType = 
+export type NotificationType =
   | 'new_request'
   | 'request_accepted'
   | 'request_rejected';
 
-export interface NotificationPayload {
+export interface NotificationPayload<T = unknown> {
   type: NotificationType;
-  data: Record<string, any>;
+  data: T;
   timestamp: string;
 }
