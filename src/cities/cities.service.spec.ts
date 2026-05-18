@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CitiesService } from './cities.service';
 import { City } from './entities/city.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
@@ -53,44 +53,74 @@ describe('CitiesService', () => {
     it('Тест должен создавать новый город', async () => {
       jest.spyOn(repository, 'findOne').mockResolvedValue(null);
       jest.spyOn(repository, 'create').mockReturnValue(createCityDto as City);
-      jest.spyOn(repository, 'save').mockResolvedValue({ id: 1, ...createCityDto } as City);
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({ id: 1, ...createCityDto } as City);
 
       const result = await service.create(createCityDto);
 
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { name: createCityDto.name } });
+      expect(repository.findOne).toHaveBeenCalledWith({
+        where: { name: createCityDto.name },
+      });
       expect(repository.create).toHaveBeenCalledWith(createCityDto);
       expect(repository.save).toHaveBeenCalled();
       expect(result).toEqual({ id: 1, name: 'Almaty' });
     });
 
     it('Должен прокидывать ConflictException, если город уже существует', async () => {
-      jest.spyOn(repository, 'findOne').mockResolvedValue({ id: 1, name: 'Almaty' } as City);
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ id: 1, name: 'Almaty' } as City);
 
-      await expect(service.create(createCityDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createCityDto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(repository.save).not.toHaveBeenCalled();
     });
   });
 
   describe('Метод findAll', () => {
     it('Должен вызывать queryBuilder с лимитами по умолчанию', async () => {
-      const queryBuilderMock = mockCityRepository.createQueryBuilder();
-      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilderMock as any);
+      const queryBuilderMock: Partial<SelectQueryBuilder<City>> = {
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      jest
+        .spyOn(repository, 'createQueryBuilder')
+        .mockReturnValue(queryBuilderMock as SelectQueryBuilder<City>);
 
       await service.findAll();
 
       expect(repository.createQueryBuilder).toHaveBeenCalledWith('city');
-      expect(queryBuilderMock.select).toHaveBeenCalledWith(['city.id', 'city.name']);
+      expect(queryBuilderMock.select).toHaveBeenCalledWith([
+        'city.id',
+        'city.name',
+      ]);
       expect(queryBuilderMock.take).toHaveBeenCalledWith(64);
       expect(queryBuilderMock.orderBy).toHaveBeenCalledWith('city.name', 'ASC');
     });
 
     it('Должен применять поисковой фильтр и кастомный лимит', async () => {
-      const queryBuilderMock = mockCityRepository.createQueryBuilder();
-      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilderMock as any);
+      const queryBuilderMock: Partial<SelectQueryBuilder<City>> = {
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      jest
+        .spyOn(repository, 'createQueryBuilder')
+        .mockReturnValue(queryBuilderMock as SelectQueryBuilder<City>);
 
       await service.findAll('  Astana  ', 10);
 
-      expect(queryBuilderMock.where).toHaveBeenCalledWith('city.name ILIKE :search', { search: '%Astana%' });
+      expect(queryBuilderMock.where).toHaveBeenCalledWith(
+        'city.name ILIKE :search',
+        { search: '%Astana%' },
+      );
       expect(queryBuilderMock.take).toHaveBeenCalledWith(10);
     });
   });
@@ -102,7 +132,9 @@ describe('CitiesService', () => {
 
       const result = await service.findOne(1);
 
-      expect(repository.findOneOrFail).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(repository.findOneOrFail).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
       expect(result).toEqual(mockCity);
     });
   });
@@ -113,7 +145,9 @@ describe('CitiesService', () => {
     it('Должен успешно обновлять данные города', async () => {
       const existingCity = { id: 1, name: 'Old Almaty' } as City;
       jest.spyOn(repository, 'findOne').mockResolvedValue(existingCity);
-      jest.spyOn(repository, 'save').mockResolvedValue({ ...existingCity, ...updateCityDto });
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({ ...existingCity, ...updateCityDto });
 
       const result = await service.update(1, updateCityDto);
 
@@ -125,7 +159,9 @@ describe('CitiesService', () => {
     it('Должен прокидывать ошибку NotFoundException если город не существует', async () => {
       jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
-      await expect(service.update(999, updateCityDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(999, updateCityDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -139,7 +175,9 @@ describe('CitiesService', () => {
 
       expect(repository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(repository.remove).toHaveBeenCalledWith(existingCity);
-      expect(result).toEqual({ message: `Город "${existingCity.name}" успешно удален` });
+      expect(result).toEqual({
+        message: `Город "${existingCity.name}" успешно удален`,
+      });
     });
 
     it('Должен прокидывать ошибку NotFoundException если город не существует', async () => {

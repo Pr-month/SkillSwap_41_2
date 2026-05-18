@@ -418,13 +418,14 @@ export function ApiFindSimilar() {
   return applyDecorators(
     ApiOperation({
       summary: 'Похожие предложения',
-      description: 'Возвращает список пользователей, у которых есть навыки в той же категории, что и указанный навык.',
+      description:
+        'Возвращает список пользователей, у которых есть навыки в той же категории, что и указанный навык.',
     }),
-    ApiParam({ 
-      name: 'id', 
-      type: Number, 
-      description: 'ID навыка', 
-      example: 42 
+    ApiParam({
+      name: 'id',
+      type: Number,
+      description: 'ID навыка',
+      example: 42,
     }),
     ApiOkResponse({
       description: 'Список пользователей успешно получен',
@@ -436,18 +437,18 @@ export function ApiFindSimilar() {
             items: {
               type: 'object',
               properties: {
-                id: { 
-                  type: 'number', 
-                  example: 5 
+                id: {
+                  type: 'number',
+                  example: 5,
                 },
-                name: { 
-                  type: 'string', 
-                  example: 'Анна Смирнова' 
+                name: {
+                  type: 'string',
+                  example: 'Анна Смирнова',
                 },
-                avatar: { 
-                  type: 'string', 
-                  example: 'https://example.com/avatar.jpg', 
-                  nullable: true 
+                avatar: {
+                  type: 'string',
+                  example: 'https://example.com/avatar.jpg',
+                  nullable: true,
                 },
               },
             },
@@ -455,15 +456,15 @@ export function ApiFindSimilar() {
         },
         example: {
           users: [
-            { 
-              id: 5, 
-              name: 'Анна Смирнова', 
-              avatar: null 
+            {
+              id: 5,
+              name: 'Анна Смирнова',
+              avatar: null,
             },
-            { 
-              id: 12, 
-              name: 'Иван Петров', 
-              avatar: '/uploads/avatar.png' 
+            {
+              id: 12,
+              name: 'Иван Петров',
+              avatar: '/uploads/avatar.png',
             },
           ],
         },

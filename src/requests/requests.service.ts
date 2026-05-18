@@ -83,7 +83,9 @@ export class RequestsService {
     });
     const saved = await this.requestsRepository.save(request);
 
-    const sender = await this.usersRepository.findOne({ where: { id: userId } });
+    const sender = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
     const senderName = sender?.name ?? 'Пользователь';
 
     this.notificationGateway.sendNotification(receiver.id, 'new_request', {

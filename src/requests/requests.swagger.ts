@@ -59,7 +59,10 @@ export function ApiRequestsGetOutgoing() {
       summary: 'Получение исходящих заявок',
       description: 'Возвращает заявки отправленные текущим пользователем',
     }),
-    ApiResponse({ status: 200, description: 'Список исходящих заявок получен' }),
+    ApiResponse({
+      status: 200,
+      description: 'Список исходящих заявок получен',
+    }),
     ApiResponse({ status: 401, description: 'Пользователь не авторизован' }),
   );
 }

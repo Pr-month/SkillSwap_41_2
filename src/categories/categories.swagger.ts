@@ -24,7 +24,8 @@ export function ApiCategoriesGetAll() {
   return applyDecorators(
     ApiOperation({
       summary: 'Получение списка категорий',
-      description: 'Возвращает все корневые категории вместе с их подкатегориями',
+      description:
+        'Возвращает все корневые категории вместе с их подкатегориями',
     }),
     ApiResponse({ status: 200, description: 'Список категорий получен' }),
   );
@@ -34,7 +35,8 @@ export function ApiCategoriesGetOne() {
   return applyDecorators(
     ApiOperation({
       summary: 'Получение категории по ID',
-      description: 'Возвращает категорию вместе с её родителем и подкатегориями',
+      description:
+        'Возвращает категорию вместе с её родителем и подкатегориями',
     }),
     ApiParam({ name: 'id', description: 'ID категории', example: 1 }),
     ApiResponse({ status: 200, description: 'Категория найдена' }),

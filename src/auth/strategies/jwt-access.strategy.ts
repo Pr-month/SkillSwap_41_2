@@ -18,9 +18,9 @@ export class JwtAccessStrategy extends PassportStrategy(
   }
 
   validate(payload: TJwtPayload) {
-  return {
-    ...payload,
-    id: payload.sub,
-  };
-}
+    return {
+      ...payload,
+      id: payload.sub,
+    };
+  }
 }

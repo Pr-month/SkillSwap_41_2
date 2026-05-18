@@ -27,7 +27,7 @@ async function createTestDb() {
   await client.end();
 }
 
-createTestDb().catch((err) => { 
+createTestDb().catch((err) => {
   console.error('Failed to create database:', err);
   process.exit(1);
 });
