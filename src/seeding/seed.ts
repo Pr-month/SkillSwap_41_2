@@ -4,7 +4,7 @@ const run = (script: string) => {
   console.log(`\n▶ Running: ${script}`);
   execSync(`ts-node -r tsconfig-paths/register ${script}`, {
     stdio: 'inherit',
-    env: process.env, 
+    env: process.env,
   });
 };
 
@@ -16,6 +16,8 @@ async function master() {
   run('src/seeding/cities.seed.ts');
   run('src/seeding/seed-test-users.ts');
   run('src/seeding/seed-test-skills.ts');
+
+  await Promise.resolve();
 
   console.log('\n✅ Master seeding finished');
 }
