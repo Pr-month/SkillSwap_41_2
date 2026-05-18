@@ -1,9 +1,13 @@
 #Ignoring uploaded files
-/public/uploads/
+/backend/public/uploads/
 
 # compiled output
 /dist
+/backend/dist
+/frontend/dist
 /node_modules
+/backend/node_modules
+/frontend/node_modules
 /build
 
 # Logs
@@ -20,6 +24,8 @@ lerna-debug.log*
 
 # Tests
 /coverage
+/backend/coverage
+/frontend/coverage
 /.nyc_output
 
 # IDEs and editors
@@ -41,10 +47,20 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
+backend/.env
+frontend/.env
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
+backend/.env.development.local
+backend/.env.test.local
+backend/.env.production.local
+backend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.env.local
 
 # temp directory
 .temp
