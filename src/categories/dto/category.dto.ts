@@ -7,12 +7,11 @@ import {
   MinLength,
   IsInt,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
 export class CategoryDto {
   @ApiProperty({
-    description: 'UUID категории'
+    description: 'UUID категории',
   })
   @IsUUID()
   id!: string;
@@ -29,14 +28,14 @@ export class CategoryDto {
   name!: string;
 
   @ApiPropertyOptional({
-    description: 'Родительская категория'
+    description: 'Родительская категория',
   })
   @IsOptional()
   parent?: { id: string; name: string };
 
   @ApiPropertyOptional({
     description: 'Подкатегории',
-    type: [Object]
+    type: [Object],
   })
   @IsOptional()
   @IsArray()
