@@ -8,7 +8,13 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileUploadService, MulterFile } from './file-upload.service';
 
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 @ApiTags('files')
 @Controller('files')
@@ -18,7 +24,7 @@ export class FileUploadController {
   @Post()
   @ApiOperation({
     summary: 'Загрузка файла на сервер',
-    description: 'Загружает файл и возвращает ссылку'
+    description: 'Загружает файл и возвращает ссылку',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -47,11 +53,12 @@ export class FileUploadController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Проблема с загрузкой файла, неверный формат или содержимое не соответсвует расширению'
+    description:
+      'Проблема с загрузкой файла, неверный формат или содержимое не соответсвует расширению',
   })
   @ApiResponse({
     status: 413,
-    description: 'Размер файла превышает допустимый размер'
+    description: 'Размер файла превышает допустимый размер',
   })
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(@UploadedFile() file: MulterFile | undefined) {
