@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationGateway } from './notification.gateway';
 import { WsAuthService } from '../auth/ws-auth.service';
 import { Server, Socket } from 'socket.io';
+import { NotificationType } from './notification.types';
 
 describe('NotificationGateway', () => {
   let gateway: NotificationGateway;
@@ -89,11 +90,15 @@ describe('NotificationGateway', () => {
 
   describe('Отправка сообщений', () => {
     it('Сообщение идёт конкретному пользователю', () => {
-      const server = gateway.server as any;
+      const server = gateway.server;
 
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      gateway.sendNotification(123, 'TEST_TYPE' as any, { foo: 'bar' });
+      gateway.sendNotification(123, 'TEST_TYPE' as NotificationType, {
+        foo: 'bar',
+      });
+
+      const expectAnyString = () => expect.any(String) as unknown as string;
 
       expect(server.to).toHaveBeenCalledWith('123');
       expect(server.emit).toHaveBeenCalledWith(
@@ -101,7 +106,7 @@ describe('NotificationGateway', () => {
         expect.objectContaining({
           type: 'TEST_TYPE',
           data: { foo: 'bar' },
-          timestamp: expect.any(String),
+          timestamp: expectAnyString(),
         }),
       );
 

@@ -1,8 +1,5 @@
-import {
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
-import { Server, Socket  } from 'socket.io';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { WsAuthService } from '../auth/ws-auth.service';
 import { NotificationType, NotificationPayload } from './notification.types';
 
@@ -20,7 +17,7 @@ export class NotificationGateway {
       const payload = await this.wsAuthService.authenticateSocket(client);
       const userId = payload.sub;
       // Добавляем клиента в комнату с именем = его userId
-      client.join(userId.toString());
+      await client.join(userId.toString());
       console.log(`Client ${client.id} joined room: ${userId}`);
     } catch {
       client.disconnect();
@@ -33,7 +30,11 @@ export class NotificationGateway {
   }
 
   // Метод для отправки уведомления конкретному пользователю
-  sendNotification(userId: number, type: NotificationType, data: Record<string, any>) {
+  sendNotification(
+    userId: number,
+    type: NotificationType,
+    data: Record<string, unknown>,
+  ) {
     const payload: NotificationPayload = {
       type,
       data,
