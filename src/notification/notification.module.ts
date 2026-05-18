@@ -6,10 +6,7 @@ import { WsAuthService } from '../auth/ws-auth.service';
 import { jwtConfig } from '../config/jwt.config';
 
 @Module({
-  imports: [
-    ConfigModule.forFeature(jwtConfig),
-    JwtModule.register({}),
-  ],
+  imports: [ConfigModule.forFeature(jwtConfig), JwtModule.register({})],
   providers: [NotificationGateway, WsAuthService],
   exports: [NotificationGateway],
 })
