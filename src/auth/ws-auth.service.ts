@@ -46,5 +46,5 @@ export class WsAuthService {
       throw new UnauthorizedException('Отсутствует токен авторизации');
     }
     return this.validateToken(token);
-  }  
+  }
 }
