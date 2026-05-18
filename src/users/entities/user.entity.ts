@@ -66,9 +66,9 @@ export class User {
 
   @ManyToMany(() => Category, (category) => category.usersWhoWantToLearn)
   @JoinTable({
-    name: "wantToLearn",
-    joinColumn: { name: "user_id", referencedColumnName: "id" },
-    inverseJoinColumn: { name: "category_id", referencedColumnName: "id" }
+    name: 'wantToLearn',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
   })
   wantToLearn?: Category[];
 }

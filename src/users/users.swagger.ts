@@ -16,7 +16,8 @@ import { User } from './entities/user.entity';
 
 const UnauthorizedResponse = ApiResponse({
   status: 401,
-  description: 'Пользователь не авторизован (JWT недействителен или отсутствует)',
+  description:
+    'Пользователь не авторизован (JWT недействителен или отсутствует)',
   schema: {
     example: {
       statusCode: 401,
@@ -71,11 +72,29 @@ export function ApiFindAllUsers() {
   return applyDecorators(
     ApiOperation({
       summary: 'Получение списка пользователей с пагинацией и поиском',
-      description: 'Публичный эндпоинт. Поддерживает поиск по имени/email и пагинацию (limit/offset).',
+      description:
+        'Публичный эндпоинт. Поддерживает поиск по имени/email и пагинацию (limit/offset).',
     }),
-    ApiQuery({ name: 'search', required: false, type: String, description: 'Поиск по имени или email' }),
-    ApiQuery({ name: 'limit', required: false, type: Number, description: 'Количество записей на страницу', example: 10 }),
-    ApiQuery({ name: 'offset', required: false, type: Number, description: 'Номер страницы (начиная с 1)', example: 1 }),
+    ApiQuery({
+      name: 'search',
+      required: false,
+      type: String,
+      description: 'Поиск по имени или email',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: false,
+      type: Number,
+      description: 'Количество записей на страницу',
+      example: 10,
+    }),
+    ApiQuery({
+      name: 'offset',
+      required: false,
+      type: Number,
+      description: 'Номер страницы (начиная с 1)',
+      example: 1,
+    }),
     ApiExtraModels(User),
     ApiOkResponse({
       description: 'Список пользователей успешно получен',
@@ -155,7 +174,12 @@ export function ApiGetMe() {
 export function ApiFindById() {
   return applyDecorators(
     ApiOperation({ summary: 'Получить пользователя по ID' }),
-    ApiParam({ name: 'id', type: Number, description: 'ID пользователя', example: 1 }),
+    ApiParam({
+      name: 'id',
+      type: Number,
+      description: 'ID пользователя',
+      example: 1,
+    }),
     ApiOkResponse({
       description: 'Пользователь найден',
       type: User,
@@ -181,7 +205,10 @@ export function ApiUpdateMe() {
   return applyDecorators(
     ApiBearerAuth(),
     ApiOperation({ summary: 'Обновить профиль текущего пользователя' }),
-    ApiBody({ type: UpdateUserDto, description: 'Поля для обновления (все необязательны)' }),
+    ApiBody({
+      type: UpdateUserDto,
+      description: 'Поля для обновления (все необязательны)',
+    }),
     ApiOkResponse({
       description: 'Профиль успешно обновлён',
       type: User,
@@ -225,9 +252,15 @@ export function ApiRemoveUser() {
     ApiBearerAuth(),
     ApiOperation({
       summary: 'Удалить пользователя по ID (только для администратора)',
-      description: 'Требуется роль ADMIN. При успешном удалении возвращается пустой ответ 200.',
+      description:
+        'Требуется роль ADMIN. При успешном удалении возвращается пустой ответ 200.',
     }),
-    ApiParam({ name: 'id', type: Number, description: 'ID удаляемого пользователя', example: 1 }),
+    ApiParam({
+      name: 'id',
+      type: Number,
+      description: 'ID удаляемого пользователя',
+      example: 1,
+    }),
     ApiOkResponse({ description: 'Пользователь успешно удалён' }),
     UnauthorizedResponse,
     ForbiddenResponse,
