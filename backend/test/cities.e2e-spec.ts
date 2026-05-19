@@ -7,13 +7,30 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import request from 'supertest';
 import { Repository } from 'typeorm';
+import express from 'express';
 import { City } from '../src/cities/entities/city.entity';
 import { User } from '../src/users/entities/user.entity';
 import { UserRole } from '../src/users/enums/users.enums';
 import { AppModule } from './../src/app.module';
 
+// Интерфейсы для типизации ответов
+interface CityResponse {
+  id: number;
+  name: string;
+  country: string;
+  region?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ErrorResponse {
+  message: string;
+  errors?: Array<{ field: string; errors: string[] }>;
+}
+
 describe('Cities (e2e)', () => {
   let app: INestApplication;
+  let httpServer: express.Express;
   let userRepository: Repository<User>;
   let cityRepository: Repository<City>;
   let jwtService: JwtService;
@@ -22,7 +39,7 @@ describe('Cities (e2e)', () => {
   let regularUser: User;
   let adminAccessToken: string;
   let regularAccessToken: string;
-  let testCity: City;
+  let testCity: CityResponse;
 
   const adminEmail = `admin-cities-${Date.now()}@test.com`;
   const adminPassword = 'Admin1234';
@@ -55,6 +72,7 @@ describe('Cities (e2e)', () => {
     );
     app.useGlobalFilters(new AllExceptionsFilter());
     await app.init();
+    httpServer = app.getHttpServer() as express.Express;
 
     userRepository = app.get(getRepositoryToken(User));
     cityRepository = app.get(getRepositoryToken(City));
@@ -90,7 +108,6 @@ describe('Cities (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Удаляем тестовые данные
     if (testCity) await cityRepository.delete(testCity.id).catch(() => {});
     await userRepository.delete(adminUser.id);
     await userRepository.delete(regularUser.id);
@@ -101,7 +118,8 @@ describe('Cities (e2e)', () => {
   // 1. GET /cities – список городов
   // -------------------------------------------------------------------
   describe('GET /cities', () => {
-    let city1: City, city2: City;
+    let city1: City;
+    let city2: City;
 
     beforeAll(async () => {
       city1 = await cityRepository.save({
@@ -122,34 +140,37 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен вернуть список городов (публичный эндпоинт)', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get('/cities')
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      const ids = response.body.map((c: City) => c.id);
+      const cities = response.body as CityResponse[];
+      expect(Array.isArray(cities)).toBe(true);
+      const ids = cities.map((c) => c.id);
       expect(ids).toContain(city1.id);
       expect(ids).toContain(city2.id);
     });
 
     it('Должен фильтровать по search (поиск по имени)', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get('/cities?search=Alpha')
         .expect(200);
 
-      expect(response.body.length).toBeGreaterThanOrEqual(1);
-      const names = response.body.map((c: City) => c.name);
+      const cities = response.body as CityResponse[];
+      expect(cities.length).toBeGreaterThanOrEqual(1);
+      const names = cities.map((c) => c.name);
       expect(names).toContain('E2E City Alpha');
       expect(names).not.toContain('E2E City Beta');
     });
 
     it('Должен ограничивать количество результатов через limit', async () => {
       const limit = 1;
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/cities?limit=${limit}`)
         .expect(200);
 
-      expect(response.body.length).toBeLessThanOrEqual(limit);
+      const cities = response.body as CityResponse[];
+      expect(cities.length).toBeLessThanOrEqual(limit);
     });
   });
 
@@ -172,16 +193,17 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен вернуть город по ID', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/cities/${singleCity.id}`)
         .expect(200);
 
-      expect(response.body.id).toBe(singleCity.id);
-      expect(response.body.name).toBe(singleCity.name);
+      const city = response.body as CityResponse;
+      expect(city.id).toBe(singleCity.id);
+      expect(city.name).toBe(singleCity.name);
     });
 
     it('Должен вернуть 404 для несуществующего ID', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .get('/cities/99999')
         .expect(404);
     });
@@ -198,13 +220,14 @@ describe('Cities (e2e)', () => {
     };
 
     it('Должен создать город при запросе от администратора', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/cities')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send(newCityPayload)
         .expect(201);
 
-      expect(response.body).toMatchObject({
+      const created = response.body as CityResponse;
+      expect(created).toMatchObject({
         id: expect.any(Number),
         name: newCityPayload.name,
         country: newCityPayload.country,
@@ -213,18 +236,18 @@ describe('Cities (e2e)', () => {
         updatedAt: expect.any(String),
       });
 
-      testCity = response.body; // сохраним для последующего обновления/удаления
+      testCity = created;
     });
 
     it('Должен вернуть 401 при отсутствии токена', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/cities')
         .send(newCityPayload)
         .expect(401);
     });
 
     it('Должен вернуть 403 при запросе от обычного пользователя', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/cities')
         .set('Authorization', `Bearer ${regularAccessToken}`)
         .send(newCityPayload)
@@ -233,13 +256,14 @@ describe('Cities (e2e)', () => {
 
     it('Должен вернуть 400 при невалидных данных', async () => {
       const invalidPayload = { name: '', country: 123 };
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/cities')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send(invalidPayload)
         .expect(400);
 
-      expect(response.body.message).toBe('Validation failed');
+      const errorBody = response.body as ErrorResponse;
+      expect(errorBody.message).toBe('Validation failed');
     });
   });
 
@@ -249,20 +273,20 @@ describe('Cities (e2e)', () => {
   describe('PATCH /cities/:id', () => {
     it('Должен обновить город администратором', async () => {
       const updatePayload = { name: 'Updated City Name', region: 'New Region' };
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .patch(`/cities/${testCity.id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send(updatePayload)
         .expect(200);
 
-      expect(response.body.name).toBe(updatePayload.name);
-      expect(response.body.region).toBe(updatePayload.region);
-      // остальные поля не изменились
-      expect(response.body.country).toBe('Adminsland');
+      const updated = response.body as CityResponse;
+      expect(updated.name).toBe(updatePayload.name);
+      expect(updated.region).toBe(updatePayload.region);
+      expect(updated.country).toBe('Adminsland');
     });
 
     it('Должен вернуть 404 при обновлении несуществующего города', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .patch('/cities/99999')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .send({ name: 'Ghost' })
@@ -270,7 +294,7 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен вернуть 403 для обычного пользователя', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .patch(`/cities/${testCity.id}`)
         .set('Authorization', `Bearer ${regularAccessToken}`)
         .send({ name: 'Hack' })
@@ -292,7 +316,7 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен удалить город администратором', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/cities/${cityToDelete.id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(200);
@@ -302,7 +326,7 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен вернуть 404 при повторном удалении', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/cities/${cityToDelete.id}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(404);
@@ -310,7 +334,7 @@ describe('Cities (e2e)', () => {
 
     it('Должен вернуть 403 для обычного пользователя', async () => {
       const tempCity = await cityRepository.save({ name: 'Temp' });
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/cities/${tempCity.id}`)
         .set('Authorization', `Bearer ${regularAccessToken}`)
         .expect(403);
