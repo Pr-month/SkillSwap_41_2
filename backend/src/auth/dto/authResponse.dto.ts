@@ -5,7 +5,7 @@ export class AuthResponseDto {
   @ApiProperty({
     example: 'jwt_access_token_example',
   })
-  accessToken: string;
+  accessToken!: string;
 
   @ApiProperty({
     type: UserResponseDto,
@@ -15,5 +15,5 @@ export class AuthResponseDto {
       role: 'USER',
     },
   })
-  user: UserResponseDto;
+  user!: UserResponseDto;
 }
