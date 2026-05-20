@@ -1,7 +1,16 @@
-import { Controller, Post, Body, UseGuards, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Res,
+  Get,
+  Inject,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dto/register.dto';
-import { TRequestWithRefreshToken } from './auth.types';
+import { OAuthRequest, TRequestWithRefreshToken } from './auth.types';
 import { LoginDTO } from './dto/login.dto';
 import { Response } from 'express';
 import { TLogoutRequest } from './auth.types';
@@ -13,10 +22,16 @@ import {
   ApiAuthRegister,
 } from './auth.swagger';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { YandexAuthGuard } from './guards/yandex.quard';
+import { jwtConfig, TJwtConfig } from 'src/config/jwt.config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(jwtConfig.KEY)
+    private readonly jwtCfg: TJwtConfig,
+  ) {}
 
   @ApiAuthRegister()
   @Post('register')
@@ -64,5 +79,20 @@ export class AuthController {
     const result = await this.authService.logout(req.user.id);
     res.clearCookie('refreshToken', { path: '/auth' });
     return result;
+  }
+
+  @UseGuards(YandexAuthGuard)
+  @Get('yandex/login')
+  async yandex() {}
+
+  @UseGuards(YandexAuthGuard)
+  @Get('yandex/callback')
+  async yandexCallback(@Req() req: OAuthRequest, @Res() res: Response) {
+    const oauthUser = req.user;
+    const authData = await this.authService.findOrCreateOAuthUser(oauthUser);
+
+    this.authService.setRefreshTokenCookie(res, authData.refreshToken);
+
+    return res.redirect(`${this.jwtCfg.frontendUrl}/oauth/success`);
   }
 }
