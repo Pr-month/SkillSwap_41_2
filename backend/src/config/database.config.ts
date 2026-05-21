@@ -1,6 +1,7 @@
 import { ConfigType, registerAs } from '@nestjs/config';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 dotenv.config();
 
@@ -13,8 +14,9 @@ export const databaseConfig = registerAs(
     username: process.env.DATABASE_USER ?? 'postgres',
     password: process.env.DATABASE_PASSWORD ?? '', // Пустая строка вместо undefined
     database: process.env.DATABASE_NAME ?? 'my_db',
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    entities: [path.join(__dirname, '/../**/*.entity{.ts,.js}')],
     synchronize: process.env.NODE_ENV !== 'production',
+    migrations: [path.join(__dirname, '/../database/migrations/**/*{.ts,.js}')],
   }),
 );
 
