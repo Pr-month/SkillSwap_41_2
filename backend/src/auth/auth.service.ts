@@ -16,6 +16,7 @@ import { TJwtConfig, jwtConfig } from '../config/jwt.config';
 import { StringValue } from 'ms';
 import { LoginDTO } from './dto/login.dto';
 import { TAuthResponse, TTokens } from './auth.types';
+import { OAuthUserDto } from './dto/OAuthUserDto';
 
 @Injectable()
 export class AuthService {
@@ -147,5 +148,34 @@ export class AuthService {
       refreshToken: null,
     });
     return { message: 'Успешный выход' };
+  }
+
+  async findOrCreateOAuthUser(data: OAuthUserDto): Promise<TAuthResponse> {
+    if (!data.email) {
+      throw new Error('Не удалось получить email пользователя');
+    }
+
+    let user = await this.usersRepository.findOne({
+      where: { email: data.email },
+    });
+
+    if (!user) {
+      user = this.usersRepository.create({
+        email: data.email,
+        name: data.name,
+        gender: data.gender,
+        avatar: data.avatar,
+        provider: data.provider,
+      });
+
+      await this.usersRepository.save(user);
+    }
+
+    const tokens = await this.generateTokens(user);
+    return {
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 }

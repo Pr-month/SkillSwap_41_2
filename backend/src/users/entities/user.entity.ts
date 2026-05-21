@@ -13,6 +13,7 @@ import {
 import { Gender, UserRole } from '../enums/users.enums';
 import { City } from 'src/cities/entities/city.entity';
 import { Category } from 'src/categories/entities/category.entity';
+import { OAuthProvider } from 'src/auth/dto/OAuthUserDto';
 
 @Entity('users')
 export class User {
@@ -26,7 +27,7 @@ export class User {
   email!: string;
 
   @Exclude()
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ nullable: true, type: 'varchar', length: 255 })
   password!: string;
 
   @Column({ type: 'text', nullable: true })
@@ -71,4 +72,7 @@ export class User {
     inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
   })
   wantToLearn?: Category[];
+
+  @Column({ type: 'enum', enum: OAuthProvider, nullable: true })
+  provider?: OAuthProvider | null;
 }

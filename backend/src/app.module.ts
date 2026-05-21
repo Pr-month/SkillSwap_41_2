@@ -15,11 +15,12 @@ import { RequestsModule } from './requests/requests.module';
 import { NotificationModule } from './notification/notification.module';
 import { CitiesModule } from './cities/cities.module';
 import { uploadConfig } from './config/upload.config';
+import { googleConfig } from './config/google.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig, appConfig, uploadConfig],
+      load: [databaseConfig, jwtConfig, appConfig, uploadConfig, googleConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
