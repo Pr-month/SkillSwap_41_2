@@ -1,5 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import {
   ValidationPipe,
@@ -24,6 +25,8 @@ import { AuthModule } from './auth/auth.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(helmet());
 
   const configService = app.get(ConfigService);
   const config = configService.get<TAppConfig>(appConfig.KEY);
