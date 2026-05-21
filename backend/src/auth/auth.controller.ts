@@ -24,9 +24,9 @@ export class AuthController {
     @Body() registerDTO: RegisterDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.register(registerDTO);
-    this.authService.setRefreshTokenCookie(res, result.refreshToken);
-    return result;
+    const { user, accessToken, refreshToken } = await this.authService.register(registerDTO);
+    this.authService.setRefreshTokenCookie(res, refreshToken);
+    return { user, accessToken };
   }
 
   @ApiAuthRefresh()
@@ -38,9 +38,9 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
-    const result = await this.authService.refreshTokens(userId, refreshToken);
-    this.authService.setRefreshTokenCookie(res, result.refreshToken);
-    return result;
+    const { accessToken, refreshToken: newRefreshToken } = await this.authService.refreshTokens(userId, refreshToken);
+    this.authService.setRefreshTokenCookie(res, newRefreshToken);
+    return { accessToken };
   }
 
   @ApiAuthLogin()
@@ -49,9 +49,9 @@ export class AuthController {
     @Body() loginDTO: LoginDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.login(loginDTO);
-    this.authService.setRefreshTokenCookie(res, result.refreshToken);
-    return result;
+    const { user, accessToken, refreshToken } = await this.authService.login(loginDTO);
+    this.authService.setRefreshTokenCookie(res, refreshToken);
+    return { user, accessToken };
   }
 
   @ApiAuthLogout()

@@ -6,12 +6,12 @@ export class LoginDTO {
     example: 'john.doe@example.com',
   })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({
     example: 'password123',
   })
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 }
