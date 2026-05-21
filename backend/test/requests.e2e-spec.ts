@@ -2,75 +2,58 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import request from 'supertest';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
+import express from 'express';
 import { AppModule } from '../src/app.module';
 import { User } from '../src/users/entities/user.entity';
 import { Skill } from '../src/skills/entities/skill.entity';
-//import { Category } from '../src/categories/entities/category.entity';
 import { AuthService } from '../src/auth/auth.service';
 import { seedTestUsers } from '../src/seeding/seed-test-users.data';
 import { seedTestSkills } from '../src/seeding/seed-test-skills.data';
 import { RequestStatus } from '../src/requests/requests.enum';
-import bcrypt from 'bcrypt';
-import { In } from 'typeorm';
 
 interface CreateRequestResponse {
   id: string;
   senderId: string;
   receiverId: string;
   status: RequestStatus;
-  offeredSkill: {
-    title: string;
-  };
-  requestedSkill: {
-    title: string;
-  };
+  offeredSkill: { title: string };
+  requestedSkill: { title: string };
 }
 
 interface OutgoingRequestResponse {
   id: string;
   senderId: string;
-  offeredSkill: {
-    title: string;
-  };
+  offeredSkill: { title: string };
 }
 
 describe('RequestsController (E2E with Pre‑seeded Data)', () => {
   let app: INestApplication;
+  let httpServer: express.Express;
   let authService: AuthService;
   let userRepository: Repository<User>;
   let skillRepository: Repository<Skill>;
-  //let categoryRepository: Repository<Category>;
   let authToken: string;
   let authTokenR: string;
   let testUser: User | null;
   let offeredSkill: Skill;
   let requestedSkill: Skill;
 
-  // Вспомогательная функция для безопасного получения навыка
   const getSkillOrThrow = async (title: string): Promise<Skill> => {
     const skill = await skillRepository.findOne({
       where: { title },
       relations: ['owner'],
     });
-    if (!skill) {
-      throw new Error(`Skill "${title}" not found in database`);
-    }
+    if (!skill) throw new Error(`Skill "${title}" not found`);
     return skill;
   };
 
-  // Функция сидинга данных
   const seedTestData = async () => {
-    // Сидинг категорий (если нужно)
-    //await seedCategories(categoryRepository);
-
-    // Сидинг тестовых пользователей
     for (const userData of seedTestUsers) {
-      const existingUser = await userRepository.findOne({
-        where: { email: userData.email },
-      });
-      if (!existingUser) {
+      const existing = await userRepository.findOne({ where: { email: userData.email } });
+      if (!existing) {
         const hashedPassword = await bcrypt.hash(userData.password, 10);
         await userRepository.save({
           name: userData.name,
@@ -81,16 +64,12 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
       }
     }
 
-    // Сидинг навыков
     const users = await userRepository.find();
     for (let i = 0; i < seedTestSkills.length; i++) {
       const skillData = seedTestSkills[i];
-      const exists = await skillRepository.findOne({
-        where: { title: skillData.title },
-      });
+      const exists = await skillRepository.findOne({ where: { title: skillData.title } });
       if (!exists) {
         const owner = users[i % users.length];
-        // Предполагаем, что категория уже существует или добавляем логику её создания
         await skillRepository.save({ ...skillData, owner });
       }
     }
@@ -110,60 +89,40 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
       }),
     );
     await app.init();
+    httpServer = app.getHttpServer() as express.Express;
 
     authService = moduleFixture.get<AuthService>(AuthService);
     userRepository = moduleFixture.get(getRepositoryToken(User));
     skillRepository = moduleFixture.get(getRepositoryToken(Skill));
-    //categoryRepository = moduleFixture.get(getRepositoryToken(Category));
 
     await seedTestData();
 
     testUser = await userRepository.findOne({
       where: { email: seedTestUsers[0].email },
     });
+    if (!testUser) throw new Error(`Test user ${seedTestUsers[0].email} not found`);
 
-    if (!testUser) {
-      throw new Error(
-        `Test user with email ${seedTestUsers[0].email} not found in database`,
-      );
-    }
+    authToken = (await authService.login({
+      email: seedTestUsers[0].email,
+      password: seedTestUsers[0].password,
+    })).accessToken;
+    authTokenR = (await authService.login({
+      email: seedTestUsers[1].email,
+      password: seedTestUsers[1].password,
+    })).accessToken;
 
-    authToken = (
-      await authService.login({
-        email: seedTestUsers[0].email,
-        password: seedTestUsers[0].password,
-      })
-    ).accessToken;
-    authTokenR = (
-      await authService.login({
-        email: seedTestUsers[1].email,
-        password: seedTestUsers[1].password,
-      })
-    ).accessToken;
-
-    // Безопасное получение навыков
-    if (seedTestSkills.length < 2) {
-      throw new Error(
-        'Not enough test skills. Need at least 2 skills in seed data',
-      );
-    }
-
+    if (seedTestSkills.length < 2) throw new Error('Need at least 2 skills');
     const offeredTitle = seedTestSkills[0].title;
     const requestedTitle = seedTestSkills[1].title;
-
-    if (!offeredTitle) throw new Error('Offered skill title is missing');
-    if (!requestedTitle) throw new Error('Requested skill title is missing');
+    if (!offeredTitle || !requestedTitle) throw new Error('Skill titles missing');
 
     offeredSkill = await getSkillOrThrow(offeredTitle);
     requestedSkill = await getSkillOrThrow(requestedTitle);
   });
 
   afterEach(async () => {
-    // Очистка данных после каждого теста
     await skillRepository.delete({});
-    await userRepository.delete({
-      email: In(seedTestUsers.map((u) => u.email)),
-    });
+    await userRepository.delete({ email: In(seedTestUsers.map(u => u.email)) });
   });
 
   afterAll(async () => {
@@ -172,24 +131,19 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
 
   describe('POST /requests', () => {
     it('должен создать новую заявку', async () => {
-      if (!testUser) {
-        throw new Error(
-          'Test user is not initialized. Check seeding and user setup.',
-        );
-      }
+      if (!testUser) throw new Error('Test user not initialized');
 
       const createRequestDto = {
         requestedSkillId: requestedSkill.id,
         offeredSkillId: offeredSkill.id,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send(createRequestDto)
         .expect(201);
 
-      // Приводим тип response.body к нашему интерфейсу
       const body = response.body as CreateRequestResponse;
       expect(body).toHaveProperty('id');
       expect(body.senderId).toBe(testUser.id);
@@ -204,8 +158,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
         requestedSkillId: offeredSkill.id,
         offeredSkillId: offeredSkill.id,
       };
-
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send(createRequestDto)
@@ -217,8 +170,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
         requestedSkillId: requestedSkill.id,
         offeredSkillId: uuidv4(),
       };
-
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send(createRequestDto)
@@ -228,27 +180,22 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
 
   describe('GET /requests/outgoing', () => {
     it('должен вернуть исходящие заявки пользователя', async () => {
-      if (!testUser) {
-        throw new Error('Test user is not defined');
-      }
-      // Сначала создаём заявку
+      if (!testUser) throw new Error('Test user is not defined');
       const createRequestDto = {
         requestedSkillId: requestedSkill.id,
         offeredSkillId: offeredSkill.id,
       };
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send(createRequestDto);
 
-      // Затем получаем исходящие заявки
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get('/requests/outgoing')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       const body = response.body as OutgoingRequestResponse[];
-
       expect(body).toBeInstanceOf(Array);
       expect(body.length).toBeGreaterThanOrEqual(1);
       expect(body[0]).toHaveProperty('id');
@@ -259,7 +206,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
 
   describe('GET /requests/incoming', () => {
     it('должен вернуть входящие заявки пользователя', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get('/requests/incoming')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
@@ -272,39 +219,33 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
     let requestId: string;
 
     beforeEach(async () => {
-      // Создаём вх заявку для тестирования
       const createRequestDto = {
         requestedSkillId: offeredSkill.id,
         offeredSkillId: requestedSkill.id,
       };
-
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenR}`)
         .send(createRequestDto)
         .expect(201);
-
       const body = response.body as CreateRequestResponse;
-      requestId = body.id; // Теперь безопасно
+      requestId = body.id;
     });
 
     it('должен обновить статус заявки на "accepted"', async () => {
       const updateDto = { status: RequestStatus.ACCEPTED };
-
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .patch(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateDto)
         .expect(200);
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      expect(response.body.status).toBe(RequestStatus.ACCEPTED);
+      const updated = response.body as { status: RequestStatus };
+      expect(updated.status).toBe(RequestStatus.ACCEPTED);
     });
 
     it('должен вернуть 403 при попытке обновить чужую заявку', async () => {
       const updateDto = { status: RequestStatus.ACCEPTED };
-
-      await request(app.getHttpServer())
+      await request(httpServer)
         .patch(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authTokenR}`)
         .send(updateDto)
@@ -313,8 +254,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
 
     it('должен вернуть 400 для недопустимого статуса', async () => {
       const updateDto = { status: 'INVALID_STATUS' };
-
-      await request(app.getHttpServer())
+      await request(httpServer)
         .patch(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateDto)
@@ -326,34 +266,32 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
     let requestId: string;
 
     beforeEach(async () => {
-      // Создаём заявку для тестирования
       const createRequestDto = {
         requestedSkillId: requestedSkill.id,
         offeredSkillId: offeredSkill.id,
       };
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authToken}`)
         .send(createRequestDto);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      requestId = response.body.id;
+      const body = response.body as CreateRequestResponse;
+      requestId = body.id;
     });
 
     it('должен удалить заявку пользователя', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      // Проверяем, что заявка больше не существует
-      await request(app.getHttpServer())
+      await request(httpServer)
         .get(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });
 
     it('должен вернуть 403 при попытке удалить чужую заявку', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authTokenR}`)
         .expect(403);
@@ -361,7 +299,7 @@ describe('RequestsController (E2E with Pre‑seeded Data)', () => {
 
     it('должен вернуть 404 если заявка не существует', async () => {
       const idTest = uuidv4();
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/requests/${idTest}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
