@@ -9,6 +9,7 @@ import {
 import { LoginDTO } from './dto/login.dto';
 import { AuthResponseDto } from './dto/authResponse.dto';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { RefreshResponseDto } from './dto/refreshResponse.dto';
 
 // =========================
 // Error Responses
@@ -113,7 +114,7 @@ export function ApiAuthRefresh() {
     ApiResponse({
       status: 200,
       description: 'Токены успешно обновлены',
-      type: AuthResponseDto,
+      type: RefreshResponseDto,
       headers: {
         'Set-Cookie': {
           description: 'Устанавливает новый HTTP-only cookie с refresh токеном',

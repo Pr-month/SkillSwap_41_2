@@ -26,7 +26,11 @@
     "seed:users": "ts-node -r tsconfig-paths/register src/seeding/seed-test-users.ts",
     "db:clean": "ts-node -r tsconfig-paths/register src/seeding/clean-db.ts",
     "seed:all": "dotenv -e .env.test.local -- ts-node -r tsconfig-paths/register src/seeding/seed.ts",
-    "db:create": "ts-node -r tsconfig-paths/register src/seeding/create-test-db.ts"
+    "db:create": "ts-node -r tsconfig-paths/register src/seeding/create-test-db.ts",
+    "typeorm": "dotenv -e .env.test.local -- ts-node --files -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migrate:generate": "npm run typeorm -- migration:generate -d src/config/database.config.ts",
+    "migrate:run": "npm run typeorm -- migration:run -d src/config/database.config.ts",
+    "migrate:revert": "npm run typeorm -- migration:revert -d src/config/database.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -44,6 +48,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
+    "helmet": "^8.1.0",
     "ms": "^2.1.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -72,6 +77,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
+    "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",

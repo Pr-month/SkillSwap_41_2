@@ -11,9 +11,15 @@ import { Skill } from '../src/skills/entities/skill.entity';
 import { User } from '../src/users/entities/user.entity';
 import { UserRole } from '../src/users/enums/users.enums';
 import { AppModule } from './../src/app.module';
+import express from 'express';
+
+interface SimilarResponse {
+  users: Array<{ id: number; name: string; avatar: string | null }>;
+}
 
 describe('Skills (e2e)', () => {
   let app: INestApplication;
+  let httpServer: express.Express;
   let userRepository: Repository<User>;
   let categoryRepository: Repository<Category>;
   let skillRepository: Repository<Skill>;
@@ -29,7 +35,6 @@ describe('Skills (e2e)', () => {
   const testCategoryName = `E2E Category ${Date.now()}`;
   const testSkillTitle = `E2E Skill ${Date.now()}`;
 
-  // перед тестами инициализируем приложение и создаем необходимые тестовые данные 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -55,16 +60,15 @@ describe('Skills (e2e)', () => {
       }),
     );
     await app.init();
+    httpServer = app.getHttpServer() as express.Express;
 
     userRepository = app.get(getRepositoryToken(User));
     categoryRepository = app.get(getRepositoryToken(Category));
     skillRepository = app.get(getRepositoryToken(Skill));
     jwtService = app.get(JwtService);
 
-    // Создаём тестовую категорию
     testCategory = await categoryRepository.save({ name: testCategoryName });
 
-    // Создаём тестового пользователя
     const hashedPassword = await bcrypt.hash(testUserPassword, 10);
     testUser = await userRepository.save({
       name: 'E2E Skills User',
@@ -73,14 +77,12 @@ describe('Skills (e2e)', () => {
       role: UserRole.USER,
     });
 
-    // Генерируем JWT токен
     accessToken = jwtService.sign(
       { sub: testUser.id, email: testUser.email, role: testUser.role },
       { secret: process.env.JWT_ACCESS_SECRET ?? 'skillswap_41_2' },
     );
   });
-  
-  // после тестов удаляем тестовые данные и закрываем приложение
+
   afterAll(async () => {
     if (testSkill) await skillRepository.delete(testSkill.id).catch(() => {});
     await userRepository.delete(testUser.id);
@@ -88,7 +90,6 @@ describe('Skills (e2e)', () => {
     await app.close();
   });
 
-  // проверяем создание навыка
   describe('POST /skills', () => {
     it('Должен создаться навык при авторизованном запросе', async () => {
       const payload = {
@@ -98,13 +99,14 @@ describe('Skills (e2e)', () => {
         images: ['image1.png'],
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/skills')
         .set('Authorization', `Bearer ${accessToken}`)
         .send(payload)
         .expect(201);
 
-      expect(response.body).toMatchObject({
+      const createdSkill = response.body as Skill;
+      expect(createdSkill).toMatchObject({
         id: expect.any(Number),
         title: payload.title,
         description: payload.description,
@@ -113,11 +115,11 @@ describe('Skills (e2e)', () => {
         owner: expect.objectContaining({ id: testUser.id }),
       });
 
-      testSkill = response.body;
+      testSkill = createdSkill;
     });
 
     it('Должна вернуться ошибка 401 без токена', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/skills')
         .send({ title: 'test', description: 'test', categoryId: 1, images: [] })
         .expect(401);
@@ -130,80 +132,86 @@ describe('Skills (e2e)', () => {
         categoryId: 'not-number',
         images: [],
       };
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/skills')
         .set('Authorization', `Bearer ${accessToken}`)
         .send(invalidPayload)
         .expect(400);
-      expect(response.body.message).toBe('Validation failed');
+      const errorBody = response.body as { message: string };
+      expect(errorBody.message).toBe('Validation failed');
     });
   });
 
-  // проверяем получение списка навыков
   describe('GET /skills', () => {
     it('Должен вернуться список навыков', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/skills')
-        .expect(200);
-      expect(Array.isArray(response.body)).toBe(true);
-      const found = response.body.some((s: Skill) => s.id === testSkill.id);
+      const response = await request(httpServer).get('/skills').expect(200);
+      const skills = response.body as Skill[];
+      expect(Array.isArray(skills)).toBe(true);
+      const found = skills.some((s) => s.id === testSkill.id);
       expect(found).toBe(true);
     });
 
     it('Должен сработать фильтр по категории', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/skills?category=${testCategory.id}`)
         .expect(200);
-      expect(response.body.some((s: Skill) => s.id === testSkill.id)).toBe(true);
+      const skills = response.body as Skill[];
+      const found = skills.some((s) => s.id === testSkill.id);
+      expect(found).toBe(true);
     });
 
     it('Должен сработать фильтр по ID владельца', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/skills?owner=${testUser.id}`)
         .expect(200);
-      expect(response.body.some((s: Skill) => s.id === testSkill.id)).toBe(true);
+      const skills = response.body as Skill[];
+      const found = skills.some((s) => s.id === testSkill.id);
+      expect(found).toBe(true);
     });
 
     it('Должен сработать поиск', async () => {
       const searchTerm = testSkillTitle.substring(0, 5);
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/skills?search=${searchTerm}`)
         .expect(200);
-      expect(response.body.some((s: Skill) => s.id === testSkill.id)).toBe(true);
+      const skills = response.body as Skill[];
+      const found = skills.some((s) => s.id === testSkill.id);
+      expect(found).toBe(true);
     });
 
     it('Должна вернуться ошибка 404 при offset > total', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get('/skills?offset=10000')
         .expect(404);
-      expect(response.body.message).toContain('Навыки не найдены');
+      const errorBody = response.body as { message: string };
+      expect(errorBody.message).toContain('Навыки не найдены');
     });
   });
 
-  // проверяем получение конкретного навыка по ID
   describe('GET /skills/:id', () => {
     it('Должен вернуться навык по id', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/skills/${testSkill.id}`)
         .expect(200);
-      expect(response.body.id).toBe(testSkill.id);
+      const skill = response.body as Skill;
+      expect(skill.id).toBe(testSkill.id);
     });
 
     it('Должна вернуться ошибка 404 для несуществующего id', async () => {
-      await request(app.getHttpServer()).get('/skills/99999').expect(404);
+      await request(httpServer).get('/skills/99999').expect(404);
     });
   });
 
-  // проверяем обновление навыка по ID
   describe('PATCH /skills/:id', () => {
     it('Должен обновиться навык, если обновляет владелец', async () => {
       const updatePayload = { title: 'Updated E2E Title' };
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .patch(`/skills/${testSkill.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatePayload)
         .expect(200);
-      expect(response.body.title).toBe(updatePayload.title);
+      const updatedSkill = response.body as Skill;
+      expect(updatedSkill.title).toBe(updatePayload.title);
     });
 
     it('Должна вернуться ошибка 403 при попытке обновить чужой навык', async () => {
@@ -222,7 +230,7 @@ describe('Skills (e2e)', () => {
         images: [],
       });
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .patch(`/skills/${otherSkill.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ title: 'Hack' })
@@ -233,14 +241,13 @@ describe('Skills (e2e)', () => {
     });
 
     it('Должна вернуться ошибка 401 без токена', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .patch(`/skills/${testSkill.id}`)
         .send({ title: 'unauth' })
         .expect(401);
     });
   });
 
-  // проверка удаления навыка по ID
   describe('DELETE /skills/:id', () => {
     let tempSkill: Skill;
 
@@ -259,7 +266,7 @@ describe('Skills (e2e)', () => {
     });
 
     it('Должен удалиться навык, если удаляет владелец', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/skills/${tempSkill.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
@@ -282,7 +289,7 @@ describe('Skills (e2e)', () => {
         owner: otherUser,
         images: [],
       });
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/skills/${otherSkill.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(403);
@@ -291,33 +298,31 @@ describe('Skills (e2e)', () => {
     });
   });
 
-  // проверка добавления навыка в Избранное
   describe('POST /skills/:id/favorite', () => {
     it('Должен добавиться навык в избранное', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/skills/${testSkill.id}/favorite`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(201);
     });
 
     it('Должна вернуться ошибка 409 при повторном добавлении', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/skills/${testSkill.id}/favorite`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(409);
     });
 
     it('Должна вернуться ошибка 401 без токена', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/skills/${testSkill.id}/favorite`)
         .expect(401);
     });
   });
 
-  // проверка удаления навыка из Избранного
   describe('DELETE /skills/:id/favorite', () => {
     beforeAll(async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/skills/${testSkill.id}/favorite`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send()
@@ -325,21 +330,20 @@ describe('Skills (e2e)', () => {
     });
 
     it('Должен удалиться навык из избранного', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/skills/${testSkill.id}/favorite`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });
 
     it('Должна вернуться ошибка 404 при повторном удалении', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .delete(`/skills/${testSkill.id}/favorite`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
   });
 
-  // проверка получения списка похожих навыков
   describe('GET /skills/:id/similar', () => {
     let anotherSkill: Skill;
 
@@ -358,19 +362,18 @@ describe('Skills (e2e)', () => {
     });
 
     it('Должен вернуться список пользователей с навыками в той же категории', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .get(`/skills/${testSkill.id}/similar`)
         .expect(200);
-      expect(response.body).toHaveProperty('users');
-      expect(Array.isArray(response.body.users)).toBe(true);
-      const userIds = response.body.users.map((u: any) => u.id);
+      const similar = response.body as SimilarResponse;
+      expect(similar.users).toBeDefined();
+      expect(Array.isArray(similar.users)).toBe(true);
+      const userIds = similar.users.map((u) => u.id);
       expect(userIds).toContain(testUser.id);
     });
 
     it('Должна вернуться ошибка 404 для несуществующего навыка', async () => {
-      await request(app.getHttpServer())
-        .get('/skills/99999/similar')
-        .expect(404);
+      await request(httpServer).get('/skills/99999/similar').expect(404);
     });
   });
 });
