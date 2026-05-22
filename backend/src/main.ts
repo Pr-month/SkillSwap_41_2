@@ -28,8 +28,12 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   const config = configService.get<TAppConfig>(appConfig.KEY);
-  const uploadFolder =
-    configService.get<string>('upload.folder') ?? 'public/uploads';
+
+  if (!config) {
+    throw new Error('App configuration not loaded. Check appConfig registration.');
+  }
+  
+  const uploadFolder = config.uploadFolder;
 
   app.useStaticAssets(join(process.cwd(), uploadFolder), {
     prefix: '/uploads',
