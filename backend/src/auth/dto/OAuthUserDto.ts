@@ -1,11 +1,6 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { Gender } from 'src/users/enums/users.enums';
-
-export enum OAuthProvider {
-  YANDEX = 'yandex',
-  GOOGLE = 'google',
-  GITHUB = 'github',
-}
+import { OAuthProvider } from '../auth.enums';
 
 export class OAuthUserDto {
   @IsOptional()

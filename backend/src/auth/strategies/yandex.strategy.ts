@@ -2,8 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-yandex';
 import { TYandexConfig, yandexConfig } from 'src/config/yandex.config';
-import { OAuthProvider, OAuthUserDto } from '../dto/OAuthUserDto';
+import { OAuthUserDto } from '../dto/OAuthUserDto';
 import { Gender } from 'src/users/enums/users.enums';
+import { OAuthProvider } from '../auth.enums';
 
 @Injectable()
 export class YandexStrategy extends PassportStrategy(Strategy, 'yandex') {

@@ -13,7 +13,7 @@ import {
 import { Gender, UserRole } from '../enums/users.enums';
 import { City } from 'src/cities/entities/city.entity';
 import { Category } from 'src/categories/entities/category.entity';
-import { OAuthProvider } from 'src/auth/dto/OAuthUserDto';
+import { OAuthProvider } from 'src/auth/auth.enums';
 
 @Entity('users')
 export class User {
@@ -28,7 +28,7 @@ export class User {
 
   @Exclude()
   @Column({ nullable: true, type: 'varchar', length: 255 })
-  password!: string;
+  password?: string;
 
   @Column({ type: 'text', nullable: true })
   about?: string;

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -130,7 +131,10 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
-    const passwordMatches = await bcrypt.compare(dto.password, user.password);
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      user.password || '',
+    );
     if (!passwordMatches) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
@@ -152,7 +156,7 @@ export class AuthService {
 
   async findOrCreateOAuthUser(data: OAuthUserDto): Promise<TAuthResponse> {
     if (!data.email) {
-      throw new Error('Не удалось получить email пользователя');
+      throw new BadRequestException('Не удалось получить email пользователя');
     }
 
     let user = await this.usersRepository.findOne({
