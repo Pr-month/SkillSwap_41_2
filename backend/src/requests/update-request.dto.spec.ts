@@ -7,6 +7,7 @@ describe('UpdateRequestDto', () => {
 
   beforeEach(() => {
     dto = new UpdateRequestDto();
+    dto.status = RequestStatus.PENDING;
   });
 
   describe('status', () => {

@@ -6,6 +6,9 @@ describe('CreateRequestDto', () => {
 
   beforeEach(() => {
     dto = new CreateRequestDto();
+    dto.receiverId = 1;
+    dto.offeredSkillId = 2;
+    dto.requestedSkillId = 3;
   });
 
   describe('receiverId', () => {
