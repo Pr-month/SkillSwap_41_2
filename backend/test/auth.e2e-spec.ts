@@ -10,23 +10,38 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import request from 'supertest';
 import cookieParser from 'cookie-parser';
 import { Repository } from 'typeorm';
-import { describe, it } from '@jest/globals';
+import { describe, it, beforeAll, afterAll } from '@jest/globals';
 import { AppModule } from './../src/app.module';
 import { AllExceptionsFilter } from 'src/common/all-exception.filter';
 import { RegisterDTO } from 'src/auth/dto/register.dto';
 import { User } from 'src/users/entities/user.entity';
 import type { Server } from 'http';
+import { SendmailService } from '../src/sendmail/sendmail.service';
+import { NotificationService } from '../src/notification/notification.service';
+import { ConfigService } from '@nestjs/config';
+import { sendmailConfig } from '../src/config/sendmail.config';
+import { dataSource } from '../src/config/database.config';
+import { mockConfigService, testSendmailConfig } from './test-utils';
+
+type AuthResponse = {
+  accessToken: string;
+};
+
+function extractRefreshTokenFromCookie(cookieHeader: string | string[] | undefined): string | null {
+  if (!cookieHeader) return null;
+  const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
+  for (const cookie of cookies) {
+    const match = cookie.match(/refreshToken=([^;]+)/);
+    if (match) return match[1];
+  }
+  return null;
+}
 
 describe('AuthController (e2e)', () => {
-  type AuthResponse = {
-    accessToken: string;
-    refreshToken?: string;
-  };
-
   let userRepository: Repository<User>;
   let app: INestApplication;
   let accessToken: string;
-  let refreshToken: string;
+  let refreshToken: string | null = null;
   let httpServer: Server;
   let api: ReturnType<typeof request>;
   let moduleFixture: TestingModule;
@@ -40,11 +55,26 @@ describe('AuthController (e2e)', () => {
   beforeAll(async () => {
     moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ConfigService)
+      .useValue(mockConfigService)
+      .overrideProvider(SendmailService)
+      .useValue({ sendEmail: jest.fn() })
+      .overrideProvider(NotificationService)
+      .useValue({
+        notifyNewRequest: jest.fn(),
+        notifyRequestAccepted: jest.fn(),
+        notifyRequestRejected: jest.fn(),
+      })
+      .overrideProvider(sendmailConfig.KEY)
+      .useValue(testSendmailConfig)
+      .compile();
 
     userRepository = moduleFixture.get<Repository<User>>(
       getRepositoryToken(User),
     );
+
+    await userRepository.delete({ email: registerUserDto.email });
 
     app = moduleFixture.createNestApplication();
 
@@ -82,8 +112,12 @@ describe('AuthController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await userRepository.delete({ email: registerUserDto.email });
     await app.close();
     await moduleFixture.close();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   });
 
   // ===== Registration =====
@@ -97,9 +131,9 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     const body = res.body as AuthResponse;
-
     accessToken = body.accessToken;
-    refreshToken = body.refreshToken || res.headers['set-cookie'][0];
+    refreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
+    expect(refreshToken).not.toBeNull();
   });
 
   it('/auth/register (POST) => should fail duplicate email', async () => {
@@ -120,9 +154,9 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     const body = res.body as AuthResponse;
-
     accessToken = body.accessToken;
-    refreshToken = body.refreshToken || res.headers['set-cookie'][0];
+    refreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
+    expect(refreshToken).not.toBeNull();
   });
 
   it('/auth/login (POST) => should fail with wrong password', async () => {
@@ -137,28 +171,22 @@ describe('AuthController (e2e)', () => {
 
   // ===== Refresh =====
   it('/auth/refresh (POST) => should refresh tokens', async () => {
+    expect(refreshToken).toBeDefined();
     const res = await api
       .post('/auth/refresh')
-      .send({
-        refreshToken,
-      })
+      .send({ refreshToken: refreshToken as string })
       .expect(201);
 
     expect(res.body).toHaveProperty('accessToken');
-    // expect(res.headers['set-cookie']).toBeDefined();
-
-    const body = res.body as AuthResponse;
-
-    accessToken = body.accessToken;
-    refreshToken = body.refreshToken || res.headers['set-cookie'][0];
+    const newRefreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
+    expect(newRefreshToken).not.toBeNull();
+    refreshToken = newRefreshToken!;
   });
 
   it('/auth/refresh (POST) => should fail with invalid refresh token', async () => {
     await api
       .post('/auth/refresh')
-      .send({
-        refreshToken: 'invalidtoken',
-      })
+      .send({ refreshToken: 'invalidtoken' })
       .expect(401);
   });
 
@@ -172,9 +200,7 @@ describe('AuthController (e2e)', () => {
     expect(res.body).toEqual({ message: 'Успешный выход' });
 
     const testUser = await userRepository.findOne({
-      where: {
-        email: registerUserDto.email,
-      },
+      where: { email: registerUserDto.email },
     });
 
     expect(testUser?.refreshToken).toBeNull();
