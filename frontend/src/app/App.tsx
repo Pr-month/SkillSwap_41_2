@@ -12,6 +12,7 @@ import { AboutPage } from '@/pages/AboutPage/AboutPage';
 import { fetchExchanges } from '@/services/slices/exchangeSlice';
 import { getSkills } from '@/services/slices/skillsSlice';
 import Loader from '@/shared/ui/Loader/loader';
+import { getCategories } from '@/services/slices/categorySlice';
 const ProfileDetailsPage = lazy(
   () =>
     new Promise<{ default: ComponentType<unknown> }>(resolve => {
@@ -40,6 +41,7 @@ function App() {
     dispatch(fetchCatalog());
     dispatch(fetchExchanges());
     dispatch(getSkills());
+    dispatch(getCategories())
   }, [dispatch]);
 
   return (
