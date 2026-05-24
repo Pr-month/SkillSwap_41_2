@@ -12,23 +12,20 @@ import { useDispatch, useSelector } from '@/services/store/store';
 import { resetStepThreeData, updateStepThreeData } from '@/services/slices/registrationSlice';
 import { RegistrationInfoPanel } from '@/shared/ui/registrationInfoPanel/registrationInfoPanel';
 import { stepActions } from '@/services/slices/stepSlice';
-import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  getCategoriesSelector,
-  getSubcategoriesByCategory,
-  getSubcategoryIdByName,
-} from '@/services/slices/skillsSlice';
-import { SkillSubcategory } from '@/entities/skill/model/types';
+import { useLocation, useNavigate } from 'react-router-dom';import { getCategoriesSelector } from '@/services/slices/categorySlice';
 
 export const RegisterStepThree: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+
   const rawSkills = useSelector(getCategoriesSelector);
+
   const skills = rawSkills.map(category => ({
-    label: category,
-    value: category,
+    label: category.name,
+    value: category.name,
   }));
+
   const defaultValues = useSelector(state => state.register.stepThreeData);
 
   const schema = yup.object({
@@ -38,7 +35,7 @@ export const RegisterStepThree: FC = () => {
       .matches(/^[а-яёА-ЯЁ\s]+$/, 'Только кириллические символы')
       .min(3, 'Минимум 3 символа')
       .max(50, 'Максимум 50 символов'),
-    skillCategory: yup.string().required('Укажите категорию навыка').oneOf(rawSkills),
+    skillCategory: yup.string().required('Укажите категорию навыка').oneOf(rawSkills as unknown as string[]),
     skillSubCategory: yup.string().required('Подкатегория обязательна'),
     description: yup.string().required('Введите описание навыка').max(500, 'Максимум 500 символов'),
     images: yup
@@ -76,27 +73,46 @@ export const RegisterStepThree: FC = () => {
   });
 
   const selectedCategory = watch('skillCategory') || '';
-  const rawSubcategories = useSelector(state =>
-    getSubcategoriesByCategory(state, selectedCategory),
-  );
+  const selectedSubCategory = watch('skillSubCategory') || '';
 
+  // Вычисляем опции подкатегорий
   const subcategoryOptions = useMemo(() => {
-    return (rawSubcategories ?? []).map((category: string) => ({
-      label: category,
-      value: category,
+    if (!selectedCategory) return [];
+
+    const category = rawSkills.find(c => c.name === selectedCategory);
+    if (!category) return [];
+
+    return category.subCategory.map(sub => ({
+      label: sub.name,
+      value: sub.name,
     }));
-  }, [rawSubcategories]);
-  const subcategoryId = useSelector(state =>
-    getSubcategoryIdByName(state, watch('skillSubCategory')),
-  );
+  }, [selectedCategory, rawSkills]);
+
+  // ВЫЧИСЛЯЕМ subcategoryId напрямую, без useSelector
+  const subcategoryId = useMemo(() => {
+    if (!selectedCategory || !selectedSubCategory) return null;
+
+    const category = rawSkills.find(c => c.name === selectedCategory);
+    if (!category) return null;
+
+    const subcategory = category.subCategory.find(sub => sub.name === selectedSubCategory);
+    return subcategory?.id || null;
+  }, [selectedCategory, selectedSubCategory, rawSkills]);
+
+  // Устанавливаем дефолтное значение для подкатегории
   useEffect(() => {
     if (subcategoryOptions.length > 0) {
-      setValue('skillSubCategory', subcategoryOptions[0].value);
-      clearErrors('skillSubCategory');
+      const currentValue = watch('skillSubCategory');
+      const isValid = subcategoryOptions.some(opt => opt.value === currentValue);
+
+      if (!isValid) {
+        setValue('skillSubCategory', subcategoryOptions[0].value);
+        clearErrors('skillSubCategory');
+      }
     } else {
       setValue('skillSubCategory', '');
     }
-  }, [subcategoryOptions, clearErrors, setValue]);
+  }, [subcategoryOptions, setValue, clearErrors, watch]);
 
   const prepareImages = async (img: File[] | undefined) => {
     const files: File[] = img ?? [];
@@ -117,20 +133,34 @@ export const RegisterStepThree: FC = () => {
     dispatch(resetStepThreeData());
     dispatch(stepActions.prevStep());
   };
+
+  type SkillCategoryType =
+    | 'Бизнес и карьера'
+    | 'Творчество и искусство'
+    | 'Иностранные языки'
+    | 'Образование и развитие'
+    | 'Дом и уют'
+    | 'Здоровье и лайфстайл';
+
   const submitForm = async (data: yup.InferType<typeof schema>) => {
+
+    const skillCategory = data.skillCategory as SkillCategoryType;
+    const skillSubCategory = data.skillSubCategory as any; 
+
     dispatch(
       updateStepThreeData({
         ...data,
         images: await prepareImages(data.images),
-        skillCategory: data.skillCategory,
+        skillCategory: skillCategory,
         customSkillId: String(Math.random()),
-        skillSubCategory: data.skillSubCategory as SkillSubcategory<typeof data.skillCategory>,
-        subcategoryId: subcategoryId,
+        skillSubCategory: skillSubCategory,
+        subcategoryId: subcategoryId ? String(subcategoryId) : undefined,
         userId: String(Math.random()),
       }),
     );
     navigate('/register/preview', { state: { background: location } });
   };
+  
   return (
     <>
       <div className={styles.registrationContainer}>
