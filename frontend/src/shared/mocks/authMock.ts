@@ -1,11 +1,8 @@
+import { TRefreshResponse, TLoginData, TAuthResponse } from '@/api/types/auth';
+import { TApiResponse } from '@/api/types/common';
+import { TUserResponse } from '@/api/types/users';
 import { CustomSkill } from '@/entities/skill/model/types';
-import {
-  TAuthResponse,
-  TLoginData,
-  TRefreshResponse,
-  TServerResponse,
-  TUserResponse,
-} from '../utils/api';
+
 import { User } from '@/entities/user/model/types';
 import { TFullRegistrationData } from '@/services/slices/registrationSlice';
 
@@ -116,7 +113,7 @@ export const getUserApi = (): Promise<TUserResponse> => {
   });
 };
 
-export const logoutApi = (): Promise<TServerResponse<object>> => {
+export const logoutApi = (): Promise<TApiResponse<object>> => {
   return new Promise(resolve => {
     setTimeout(() => {
       localStorage.removeItem('refreshToken');
