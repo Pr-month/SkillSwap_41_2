@@ -95,7 +95,7 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
     if (contentType?.includes('application/json')) {
       const result = await response.json();
 
-      return result.data as T;
+      return result as T;
     }
 
     /**

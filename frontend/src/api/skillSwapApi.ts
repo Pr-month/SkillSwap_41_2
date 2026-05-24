@@ -3,13 +3,20 @@ import { getCookie } from '@/shared/utils/cookies';
 import { api } from './apiClient';
 import { TUpdateProfileData, TUpdateProfileResponse, TUsersResponse } from './types/users';
 import { TAuthResponse, TLoginData } from './types/auth';
-import { Skill } from '@/entities/skill/model/types';
+import { TSkillResponse } from './types/skill';
+
+/**
+ * Получение списка категорий
+ */
+export const getCategoriesApi = async () => {
+  return api.get('/api/categories');
+}
 
 /**
  * Получение списка навыков
  */
 export const getSkillsApi = async () => {
-  return api.get<Skill[]>('/api/skills');
+  return api.get<TSkillResponse>('/api/skills');
 };
 
 /**
