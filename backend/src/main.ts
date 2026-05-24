@@ -27,6 +27,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(helmet());
+  app.setGlobalPrefix('api');
+
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  });
 
   const configService = app.get(ConfigService);
   const config = configService.get<TAppConfig>(appConfig.KEY);
