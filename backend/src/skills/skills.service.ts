@@ -15,6 +15,7 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
+import { SkillResponseDto } from './dto/skill-response.gto';
 
 @Injectable()
 export class SkillsService {
@@ -126,7 +127,7 @@ export class SkillsService {
     return await this.skillRepository.save(skill);
   }
 
-  async findAll(query: GetSkillsQueryDto): Promise<Skill[]> {
+  async findAll(query: GetSkillsQueryDto): Promise<SkillResponseDto[]> {
     const { category, owner, search, limit, offset } = query;
 
     // собираем запрос (qb - query builder)
@@ -168,7 +169,12 @@ export class SkillsService {
 
     if (skip > total) throw new NotFoundException('Навыки не найдены');
 
-    return data;
+    return data.map((skill: Skill) => ({
+      id: skill.id,
+      title: skill.title,
+      description: skill.description,
+      category: skill.category.id,
+    }));
   }
 
   async findOne(id: number): Promise<Skill> {
