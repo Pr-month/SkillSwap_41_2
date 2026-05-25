@@ -7,7 +7,6 @@ import { Skill } from 'src/skills/entities/skill.entity';
 import { Request } from 'src/requests/entities/request.entity';
 import { CategoriesDataDefault } from './categories.data';
 
-
 const AppDataSource = new DataSource({
   ...databaseConfig(),
   entities: [Category, User, City, Skill, Request],
@@ -40,7 +39,7 @@ async function seedCategories() {
 
         await repo.save({
           name: childName,
-          parent
+          parent,
         });
       }
     }

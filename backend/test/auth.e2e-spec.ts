@@ -27,7 +27,9 @@ type AuthResponse = {
   accessToken: string;
 };
 
-function extractRefreshTokenFromCookie(cookieHeader: string | string[] | undefined): string | null {
+function extractRefreshTokenFromCookie(
+  cookieHeader: string | string[] | undefined,
+): string | null {
   if (!cookieHeader) return null;
   const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
   for (const cookie of cookies) {
@@ -178,7 +180,9 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(res.body).toHaveProperty('accessToken');
-    const newRefreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
+    const newRefreshToken = extractRefreshTokenFromCookie(
+      res.headers['set-cookie'],
+    );
     expect(newRefreshToken).not.toBeNull();
     refreshToken = newRefreshToken!;
   });

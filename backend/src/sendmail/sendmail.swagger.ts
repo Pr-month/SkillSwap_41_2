@@ -13,7 +13,8 @@ export function ApiSendmail() {
   return applyDecorators(
     ApiOperation({
       summary: 'Отправка email',
-      description: 'Отправляет email через SMTP с поддержкой текста или HTML, с автоматическими повторными попытками при ошибках.',
+      description:
+        'Отправляет email через SMTP с поддержкой текста или HTML, с автоматическими повторными попытками при ошибках.',
     }),
     ApiBody({
       type: SendmailDto,
@@ -38,7 +39,8 @@ export function ApiSendmail() {
       },
     }),
     ApiNoContentResponse({
-      description: 'Письмо успешно отправлено (или после всех повторных попыток)',
+      description:
+        'Письмо успешно отправлено (или после всех повторных попыток)',
     }),
     ApiBadRequestResponse({
       description: 'Ошибка валидации входных данных',
@@ -56,7 +58,8 @@ export function ApiSendmail() {
       },
     }),
     ApiUnauthorizedResponse({
-      description: 'Отсутствует или недействительный токен (если эндпоинт защищён)',
+      description:
+        'Отсутствует или недействительный токен (если эндпоинт защищён)',
       schema: {
         example: {
           statusCode: 401,

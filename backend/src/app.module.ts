@@ -21,7 +21,13 @@ import { SendmailModule } from './sendmail/sendmail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig, appConfig, uploadConfig, sendmailConfig],
+      load: [
+        databaseConfig,
+        jwtConfig,
+        appConfig,
+        uploadConfig,
+        sendmailConfig,
+      ],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({

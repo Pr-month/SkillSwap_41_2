@@ -133,14 +133,18 @@ describe('RequestsController (e2e)', () => {
     });
 
     // 4. Получаем токены
-    authTokenSender = (await authService.login({
-      email: senderEmail,
-      password,
-    })).accessToken;
-    authTokenReceiver = (await authService.login({
-      email: receiverEmail,
-      password,
-    })).accessToken;
+    authTokenSender = (
+      await authService.login({
+        email: senderEmail,
+        password,
+      })
+    ).accessToken;
+    authTokenReceiver = (
+      await authService.login({
+        email: receiverEmail,
+        password,
+      })
+    ).accessToken;
   });
 
   afterAll(async () => {
