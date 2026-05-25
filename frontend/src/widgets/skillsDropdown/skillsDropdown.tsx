@@ -1,8 +1,8 @@
 import { useEffect, useState, forwardRef } from 'react';
-import { skillsCategories, skillsMapping } from '@/shared/lib/categories';
+import { skillsMapping } from '@/shared/lib/categories';
 import styles from './skillsDropdown.module.css';
 import { useSelector } from '@/services/store/store';
-import { getSkillsSelector } from '@/services/slices/skillsSlice';
+import { getCategoriesSelector } from '@/services/slices/categorySlice';
 
 interface SkillsDropdownProps {
   isOpen: boolean;
@@ -11,7 +11,17 @@ interface SkillsDropdownProps {
 
 export const SkillsDropdown = forwardRef<HTMLDivElement, SkillsDropdownProps>(({ isOpen }, ref) => {
   const [isMobile, setIsMobile] = useState(false);
-  const skills = useSelector(getSkillsSelector);
+
+  const categories = useSelector(getCategoriesSelector);
+
+  console.log('categories', categories);
+
+  const mapCategories = categories.map(category => ({
+    id: category.id,
+    slug: category.slug,
+    name: category.name,
+    subcategories: category.subCategory.map(sub => sub.name),
+  }));
 
   useEffect(() => {
     const handleResize = () => {
@@ -23,24 +33,13 @@ export const SkillsDropdown = forwardRef<HTMLDivElement, SkillsDropdownProps>(({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const groupedSkills = skills.reduce(
-    (acc, skill) => {
-      if (!acc[skill.category]) {
-        acc[skill.category] = new Set();
-      }
-      acc[skill.category].add(skill.subcategory);
-      return acc;
-    },
-    {} as Record<string, Set<string>>,
-  );
-
   if (!isOpen) return null;
 
   const renderCategory = (
     skillscategory: string,
     subcategories: string[],
-    iconPath: string,
-    bgColor: string,
+    iconPath?: string,
+    bgColor?: string,
   ) => (
     <div className={styles.skillscategory} key={skillscategory}>
       <div className={styles.skillscategoryHeader}>
@@ -56,7 +55,7 @@ export const SkillsDropdown = forwardRef<HTMLDivElement, SkillsDropdownProps>(({
         <div className={styles.categoryContent}>
           <h3 className={styles.categoryTitle}>{skillscategory}</h3>
           <div className={styles.subcategories}>
-            {subcategories.map(sub => (
+            {subcategories?.map(sub => (
               <div key={sub} className={styles.subcategory}>
                 {sub}
               </div>
@@ -67,15 +66,8 @@ export const SkillsDropdown = forwardRef<HTMLDivElement, SkillsDropdownProps>(({
     </div>
   );
 
-  const categories = Object.entries(skillsCategories).map(([category, subcategories]) => {
-    const actualSubcategories = groupedSkills[category]
-      ? Array.from(groupedSkills[category])
-      : subcategories;
-    return [category, actualSubcategories] as [string, string[]];
-  });
-
-  const firstColumnCategories = [categories[0], categories[2], categories[4]];
-  const secondColumnCategories = [categories[1], categories[3], categories[5]];
+  const firstColumnCategories = [mapCategories[0], mapCategories[2], mapCategories[4]];
+  const secondColumnCategories = [mapCategories[1], mapCategories[5], mapCategories[6]];
 
   return (
     <div ref={ref} className={styles.skillsDropdown}>
@@ -83,24 +75,25 @@ export const SkillsDropdown = forwardRef<HTMLDivElement, SkillsDropdownProps>(({
         {!isMobile && (
           <>
             <div className={styles.skillscolumn}>
-              {firstColumnCategories.map(([skillscategory, subcategories]) => {
-                const { color, icon } = skillsMapping[skillscategory as keyof typeof skillsMapping];
-                return renderCategory(skillscategory, subcategories, icon, color);
+              {firstColumnCategories.map(category => {
+                const { color, icon } = skillsMapping[category.slug];
+                return renderCategory(category.name, category.subcategories, icon, color);
               })}
             </div>
             <div className={styles.skillscolumn}>
-              {secondColumnCategories.map(([skillscategory, subcategories]) => {
-                const { color, icon } = skillsMapping[skillscategory as keyof typeof skillsMapping];
-                return renderCategory(skillscategory, subcategories, icon, color);
+              {secondColumnCategories.map(category => {
+                const { color, icon } = skillsMapping[category.slug];
+                return renderCategory(category.name, category.subcategories, icon, color);
               })}
             </div>
           </>
         )}
         {isMobile && (
           <div className={styles.skillscolumn}>
-            {categories.map(([skillscategory, subcategories]) => {
-              const { color, icon } = skillsMapping[skillscategory as keyof typeof skillsMapping];
-              return renderCategory(skillscategory, subcategories, icon, color);
+            {mapCategories.map(category => {
+              const { color, icon } = skillsMapping[category.id];
+
+              return renderCategory(category.name, category.subcategories, icon, color);
             })}
           </div>
         )}

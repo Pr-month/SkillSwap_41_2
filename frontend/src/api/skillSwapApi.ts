@@ -4,12 +4,13 @@ import { api } from './apiClient';
 import { TUpdateProfileData, TUpdateProfileResponse, TUsersResponse } from './types/users';
 import { TAuthResponse, TLoginData } from './types/auth';
 import { TSkillResponse } from './types/skill';
+import { TCategoryesResponse } from './types/categories';
 
 /**
  * Получение списка категорий
  */
 export const getCategoriesApi = async () => {
-  return api.get('/api/categories');
+  return api.get<TCategoryesResponse>('/api/categories');
 }
 
 /**

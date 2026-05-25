@@ -29,4 +29,7 @@ export class Category {
 
   @ManyToMany(() => User, (user) => user.wantToLearn)
   usersWhoWantToLearn?: User[];
+
+  @Column({ nullable: true, type: 'varchar', length: 50 })
+  slug?: string;
 }
