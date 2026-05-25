@@ -22,9 +22,11 @@ import { FileUploadModule } from './file-upload/file-upload.module';
 import { CitiesModule } from './cities/cities.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(helmet());
   app.setGlobalPrefix('api');
@@ -36,6 +38,17 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const config = configService.get<TAppConfig>(appConfig.KEY);
+
+  if (!config) {
+    throw new Error('App configuration not loaded. Check appConfig registration.');
+  }
+  
+  const uploadFolder = config.uploadFolder;
+
+  app.useStaticAssets(join(process.cwd(), uploadFolder), {
+    prefix: '/uploads',
+  });
+
   app.use(cookieParser());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalFilters(new AllExceptionsFilter());

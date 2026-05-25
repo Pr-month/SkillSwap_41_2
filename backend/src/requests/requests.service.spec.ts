@@ -7,7 +7,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TJwtPayload } from '../auth/auth.types';
-import { NotificationGateway } from '../notification/notification.gateway';
+import { NotificationService } from '../notification/notification.service';
 import { Skill } from '../skills/entities/skill.entity';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/users.enums';
@@ -22,7 +22,7 @@ describe('RequestsService', () => {
   let requestRepository: jest.Mocked<Repository<Request>>;
   let userRepository: jest.Mocked<Repository<User>>;
   let skillRepository: jest.Mocked<Repository<Skill>>;
-  let notificationGateway: jest.Mocked<NotificationGateway>;
+  let notificationService: jest.Mocked<NotificationService>;
 
   // тестовые данные
   const mockUser = {
@@ -86,9 +86,11 @@ describe('RequestsService', () => {
           },
         },
         {
-          provide: NotificationGateway,
+          provide: NotificationService,
           useValue: {
-            sendNotification: jest.fn(),
+            notifyNewRequest: jest.fn(),
+            notifyRequestAccepted: jest.fn(),
+            notifyRequestRejected: jest.fn(),
           },
         },
       ],
@@ -98,7 +100,7 @@ describe('RequestsService', () => {
     requestRepository = module.get(getRepositoryToken(Request));
     userRepository = module.get(getRepositoryToken(User));
     skillRepository = module.get(getRepositoryToken(Skill));
-    notificationGateway = module.get(NotificationGateway);
+    notificationService = module.get(NotificationService);
   });
 
   // после каждого теста очищаем моки
@@ -159,15 +161,14 @@ describe('RequestsService', () => {
         status: RequestStatus.PENDING,
         isRead: false,
       });
-      expect(notificationGateway.sendNotification).toHaveBeenCalledWith(
-        mockReceiver.id,
-        'new_request',
-        expect.objectContaining({
+      expect(notificationService.notifyNewRequest).toHaveBeenCalledWith(
+        mockReceiver,
+        {
           requestId: mockRequest.id,
           senderName: mockUser.name,
           offeredSkillTitle: mockOfferedSkill.title,
           requestedSkillTitle: mockRequestedSkill.title,
-        }),
+        },
       );
       expect(result).toEqual(mockRequest);
     });
@@ -181,10 +182,14 @@ describe('RequestsService', () => {
       requestRepository.save.mockResolvedValue(mockRequest);
       userRepository.findOne.mockResolvedValueOnce(null);
       await service.create(userId, dto);
-      expect(notificationGateway.sendNotification).toHaveBeenCalledWith(
-        mockReceiver.id,
-        'new_request',
-        expect.objectContaining({ senderName: 'Пользователь' }),
+      expect(notificationService.notifyNewRequest).toHaveBeenCalledWith(
+        mockReceiver,
+        {
+          requestId: mockRequest.id,
+          senderName: 'Пользователь',
+          offeredSkillTitle: mockOfferedSkill.title,
+          requestedSkillTitle: mockRequestedSkill.title,
+        },
       );
     });
 
@@ -347,10 +352,13 @@ describe('RequestsService', () => {
       expect(requestRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ status: RequestStatus.ACCEPTED }),
       );
-      expect(notificationGateway.sendNotification).toHaveBeenCalledWith(
-        mockRequest.sender.id,
-        'request_accepted',
-        expect.objectContaining({ requestId, receiverName: mockReceiver.name }),
+      expect(notificationService.notifyRequestAccepted).toHaveBeenCalledWith(
+        mockRequest.sender,
+        {
+          requestId,
+          receiverName: mockReceiver.name,
+          offeredSkillTitle: mockOfferedSkill.title,
+        },
       );
       expect(result).toEqual({ message: 'Заявка принята' });
     });
@@ -364,10 +372,13 @@ describe('RequestsService', () => {
         status: RequestStatus.ACCEPTED,
       });
       await service.accept(requestId, userId);
-      expect(notificationGateway.sendNotification).toHaveBeenCalledWith(
-        mockRequest.sender.id,
-        'request_accepted',
-        expect.objectContaining({ receiverName: 'Получатель' }),
+      expect(notificationService.notifyRequestAccepted).toHaveBeenCalledWith(
+        mockRequest.sender,
+        {
+          requestId,
+          receiverName: 'Получатель',
+          offeredSkillTitle: mockOfferedSkill.title,
+        },
       );
     });
 
@@ -419,6 +430,13 @@ describe('RequestsService', () => {
 
       const result = await service.reject(requestId, userId);
       expect(result).toEqual({ message: 'Заявка отклонена' });
+      expect(notificationService.notifyRequestRejected).toHaveBeenCalledWith(
+        mockRequest.sender,
+        {
+          requestId,
+          receiverName: mockReceiver.name,
+        },
+      );
     });
 
     it('Должно отправиться уведомление с именем по умолчанию, если получатель не найден в БД', async () => {
@@ -430,10 +448,12 @@ describe('RequestsService', () => {
         status: RequestStatus.REJECTED,
       });
       await service.reject(requestId, userId);
-      expect(notificationGateway.sendNotification).toHaveBeenCalledWith(
-        mockRequest.sender.id,
-        'request_rejected',
-        expect.objectContaining({ receiverName: 'Получатель' }),
+      expect(notificationService.notifyRequestRejected).toHaveBeenCalledWith(
+        mockRequest.sender,
+        {
+          requestId,
+          receiverName: 'Получатель',
+        },
       );
     });
 

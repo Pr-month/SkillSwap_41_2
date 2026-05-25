@@ -11,6 +11,7 @@ import {
 } from '@jest/globals';
 import { FileUploadService, MulterFile } from './file-upload.service';
 import * as fs from 'fs/promises';
+import { uploadConfig } from 'src/config/upload.config';
 
 // Мокируем fs/promises целиком
 jest.mock('fs/promises');
@@ -36,7 +37,16 @@ describe('FileUploadService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
-      providers: [FileUploadService],
+      providers: [
+        FileUploadService,
+        {
+          provide: uploadConfig.KEY,
+          useValue: {
+            folder: 'public/uploads',
+            maxSize: 2 * 1024 * 1024,
+          },
+        },
+      ],
     }).compile();
     service = module.get<FileUploadService>(FileUploadService);
   });
