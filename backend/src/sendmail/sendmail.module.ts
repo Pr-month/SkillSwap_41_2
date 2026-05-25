@@ -9,9 +9,8 @@ import { sendmailConfig, TSendmailConfig } from '../config/sendmail.config';
   imports: [
     MailerModule.forRootAsync({
       imports: [ConfigModule.forFeature(sendmailConfig)],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const config = configService.get<TSendmailConfig>(sendmailConfig.KEY);
+      inject: [sendmailConfig.KEY],
+      useFactory: (config: TSendmailConfig) => {
         if (!config) {
           throw new Error('Sendmail configuration not found');
         }
@@ -24,6 +23,7 @@ import { sendmailConfig, TSendmailConfig } from '../config/sendmail.config';
   ],
   controllers: [SendmailController],
   providers: [SendmailService],
+  exports: [SendmailService],
 })
 
 export class SendmailModule {}

@@ -37,7 +37,7 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
-  const config = configService.get<TAppConfig>(appConfig.KEY);
+  const config = configService.get('app');
 
   if (!config) {
     throw new Error('App configuration not loaded. Check appConfig registration.');
