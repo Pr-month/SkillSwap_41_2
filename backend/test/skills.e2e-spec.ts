@@ -1,5 +1,16 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
-import { BadRequestException, INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from '@jest/globals';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/all-exception.filter';
 import { ConfigService } from '@nestjs/config';
-import { appConfig, TAppConfig } from './config/app.config';
+import { TAppConfig } from './config/app.config';
 import {
   DocumentBuilder,
   SwaggerDocumentOptions,
@@ -37,12 +37,14 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
-  const config = configService.get('app');
+  const config = configService.get('app') as TAppConfig;
 
   if (!config) {
-    throw new Error('App configuration not loaded. Check appConfig registration.');
+    throw new Error(
+      'App configuration not loaded. Check appConfig registration.',
+    );
   }
-  
+
   const uploadFolder = config.uploadFolder;
 
   app.useStaticAssets(join(process.cwd(), uploadFolder), {

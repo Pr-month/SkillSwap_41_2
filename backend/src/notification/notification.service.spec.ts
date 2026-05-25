@@ -86,7 +86,9 @@ describe('NotificationService', () => {
       sendmailService.sendEmail.mockRejectedValueOnce(emailError);
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(service.notifyNewRequest(mockUser, data)).resolves.not.toThrow();
+      await expect(
+        service.notifyNewRequest(mockUser, data),
+      ).resolves.not.toThrow();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to send email notification for new request:',
@@ -142,7 +144,9 @@ describe('NotificationService', () => {
       sendmailService.sendEmail.mockRejectedValueOnce(new Error('fail'));
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(service.notifyRequestAccepted(mockUser, data)).resolves.not.toThrow();
+      await expect(
+        service.notifyRequestAccepted(mockUser, data),
+      ).resolves.not.toThrow();
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -184,7 +188,9 @@ describe('NotificationService', () => {
       sendmailService.sendEmail.mockRejectedValueOnce(new Error('fail'));
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(service.notifyRequestRejected(mockUser, data)).resolves.not.toThrow();
+      await expect(
+        service.notifyRequestRejected(mockUser, data),
+      ).resolves.not.toThrow();
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });

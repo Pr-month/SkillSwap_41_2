@@ -8,7 +8,11 @@ import { jwtConfig } from '../config/jwt.config';
 import { SendmailModule } from '../sendmail/sendmail.module';
 
 @Module({
-  imports: [ConfigModule.forFeature(jwtConfig), JwtModule.register({}), SendmailModule],
+  imports: [
+    ConfigModule.forFeature(jwtConfig),
+    JwtModule.register({}),
+    SendmailModule,
+  ],
   providers: [NotificationGateway, WsAuthService, NotificationService],
   exports: [NotificationService, NotificationGateway],
 })

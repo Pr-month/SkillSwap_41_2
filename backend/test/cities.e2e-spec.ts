@@ -1,5 +1,9 @@
 import { AllExceptionsFilter } from '../src/common/all-exception.filter';
-import { BadRequestException, INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -162,9 +166,7 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен вернуть список городов (публичный эндпоинт)', async () => {
-      const response = await request(httpServer)
-        .get('/cities')
-        .expect(200);
+      const response = await request(httpServer).get('/cities').expect(200);
 
       const cities = response.body as CityResponse[];
       expect(Array.isArray(cities)).toBe(true);
@@ -225,9 +227,7 @@ describe('Cities (e2e)', () => {
     });
 
     it('Должен вернуть 404 для несуществующего ID', async () => {
-      await request(httpServer)
-        .get('/cities/99999')
-        .expect(404);
+      await request(httpServer).get('/cities/99999').expect(404);
     });
   });
 

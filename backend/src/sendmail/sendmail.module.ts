@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { SendmailService } from './sendmail.service';
 import { SendmailController } from './sendmail.controller';
 import { sendmailConfig, TSendmailConfig } from '../config/sendmail.config';
@@ -25,5 +25,4 @@ import { sendmailConfig, TSendmailConfig } from '../config/sendmail.config';
   providers: [SendmailService],
   exports: [SendmailService],
 })
-
 export class SendmailModule {}
