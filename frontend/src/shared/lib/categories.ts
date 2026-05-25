@@ -55,29 +55,29 @@ export const skillsCategories = {
   ],
 } as const;
 
-export const skillsMapping: Record<keyof typeof skillsCategories, { color: string; icon: string }> =
+export const skillsMapping: Record<string, { color: string; icon: string }>  =
   {
-    'Бизнес и карьера': {
+    'business': {
       color: '#EEE7F7',
       icon: '/src/app/assets/static/images/iconsCategory/briefcase.svg',
     },
-    'Дом и уют': {
+    'creativity': {
       color: '#F7EBE5',
       icon: '/src/app/assets/static/images/iconsCategory/home.svg',
     },
-    'Здоровье и лайфстайл': {
+    'languages': {
       color: '#E9F7E7',
       icon: '/src/app/assets/static/images/iconsCategory/lifestyle.svg',
     },
-    'Иностранные языки': {
+    'development': {
       color: '#EBE5C5',
       icon: '/src/app/assets/static/images/iconsCategory/global.svg',
     },
-    'Образование и развитие': {
+    'health': {
       color: '#E7F2F6',
       icon: '/src/app/assets/static/images/iconsCategory/book.svg',
     },
-    'Творчество и искусство': {
+    'other': {
       color: '#F7E7F2',
       icon: '/src/app/assets/static/images/iconsCategory/palette.svg',
     },

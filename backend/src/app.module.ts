@@ -15,11 +15,13 @@ import { RequestsModule } from './requests/requests.module';
 import { NotificationModule } from './notification/notification.module';
 import { CitiesModule } from './cities/cities.module';
 import { uploadConfig } from './config/upload.config';
+import { sendmailConfig } from './config/sendmail.config';
+import { SendmailModule } from './sendmail/sendmail.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig, appConfig, uploadConfig],
+      load: [databaseConfig, jwtConfig, appConfig, uploadConfig, sendmailConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
@@ -34,6 +36,7 @@ import { uploadConfig } from './config/upload.config';
     RequestsModule,
     NotificationModule,
     CitiesModule,
+    SendmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

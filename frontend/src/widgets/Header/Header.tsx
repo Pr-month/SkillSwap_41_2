@@ -8,7 +8,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from '@/services/store/store';
 import { setSearchQuery } from '@/services/slices/catalogSlice';
 import { SkillsDropdown } from '@/widgets/skillsDropdown/skillsDropdown';
-import { getSkills } from '@/services/slices/skillsSlice';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
 export const Header = () => {
@@ -20,9 +19,6 @@ export const Header = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchQuery = useSelector(state => state.catalog.searchQuery);
 
-  useEffect(() => {
-    dispatch(getSkills());
-  }, [dispatch]);
 
   const handleSearch = (query: string) => {
     dispatch(setSearchQuery(query));

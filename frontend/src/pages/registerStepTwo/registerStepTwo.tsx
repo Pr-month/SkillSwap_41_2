@@ -21,7 +21,7 @@ import {
 import { useDispatch, useSelector } from '@/services/store/store';
 import { RegistrationInfoPanel } from '@/shared/ui/registrationInfoPanel/registrationInfoPanel';
 import { stepActions } from '@/services/slices/stepSlice';
-import { getCategoriesSelector, getSubcategoriesByCategory } from '@/services/slices/skillsSlice';
+import { getCategoriesSelector } from '@/services/slices/categorySlice';
 
 export const RegisterStepTwo: FC = () => {
   const [isDatePickerOpen, setDatePicker] = useState(false);
@@ -93,18 +93,30 @@ export const RegisterStepTwo: FC = () => {
     mode: 'onBlur',
     defaultValues: { ...defaultValues },
   });
+
   const rawSkills = useSelector(getCategoriesSelector);
+
   const skills = rawSkills.map(category => ({
-    label: category,
-    value: category,
+    label: category.name,
+    value: category.name,
   }));
+
   const selectedCategories = watch('categories') || '';
-  const subcategoryOptions = useSelector(state =>
-    getSubcategoriesByCategory(state, selectedCategories),
-  ).map((category: string) => ({
-    label: category,
-    value: category,
-  }));
+
+  const subcategoryOptions = useSelector(() => {
+    if (!selectedCategories.length) return [];
+
+    const allSubcategories = selectedCategories.flatMap(categoryName => {
+      const category = rawSkills.find(c => c.name === categoryName);
+      return category ? category.subCategory.map(sub => sub.name) : [];
+    });
+
+    return [...new Set(allSubcategories)].map(subName => ({
+      label: subName,
+      value: subName,
+    }));
+  });
+
   const onSubmit = (data: TStepTwoData) => {
     dispatch(resetStepTwoData());
     dispatch(
@@ -130,10 +142,11 @@ export const RegisterStepTwo: FC = () => {
           render={({ fieldState }) => (
             <div className={styles.logoContainer}>
               <label htmlFor="avatar" className={styles.avatarLabel}>
-                <img className={styles.avatarLabelPlusIcon} src={plusIcon} />
+                <img className={styles.avatarLabelPlusIcon} src={plusIcon} alt="Загрузить аватар" />
               </label>
               <input
                 id="avatar"
+                name="avatar"
                 type="file"
                 accept="image/*"
                 className={styles.avatarInput}
@@ -150,6 +163,7 @@ export const RegisterStepTwo: FC = () => {
                 }}
                 onBlur={() => trigger('avatar')}
               />
+
               {fieldState.error && <p className={styles.errorText}>{fieldState.error.message}</p>}
             </div>
           )}

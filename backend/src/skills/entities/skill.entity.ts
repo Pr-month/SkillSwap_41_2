@@ -44,8 +44,8 @@ export class Skill {
   updatedAt!: Date;
 
   @OneToMany(() => Request, (request) => request.offeredSkill)
-  offeredInRequests: Request[];
+  offeredInRequests!: Request[];
 
   @OneToMany(() => Request, (request) => request.requestedSkill)
-  requestedInRequests: Request[];
+  requestedInRequests!: Request[];
 }

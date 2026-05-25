@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import 'dotenv/config';
 
 async function createTestDb() {
   const client = new Client({

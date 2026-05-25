@@ -15,6 +15,7 @@ import filtersReducer from '@/services/slices/filtersSlice';
 import likeReducer from '@/services/slices/likeSlice';
 
 import authSlice from '../slices/authSlice';
+import { categoriesReducer } from '../slices/categorySlice';
 
 export const rootReducer = combineSlices({
   register: registrationReducer,
@@ -25,6 +26,7 @@ export const rootReducer = combineSlices({
   filters: filtersReducer,
   likes: likeReducer,
   [authSlice.name]: authSlice.reducer,
+  categories: categoriesReducer,
 });
 
 const store = configureStore({

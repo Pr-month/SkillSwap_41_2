@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { describe, it } from '@jest/globals';
+import { describe, it, beforeAll, afterAll } from '@jest/globals';
 import { Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from 'src/common/all-exception.filter';
@@ -15,6 +15,12 @@ import fs from 'fs/promises';
 import path from 'path';
 import dotenv from 'dotenv';
 import type { Server } from 'http';
+import { SendmailService } from '../src/sendmail/sendmail.service';
+import { NotificationService } from '../src/notification/notification.service';
+import { ConfigService } from '@nestjs/config';
+import { sendmailConfig } from '../src/config/sendmail.config';
+import { dataSource } from '../src/config/database.config';
+import { mockConfigService, testSendmailConfig } from './test-utils';
 
 dotenv.config();
 
@@ -34,18 +40,28 @@ describe('FileUploadController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ConfigService)
+      .useValue(mockConfigService)
+      .overrideProvider(SendmailService)
+      .useValue({ sendEmail: jest.fn() })
+      .overrideProvider(NotificationService)
+      .useValue({
+        notifyNewRequest: jest.fn(),
+        notifyRequestAccepted: jest.fn(),
+        notifyRequestRejected: jest.fn(),
+      })
+      .overrideProvider(sendmailConfig.KEY)
+      .useValue(testSendmailConfig)
+      .compile();
 
     app = moduleFixture.createNestApplication();
 
     app.use(cookieParser());
-
     app.useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
     );
-
     app.useGlobalFilters(new AllExceptionsFilter());
-
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -55,7 +71,6 @@ describe('FileUploadController (e2e)', () => {
           enableImplicitConversion: true,
         },
         forbidUnknownValues: true,
-
         exceptionFactory: (errors) => {
           return new BadRequestException({
             message: 'Validation failed',
@@ -79,12 +94,11 @@ describe('FileUploadController (e2e)', () => {
       process.cwd(),
       process.env.UPLOADS_PATH || 'test-uploads',
     );
-
-    await fs.rm(uploadsPath, {
-      recursive: true,
-      force: true,
-    });
+    await fs.rm(uploadsPath, { recursive: true, force: true });
     await app.close();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   });
 
   it('/files (POST) => should upload jpg file', async () => {
