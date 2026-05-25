@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { TJwtPayload } from '../auth/auth.types';
-import { NotificationGateway } from '../notification/notification.gateway';
+import { NotificationService } from '../notification/notification.service';
 import { Skill } from '../skills/entities/skill.entity';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/users.enums';
@@ -25,7 +25,7 @@ export class RequestsService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Skill)
     private readonly skillsRepository: Repository<Skill>,
-    private readonly notificationGateway: NotificationGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(userId: number, dto: CreateRequestDto) {
@@ -33,6 +33,10 @@ export class RequestsService {
       where: { id: dto.receiverId },
     });
     if (!receiver) throw new NotFoundException('Получатель не найден');
+
+    if (userId === dto.receiverId) {
+      throw new ForbiddenException('Нельзя отправить заявку самому себе');
+    }
 
     const offeredSkill = await this.skillsRepository.findOne({
       where: { id: dto.offeredSkillId },
@@ -88,7 +92,7 @@ export class RequestsService {
     });
     const senderName = sender?.name ?? 'Пользователь';
 
-    this.notificationGateway.sendNotification(receiver.id, 'new_request', {
+    await this.notificationService.notifyNewRequest(receiver, {
       requestId: saved.id,
       senderName,
       offeredSkillTitle: offeredSkill.title,
@@ -141,15 +145,11 @@ export class RequestsService {
     });
     const receiverName = receiver?.name ?? 'Получатель';
 
-    this.notificationGateway.sendNotification(
-      request.sender.id,
-      'request_accepted',
-      {
-        requestId: request.id,
-        receiverName,
-        offeredSkillTitle: request.offeredSkill.title,
-      },
-    );
+    await this.notificationService.notifyRequestAccepted(request.sender, {
+      requestId: request.id,
+      receiverName,
+      offeredSkillTitle: request.offeredSkill.title,
+    });
 
     return { message: 'Заявка принята' };
   }
@@ -175,14 +175,10 @@ export class RequestsService {
     });
     const receiverName = receiver?.name ?? 'Получатель';
 
-    this.notificationGateway.sendNotification(
-      request.sender.id,
-      'request_rejected',
-      {
-        requestId: request.id,
-        receiverName,
-      },
-    );
+    await this.notificationService.notifyRequestRejected(request.sender, {
+      requestId: request.id,
+      receiverName,
+    });
 
     return { message: 'Заявка отклонена' };
   }

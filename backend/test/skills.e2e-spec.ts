@@ -12,6 +12,12 @@ import { User } from '../src/users/entities/user.entity';
 import { UserRole } from '../src/users/enums/users.enums';
 import { AppModule } from './../src/app.module';
 import express from 'express';
+import { SendmailService } from '../src/sendmail/sendmail.service';
+import { NotificationService } from '../src/notification/notification.service';
+import { ConfigService } from '@nestjs/config';
+import { sendmailConfig } from '../src/config/sendmail.config';
+import { dataSource } from '../src/config/database.config';
+import { mockConfigService, testSendmailConfig } from './test-utils';
 
 interface SimilarResponse {
   users: Array<{ id: number; name: string; avatar: string | null }>;
@@ -38,7 +44,20 @@ describe('Skills (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ConfigService)
+      .useValue(mockConfigService)
+      .overrideProvider(SendmailService)
+      .useValue({ sendEmail: jest.fn() })
+      .overrideProvider(NotificationService)
+      .useValue({
+        notifyNewRequest: jest.fn(),
+        notifyRequestAccepted: jest.fn(),
+        notifyRequestRejected: jest.fn(),
+      })
+      .overrideProvider(sendmailConfig.KEY)
+      .useValue(testSendmailConfig)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -88,6 +107,9 @@ describe('Skills (e2e)', () => {
     await userRepository.delete(testUser.id);
     await categoryRepository.delete(testCategory.id);
     await app.close();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   });
 
   describe('POST /skills', () => {
