@@ -5,7 +5,7 @@ import { updateStepTwoData } from '@/services/slices/registrationSlice';
 import { userSliceSelectors, userSliceActions } from '@/services/slices/authSlice';
 import { Button } from '@/shared/ui/button/button';
 import { russianCities } from '@/shared/lib/cities';
-import { updateProfileApi } from '@/api/skillSwapApi';
+import { updateProfileApi } from '@/entities/user/api/user.api';
 import * as yup from 'yup';
 import styles from './ProfileForm.module.css';
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -264,9 +264,10 @@ export function ProfileForm() {
   return (
     <div className={styles.profileForm}>
       <div className={styles.profileInputBlock}>
-        <label>Почта</label>
+        <label htmlFor="email">Почта</label>
         <div className={styles.profileEmailInputWrapper}>
           <input
+            id="email"
             type="email"
             name="email"
             value={formData.email}
@@ -301,9 +302,10 @@ export function ProfileForm() {
 
       <div className={styles.profileFormInputs}>
         <div className={styles.profileInputBlock}>
-          <label>Имя</label>
+          <label htmlFor="name">Имя</label>
           <div className={styles.profileEmailInputWrapper}>
             <input
+              id="name"
               type="text"
               name="name"
               value={formData.name}
@@ -316,16 +318,16 @@ export function ProfileForm() {
         </div>
         <div className={styles.profileInputRow}>
           <div className={styles.profileInputBlock}>
-            <label>Дата рождения</label>
+            <label htmlFor="birthDate">Дата рождения</label>
             <div
               className={styles.profileDateInputWrapper}
               tabIndex={0}
               role="button"
               aria-label="Выбрать дату рождения"
               onClick={() => dateInputRef.current?.showPicker()}
-              style={{ cursor: 'pointer' }}
             >
               <input
+                id="birthDate"
                 type="date"
                 name="birthDate"
                 ref={dateInputRef}
@@ -338,10 +340,11 @@ export function ProfileForm() {
             {errors.birthDate && <div className={styles.errorText}>{errors.birthDate}</div>}
           </div>
           <div className={styles.profileInputBlock}>
-            <label>Пол</label>
+            <label htmlFor="gender">Пол</label>
             <div className={styles.profileGenderInputWrapper}>
               <div className={styles.profileSelectInputWrapper}>
                 <select
+                  id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
@@ -356,17 +359,17 @@ export function ProfileForm() {
           </div>
         </div>
         <div className={styles.profileInputBlock}>
-          <label>Город</label>
+          <label htmlFor='city'>Город</label>
           <div
             className={styles.profileCityInputWrapper}
-            style={{ width: '100%', maxWidth: '100%' }}
           >
-            <div className={styles.profileSelectInputWrapper} style={{ width: '100%' }}>
+            <div className={styles.profileSelectInputWrapper}>
               <select
+                id='city'
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                style={{ width: '100%' }}
+                className={styles.selectFullWidth}
               >
                 {russianCities.map(city => (
                   <option key={city} value={city}>
@@ -380,9 +383,10 @@ export function ProfileForm() {
           {errors.city && <div className={styles.errorText}>{errors.city}</div>}
         </div>
         <div className={styles.profileInputBlock}>
-          <label>О себе</label>
+          <label htmlFor='about'>О себе</label>
           <div className={styles.profileAboutInputWrapper}>
             <textarea
+              id='about'
               name="about"
               value={formData.about}
               onChange={handleChange}
