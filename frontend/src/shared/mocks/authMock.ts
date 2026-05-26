@@ -1,6 +1,6 @@
-import { TRefreshResponse, TLoginData, TAuthResponse } from '@/api/types/auth';
-import { TApiResponse } from '@/api/types/common';
-import { TUserResponse } from '@/api/types/users';
+import { TAuthResponse, TLoginData, TRefreshResponse } from '@/entities/auth/api/auth.types';
+import { TApiResponse } from '@/shared/api/types';
+import { TUserResponse } from '@/entities/user/api/user.types';
 import { CustomSkill } from '@/entities/skill/model/types';
 
 import { User } from '@/entities/user/model/types';
