@@ -11,7 +11,7 @@ export interface TCreateRequestDto {
   fromUserId: string;
   toUserId: string;
   skillId: string;
-  message?: string; // Опциональное поле для сообщения к запросу
+  message?: string;
 }
 
 export interface TRequestResponse {
@@ -32,8 +32,8 @@ export interface TRequestResponse {
   };
   status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
   message?: string;
-  createdAt: string; // ISO string
-  updatedAt?: string; // ISO string
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface TRequestsResponse {
