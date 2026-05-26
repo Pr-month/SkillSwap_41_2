@@ -84,6 +84,7 @@ describe('catalogSelectors', () => {
     filters: { mode: 'all', gender: 'any', city: [], skill: [] },
     likes: { likedItems: {}, loading: false, error: null },
     authUser: { data: null, authStatus: RequestStatus.Idle, userCheck: false },
+    categories: { categories: [], loading: false, error: undefined },
   };
 
   test('selectCatalogItems возвращает массив пользователей', () => {

@@ -1,13 +1,13 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AUTH_USER_SLICE } from '../slices/slicesName';
-import { TAuthResponse, TLoginData, TUserResponse, getUserApi, loginUserApi, logoutApi } from '@/shared/utils/api';
+import { TAuthResponse, TLoginData, TUserResponse, getCurrentUserApi, loginUserApi, logoutApi } from '@/shared/utils/api';
 import { deleteCookie, setCookie } from '@/shared/utils/cookies';
 
 export const fetchUser = createAsyncThunk<TUserResponse, void>(
   `${AUTH_USER_SLICE}/fetchUser`,
   async (_, { rejectWithValue }) => {
     try {
-      const data = await getUserApi();
+      const data = await getCurrentUserApi();
       return data;
     } catch (error) {
       return rejectWithValue(error);
@@ -20,7 +20,7 @@ export const loginUser = createAsyncThunk<TAuthResponse, TLoginData>(
   async (dataUser, { rejectWithValue }) => {
     try {
       const data = await loginUserApi(dataUser);
-      if (data.success) {
+      if (data.accessToken) {
         // Сохраняем токены
         setCookie('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);

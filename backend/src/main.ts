@@ -8,7 +8,6 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/all-exception.filter';
-import { ConfigService } from '@nestjs/config';
 import { appConfig, TAppConfig } from './config/app.config';
 import {
   DocumentBuilder,
@@ -36,8 +35,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const configService = app.get(ConfigService);
-  const config = configService.get<TAppConfig>(appConfig.KEY);
+  const config = app.get<TAppConfig>(appConfig.KEY);
 
   if (!config) {
     throw new Error('App configuration not loaded. Check appConfig registration.');

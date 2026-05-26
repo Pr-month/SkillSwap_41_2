@@ -5,6 +5,7 @@ import { useDispatch } from '@/services/store/store';
 import { stepActions } from '@/services/slices/stepSlice';
 import { loginUser } from '@/services/thunk/authUser';
 import { updateStepOneData } from '@/services/slices/registrationSlice';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export const AuthFormContainer = ({ isFirstStage = true }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +23,7 @@ export const AuthFormContainer = ({ isFirstStage = true }) => {
   });
 
   const dispatch = useDispatch();
+  const auth = useAuth();
 
   const textContent = isFirstStage ? PAGE_TEXTS.registration : PAGE_TEXTS.firstStage;
 
@@ -98,7 +100,16 @@ export const AuthFormContainer = ({ isFirstStage = true }) => {
       dispatch(stepActions.nextStep());
     } else {
       try {
-        await dispatch(loginUser({ email, password })).unwrap();
+        const data = await dispatch(loginUser({ email, password })).unwrap();
+        auth.login({
+          id: String(data.user._id),
+          name: data.user.name,
+          email: data.user.email ?? '',
+          avatar: typeof data.user.image === 'string' ? data.user.image : undefined,
+          birthdayDate: data.user.birthdayDate,
+          city: data.user.city,
+          description: data.user.description,
+        });
       } catch {
         setErrors(prev => ({
           ...prev,

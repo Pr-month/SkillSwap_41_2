@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { SendmailService } from './sendmail.service';
 import { SendmailController } from './sendmail.controller';
 import { sendmailConfig, TSendmailConfig } from '../config/sendmail.config';
@@ -9,21 +9,16 @@ import { sendmailConfig, TSendmailConfig } from '../config/sendmail.config';
   imports: [
     MailerModule.forRootAsync({
       imports: [ConfigModule.forFeature(sendmailConfig)],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const config = configService.get<TSendmailConfig>(sendmailConfig.KEY);
-        if (!config) {
-          throw new Error('Sendmail configuration not found');
-        }
-        return {
-          transport: config.transport,
-          defaults: config.defaults,
-        };
-      },
+      inject: [sendmailConfig.KEY],
+      useFactory: (config: TSendmailConfig) => ({
+        transport: config.transport,
+        defaults: config.defaults,
+      }),
     }),
   ],
   controllers: [SendmailController],
   providers: [SendmailService],
+  exports: [SendmailService]
 })
 
 export class SendmailModule {}
