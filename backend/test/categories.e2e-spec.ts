@@ -120,7 +120,7 @@ describe('CategoriesController (e2e)', () => {
   afterAll(async () => {
     // Удаляем созданные категории по ID
     if (testCategories && testCategories.length) {
-      await categoryRepository.delete(testCategories.map(c => c.id));
+      await categoryRepository.delete(testCategories.map((c) => c.id));
     }
     await userRepository.delete(testAdmin.id);
     await userRepository.delete(testUser.id);
@@ -132,9 +132,7 @@ describe('CategoriesController (e2e)', () => {
 
   describe('GET /categories', () => {
     it('should return not empty array', async () => {
-      const res = await request(httpServer)
-        .get('/categories')
-        .expect(200);
+      const res = await request(httpServer).get('/categories').expect(200);
       const categories = res.body as CategoryResponse[];
       expect(categories).toBeInstanceOf(Array);
       expect(categories.length).toBeGreaterThan(0);
@@ -195,9 +193,7 @@ describe('CategoriesController (e2e)', () => {
     });
 
     it('should return 404 if category not found', async () => {
-      await request(httpServer)
-        .get('/categories/99999')
-        .expect(404);
+      await request(httpServer).get('/categories/99999').expect(404);
     });
   });
 
@@ -250,9 +246,7 @@ describe('CategoriesController (e2e)', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      await request(httpServer)
-        .get(`/categories/${created.id}`)
-        .expect(404);
+      await request(httpServer).get(`/categories/${created.id}`).expect(404);
     });
 
     it('should return 403 if user is not admin', async () => {

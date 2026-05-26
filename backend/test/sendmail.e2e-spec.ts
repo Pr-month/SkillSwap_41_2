@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  BadRequestException,
+} from '@nestjs/common';
 import request from 'supertest';
 import express from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -221,13 +225,17 @@ describe('SendmailController (e2e)', () => {
     const body = response.body as ErrorResponse;
     expect(body.message).toBe('Validation failed');
     expect(body.errors).toEqual(
-      expect.arrayContaining([expect.objectContaining({ field: 'extraField' })]),
+      expect.arrayContaining([
+        expect.objectContaining({ field: 'extraField' }),
+      ]),
     );
     expect(mailerService.sendMail).not.toHaveBeenCalled();
   });
 
   it('должен вернуть 500, если отправка письма не удалась (SMTP ошибка)', async () => {
-    (mailerService.sendMail as jest.Mock).mockRejectedValueOnce(new Error('SMTP error'));
+    (mailerService.sendMail as jest.Mock).mockRejectedValueOnce(
+      new Error('SMTP error'),
+    );
     await request(httpServer)
       .post('/sendmail/send')
       .send(validTextPayload)

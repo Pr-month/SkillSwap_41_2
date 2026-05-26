@@ -24,7 +24,8 @@ export class AuthController {
     @Body() registerDTO: RegisterDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user, accessToken, refreshToken } = await this.authService.register(registerDTO);
+    const { user, accessToken, refreshToken } =
+      await this.authService.register(registerDTO);
     this.authService.setRefreshTokenCookie(res, refreshToken);
     return { user, accessToken };
   }
@@ -38,7 +39,8 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
-    const { accessToken, refreshToken: newRefreshToken } = await this.authService.refreshTokens(userId, refreshToken);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.authService.refreshTokens(userId, refreshToken);
     this.authService.setRefreshTokenCookie(res, newRefreshToken);
     return { accessToken };
   }
@@ -49,7 +51,8 @@ export class AuthController {
     @Body() loginDTO: LoginDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user, accessToken, refreshToken } = await this.authService.login(loginDTO);
+    const { user, accessToken, refreshToken } =
+      await this.authService.login(loginDTO);
     this.authService.setRefreshTokenCookie(res, refreshToken);
     return { user, accessToken };
   }

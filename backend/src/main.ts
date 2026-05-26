@@ -38,9 +38,11 @@ async function bootstrap() {
   const config = app.get<TAppConfig>(appConfig.KEY);
 
   if (!config) {
-    throw new Error('App configuration not loaded. Check appConfig registration.');
+    throw new Error(
+      'App configuration not loaded. Check appConfig registration.',
+    );
   }
-  
+
   const uploadFolder = config.uploadFolder;
 
   app.useStaticAssets(join(process.cwd(), uploadFolder), {
