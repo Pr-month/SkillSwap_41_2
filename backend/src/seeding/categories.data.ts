@@ -90,7 +90,6 @@ export const CategoriesData: SeedCreateCategory[] = [
       'Постановка целей по SMART',
       'Детская психология',
       'Психология отношений',
-
     ],
   },
   {

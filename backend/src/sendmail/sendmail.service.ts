@@ -24,8 +24,7 @@ export class SendmailService implements OnModuleInit {
   private isEmailDisabled(): boolean {
     // Проверяем переменные окружения
     return (
-      process.env. DISABLE_EMAIL=== 'true' ||
-      process.env.NODE_ENV === 'test'
+      process.env.DISABLE_EMAIL === 'true' || process.env.NODE_ENV === 'test'
     );
   }
 
