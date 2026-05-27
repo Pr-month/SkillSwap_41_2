@@ -42,6 +42,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       UPLOAD_PATH: ${UPLOAD_PATH}
       UPLOAD_MAX_FILE_SIZE: ${UPLOAD_MAX_FILE_SIZE}
+      FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - '${PORT}:3000'
     depends_on:

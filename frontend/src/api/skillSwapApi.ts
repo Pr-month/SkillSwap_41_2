@@ -1,17 +1,16 @@
-
 import { getCookie } from '@/shared/utils/cookies';
 import { api } from './apiClient';
-import { TUpdateProfileData, TUpdateProfileResponse, TUsersResponse } from './types/users';
 import { TAuthResponse, TLoginData } from './types/auth';
+import { TCategoriesResponse } from './types/categories';
 import { TSkillResponse } from './types/skill';
-import { TCategoryesResponse } from './types/categories';
+import { TUpdateProfileData, TUpdateProfileResponse, TUsersResponse } from './types/users';
 
 /**
  * Получение списка категорий
  */
 export const getCategoriesApi = async () => {
-  return api.get<TCategoryesResponse>('/api/categories');
-}
+  return api.get<TCategoriesResponse>('/api/categories');
+};
 
 /**
  * Получение списка навыков
@@ -24,7 +23,7 @@ export const getSkillsApi = async () => {
  * Получение списка пользователей
  */
 export const getUsersApi = async () => {
-  return api.get<TUsersResponse>('/api/users/all');
+  return api.get<TUsersResponse>('/users');
 };
 
 /**

@@ -1,38 +1,43 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import { AppModule } from './app.module';
 import {
-  ValidationPipe,
   BadRequestException,
   ClassSerializerInterceptor,
+  ValidationPipe,
 } from '@nestjs/common';
-import { AllExceptionsFilter } from './common/all-exception.filter';
 import { ConfigService } from '@nestjs/config';
-import { TAppConfig } from './config/app.config';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import {
   DocumentBuilder,
   SwaggerDocumentOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
-import { UsersModule } from './users/users.module';
-import { SkillsModule } from './skills/skills.module';
-import { RequestsModule } from './requests/requests.module';
-import { FileUploadModule } from './file-upload/file-upload.module';
-import { CitiesModule } from './cities/cities.module';
-import { CategoriesModule } from './categories/categories.module';
-import { AuthModule } from './auth/auth.module';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { join } from 'path';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { AppModule } from './app.module';
+import { AuthModule } from './auth/auth.module';
+import { CategoriesModule } from './categories/categories.module';
+import { CitiesModule } from './cities/cities.module';
+import { AllExceptionsFilter } from './common/all-exception.filter';
+import { TAppConfig } from './config/app.config';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { RequestsModule } from './requests/requests.module';
+import { SkillsModule } from './skills/skills.module';
+import { UsersModule } from './users/users.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URL || 'http://localhost',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 

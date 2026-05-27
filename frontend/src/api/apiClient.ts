@@ -119,8 +119,16 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
 // Методы-обертки
 // ======================
 export const api = {
-  get: <T>(path: string, accessToken?: string) =>
-    apiRequest<T>(path, { method: 'GET', accessToken }),
+  get: <T>(path: string, params?: Record<string, unknown>, accessToken?: string) => {
+    const url = params
+      ? `${path}?${new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)]),
+        ).toString()}`
+      : path;
+    return apiRequest<T>(url, { method: 'GET', accessToken });
+  },
 
   post: <TRes, TBody = unknown>(path: string, data?: TBody, accessToken?: string) =>
     apiRequest<TRes>(path, {
