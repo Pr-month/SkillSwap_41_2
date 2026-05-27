@@ -23,6 +23,7 @@ import { GetSkillsQueryDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
 import { SkillsService } from './skills.service';
+import { SkillStatus } from './enums/skills.enums';
 
 // мокаем fs/promises для тестирования работы с файлами
 jest.mock('fs/promises');
@@ -57,6 +58,7 @@ describe('SkillsService', () => {
     updatedAt: new Date(),
     offeredInRequests: [],
     requestedInRequests: [],
+    status: SkillStatus.ACTIVE,
   };
 
   // перед каждым тестом инициализируем сервис
@@ -310,8 +312,16 @@ describe('SkillsService', () => {
     });
 
     it('Должен вернуться список навыков с пагинацией', async () => {
-      const skills = [mockSkill];
-      queryBuilder.getMany.mockResolvedValue(skills);
+      const expectedSkills = [
+        {
+          id: mockSkill.id,
+          title: mockSkill.title,
+          description: mockSkill.description,
+          category: mockSkill.category.id, // только ID категории, а не весь объект
+        },
+      ];
+
+      queryBuilder.getMany.mockResolvedValue([mockSkill]);
       queryBuilder.getCount.mockResolvedValue(2);
 
       const query: GetSkillsQueryDto = {};
@@ -320,7 +330,7 @@ describe('SkillsService', () => {
       expect(skillRepository.createQueryBuilder).toHaveBeenCalledWith('skill');
       expect(queryBuilder.take).toHaveBeenCalledWith(21);
       expect(queryBuilder.skip).toHaveBeenCalledWith(0);
-      expect(result).toEqual(skills);
+      expect(result).toEqual(expectedSkills);
     });
 
     it('Должен вернуться отфильтрованный список навыков', async () => {

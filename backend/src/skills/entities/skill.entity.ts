@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { Request } from 'src/requests/entities/request.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { SkillStatus } from '../enums/skills.enums';
 
 @Entity('skills')
 export class Skill {
@@ -58,4 +59,12 @@ export class Skill {
   @ApiProperty({ example: Request })
   @OneToMany(() => Request, (request) => request.requestedSkill)
   requestedInRequests!: Request[];
+
+  @ApiProperty({ example: SkillStatus })
+  @Column({
+    type: 'enum',
+    enum: SkillStatus,
+    default: SkillStatus.ACTIVE,
+  })
+  status!: SkillStatus;
 }
