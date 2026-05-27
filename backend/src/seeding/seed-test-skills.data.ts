@@ -24,14 +24,16 @@ export const seedTestSkills: Partial<Skill>[] = [
 ];
 
 interface SeedCreateSkills {
+  id: number;
   title: string;
   description: string;
   images: string[];
   category: { name: string };
 }
 
-export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
+export const seedTestSkillsExtended: Partial<SeedCreateSkills>[] = [
   {
+    id: 1,
     title: 'Создание эффективных рекламных кампаний',
     description: 'Научим запускать рекламу, которая действительно продает',
     images: [
@@ -42,6 +44,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Маркетинг и реклама' },
   },
   {
+    id: 2,
     title: 'Портретная фотография',
     description: 'Основы композиции и работы со светом',
     images: [
@@ -52,6 +55,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Фотография' },
   },
   {
+    id: 3,
     title: 'Подготовка к IELTS',
     description: 'Эффективные стратегии для успешной сдачи экзамена',
     images: [
@@ -61,6 +65,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Английский язык' },
   },
   {
+    id: 4,
     title: 'Планирование ремонта квартиры',
     description: 'От концепции до реализации',
     images: [
@@ -71,6 +76,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Ремонт' },
   },
   {
+    id: 5,
     title: 'Хатха-йога для начинающих',
     description: 'Базовые асаны и принципы правильного дыхания',
     images: [
@@ -81,6 +87,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Йога и медитация' },
   },
   {
+    id: 6,
     title: 'Создание личного бренда в финансах',
     description: 'Как стать узнаваемым экспертом',
     images: [
@@ -91,6 +98,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Личный бренд' },
   },
   {
+    id: 7,
     title: 'Основы итальянской кухни',
     description: 'Паста, ризотто и тирамису как в Италии',
     images: [
@@ -101,15 +109,17 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Приготовление еды' },
   },
   {
+    id: 8,
     title: 'Профессиональный монтаж в Premiere Pro',
     description: 'От базовых принципов до продвинутых техник',
     images: [
       'https://images.unsplash.com/photo-1551190822-a9333d879b1f',
       'https://images.unsplash.com/photo-1581094794329-c8112a89af12',
     ],
-    category: { name: 'Дизайн и UX/UI' },
+    category: { name: 'UX/UI' },
   },
   {
+    id: 9,
     title: 'Коучинг для карьерного роста',
     description: 'Определение целей и составление плана развития',
     images: [
@@ -119,6 +129,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Управление командой' },
   },
   {
+    id: 10,
     title: 'Ремонт бытовой техники своими руками',
     description: 'Основные неисправности и их устранение',
     images: [
@@ -129,6 +140,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Ремонт' },
   },
   {
+    id: 11,
     title: 'Основы цифровой иллюстрации',
     description: 'Работа в Procreate и Photoshop',
     images: [
@@ -139,6 +151,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Рисование и иллюстрация' },
   },
   {
+    id: 12,
     title: 'Цигун для начинающих',
     description: 'Древние практики для здоровья и энергии',
     images: [
@@ -148,6 +161,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Цигун и тайцзи' },
   },
   {
+    id: 13,
     title: 'Как пройти собеседование',
     description: 'Подготовка к вопросам и самопрезентация',
     images: [
@@ -157,6 +171,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Резюме и собеседование' },
   },
   {
+    id: 14,
     title: 'Личный финансовый план',
     description: 'Как управлять бюджетом и накапливать сбережения',
     images: [
@@ -167,6 +182,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Личная финансовая грамотность' },
   },
   {
+    id: 15,
     title: 'Метод КонМари в организации дома',
     description: 'Как навести порядок раз и навсегда',
     images: [
@@ -177,6 +193,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Уборка и организация' },
   },
   {
+    id: 16,
     title: 'Функциональный тренинг для всех уровней',
     description: 'Сила, выносливость и мобильность',
     images: [
@@ -187,6 +204,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Функциональный тренинг' },
   },
   {
+    id: 17,
     title: 'Разговорный французский с нуля',
     description: 'Грамматика, лексика и произношение',
     images: [
@@ -196,6 +214,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Французский язык' },
   },
   {
+    id: 18,
     title: 'Собеседование в IT-компаниях',
     description: 'Как пройти техническое интервью',
     images: [
@@ -205,6 +224,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Резюме и собеседование' },
   },
   {
+    id: 19,
     title: 'Сбалансированное питание для занятых',
     description: 'Простые и полезные рецепты',
     images: [
@@ -215,6 +235,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Приготовление еды' },
   },
   {
+    id: 20,
     title: 'Основы звукозаписи дома',
     description: 'Оборудование и программное обеспечение',
     images: [
@@ -224,6 +245,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Звукорежиссура' },
   },
   {
+    id: 21,
     title: 'Техники скорочтения для работы',
     description: 'Увеличиваем скорость чтения без потери понимания',
     images: [
@@ -233,6 +255,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Скорочтение' },
   },
   {
+    id: 22,
     title: 'Уход за орхидеями и суккулентами',
     description: 'Как не убить даже кактус',
     images: [
@@ -243,6 +266,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Домашние растения' },
   },
   {
+    id: 23,
     title: 'Постановка целей по SMART',
     description: 'Как ставить и достигать любые цели',
     images: [
@@ -251,8 +275,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Тайм-менеджмент' },
   },
-
   {
+    id: 24,
     title: 'Основы миксологии для дома',
     description: 'Классические и авторские коктейли',
     images: [
@@ -262,8 +286,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Миксология' },
   },
-
   {
+    id: 25,
     title: 'Японский для начинающих',
     description: 'Иероглифы, грамматика и разговорная практика',
     images: [
@@ -273,6 +297,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Японский язык' },
   },
   {
+    id: 26,
     title: 'Ремонт компьютеров своими руками',
     description: 'Диагностика и замена комплектующих',
     images: [
@@ -281,8 +306,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Ремонт' },
   },
-
   {
+    id: 27,
     title: 'Развитие эмоционального интеллекта у детей',
     description: 'Практические упражнения и игры',
     images: [
@@ -292,6 +317,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Детская психология' },
   },
   {
+    id: 28,
     title: 'Реставрация старой мебели',
     description: 'От простого обновления до сложного ремонта',
     images: [
@@ -302,6 +328,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Ремонт' },
   },
   {
+    id: 29,
     title: 'Испанский для путешествий',
     description: 'Базовые фразы и грамматика',
     images: [
@@ -310,15 +337,15 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Испанский язык' },
   },
-
   {
+    id: 30,
     title: 'Основы китайской каллиграфии',
     description: 'Традиционные техники и материалы',
     images: ['https://images.unsplash.com/photo-1534945773093-1119d31a2f2c'],
     category: { name: 'Каллиграфия' },
   },
-
   {
+    id: 31,
     title: 'Интуитивное питание без диет',
     description: 'Как наладить гармоничные отношения с едой',
     images: [
@@ -328,6 +355,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Интуитивное питание' },
   },
   {
+    id: 32,
     title: 'Метод Pomodoro в работе',
     description: 'Как успевать больше без переутомления',
     images: [
@@ -336,8 +364,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Тайм-менеджмент' },
   },
-
   {
+    id: 33,
     title: 'Создание букетов в европейском стиле',
     description: 'Композиции из свежих цветов',
     images: [
@@ -347,8 +375,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Флористика' },
   },
-
   {
+    id: 34,
     title: 'Тренировки с собственным весом',
     description: 'Эффективные упражнения без оборудования',
     images: [
@@ -357,8 +385,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Calisthenics' },
   },
-
   {
+    id: 35,
     title: 'Основы сценической речи',
     description: 'Дыхание, дикция и выразительность',
     images: [
@@ -368,6 +396,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Сценическая речь' },
   },
   {
+    id: 36,
     title: 'Немецкий для работы',
     description: 'Деловая переписка и переговоры',
     images: [
@@ -377,6 +406,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Немецкий язык' },
   },
   {
+    id: 37,
     title: 'Рисование как терапия',
     description: 'Снятие стресса через творчество',
     images: [
@@ -386,6 +416,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Арт-терапия' },
   },
   {
+    id: 38,
     title: 'Основы Figma для начинающих',
     description: 'Создание прототипов и макетов',
     images: [
@@ -395,6 +426,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'UX/UI' },
   },
   {
+    id: 39,
     title: 'Ремонт стиральных машин',
     description: 'Основные неисправности и их устранение',
     images: [
@@ -403,8 +435,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Ремонт' },
   },
-
   {
+    id: 40,
     title: 'Ментальная арифметика для взрослых',
     description: 'Развитие скорости мышления и памяти',
     images: [
@@ -414,6 +446,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Ментальная арифметика' },
   },
   {
+    id: 41,
     title: 'Пейзажная и travel-фотография',
     description: 'Композиция и работа с естественным светом',
     images: [
@@ -424,6 +457,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Фотография' },
   },
   {
+    id: 42,
     title: 'Китайский для бизнеса',
     description: 'Деловой этикет и переговоры',
     images: [
@@ -433,6 +467,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Китайский язык' },
   },
   {
+    id: 43,
     title: 'Ремонт смартфонов своими руками',
     description: 'Замена экранов и батарей',
     images: [
@@ -441,8 +476,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Ремонт' },
   },
-
   {
+    id: 44,
     title: 'Построение гармоничных отношений',
     description: 'Коммуникация и эмоциональный интеллект',
     images: [
@@ -451,8 +486,8 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     ],
     category: { name: 'Психология отношений' },
   },
-
   {
+    id: 45,
     title: 'Искусство винных пар',
     description: 'Как сочетать вино с едой',
     images: [
@@ -462,6 +497,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Винная культура' },
   },
   {
+    id: 46,
     title: 'Акварельная живопись для начинающих',
     description: 'Техники и материалы',
     images: [
@@ -471,6 +507,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Рисование и иллюстрация' },
   },
   {
+    id: 47,
     title: 'Инвестиции для начинающих',
     description: 'Как начать с маленьких сумм',
     images: [
@@ -480,6 +517,7 @@ export const seedTestSkillsExtend: Partial<SeedCreateSkills>[] = [
     category: { name: 'Инвестиции' },
   },
   {
+    id: 48,
     title: 'Изготовление мебели своими руками',
     description: 'От простых полок до сложных конструкций',
     images: [

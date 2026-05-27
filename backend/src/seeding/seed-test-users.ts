@@ -33,6 +33,7 @@ async function bootstrap() {
         password: hashedPassword,
         about: userData.about,
         birthdate: userData.birthdate,
+        city: userData.city ? { id: userData.city } : undefined,
         gender: userData.gender,
         avatar: userData.avatar,
         role: userData.role,
