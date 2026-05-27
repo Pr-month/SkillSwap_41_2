@@ -14,7 +14,7 @@ import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { Request } from './entities/request.entity';
-import { RequestStatus } from './requests.enum';
+import { RequestStatus } from './enums/request.enums';
 
 @Injectable()
 export class RequestsService {
