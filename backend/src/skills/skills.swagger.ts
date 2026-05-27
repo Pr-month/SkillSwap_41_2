@@ -153,18 +153,21 @@ export function ApiFindAllSkills() {
       required: false,
       type: Number,
       description: 'ID категории для фильтрации',
+      example: 5,
     }),
     ApiQuery({
       name: 'owner',
       required: false,
       type: Number,
       description: 'ID владельца для фильтрации',
+      example: 3,
     }),
     ApiQuery({
       name: 'search',
       required: false,
       type: String,
       description: 'Поиск по title или description',
+      example: 'React',
     }),
     ApiQuery({
       name: 'limit',
@@ -178,7 +181,7 @@ export function ApiFindAllSkills() {
       required: false,
       type: Number,
       description: 'Количество пропущенных записей',
-      example: 0,
+      example: 2,
     }),
     ApiExtraModels(Skill),
     ApiOkResponse({
