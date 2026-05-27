@@ -1,21 +1,19 @@
+import { catalogReducer } from '@/services/slices/catalogSlice';
+import { exchangeReducer } from '@/services/slices/exchangeSlice';
+import filtersReducer from '@/services/slices/filtersSlice';
+import likeReducer from '@/services/slices/likeSlice';
+import { registrationReducer } from '@/services/slices/registrationSlice';
+import stepsSlice from '@/services/slices/stepSlice';
 import { combineSlices, configureStore } from '@reduxjs/toolkit';
 import {
   TypedUseSelectorHook,
   useDispatch as dispatchHook,
   useSelector as selectorHook,
 } from 'react-redux';
-
-import { registrationReducer } from '@/services/slices/registrationSlice';
-import { catalogReducer } from '@/services/slices/catalogSlice';
-import { exchangeReducer } from '@/services/slices/exchangeSlice';
-import { skillsReducer } from '../slices/skillsSlice';
-
-import stepsSlice from '@/services/slices/stepSlice';
-import filtersReducer from '@/services/slices/filtersSlice';
-import likeReducer from '@/services/slices/likeSlice';
-
 import authSlice from '../slices/authSlice';
 import { categoriesReducer } from '../slices/categorySlice';
+import { citiesReducer } from '../slices/citiesSlice';
+import { skillsReducer } from '../slices/skillsSlice';
 
 export const rootReducer = combineSlices({
   register: registrationReducer,
@@ -27,6 +25,7 @@ export const rootReducer = combineSlices({
   likes: likeReducer,
   [authSlice.name]: authSlice.reducer,
   categories: categoriesReducer,
+  cities: citiesReducer,
 });
 
 const store = configureStore({

@@ -103,6 +103,11 @@ const mockState: RootState = {
     loading: false,
     error: undefined,
   },
+  cities: {
+      cities: [],
+      loading: false,
+      error: undefined,
+    },
 };
 
 describe('exchangeSelectors', () => {

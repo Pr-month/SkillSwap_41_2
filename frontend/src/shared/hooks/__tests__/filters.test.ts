@@ -118,6 +118,7 @@ const mockState = (filters: Partial<RootState['filters']>, searchQuery = ''): Ro
   likes: {} as RootState['likes'],
   authUser: {} as RootState['authUser'],
   categories: {} as RootState['categories'],
+  cities: {} as RootState['cities'],
 });
 
 describe('Фильтрация карточек навыков', () => {

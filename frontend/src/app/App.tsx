@@ -1,18 +1,19 @@
-import { MainLayout } from '@/widgets/Layout/MainLayout';
-import './styles/index.css';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { ComponentType, lazy, Suspense, useEffect } from 'react';
-import { ProtectedRoute } from '@/shared/ui/protectedRoute/protectedRoute';
-import { useDispatch } from '@/services/store/store';
-import { initializeLikes } from '@/services/slices/likeSlice';
-import { fetchCatalog } from '@/services/slices/catalogSlice';
-import { CatalogPage } from '@/pages/catalogPage/catalogPage';
-import { fetchUser } from '@/services/thunk/authUser';
 import { AboutPage } from '@/pages/AboutPage/AboutPage';
-import { fetchExchanges } from '@/services/slices/exchangeSlice';
-import { getSkills } from '@/services/slices/skillsSlice';
-import Loader from '@/shared/ui/Loader/loader';
+import { CatalogPage } from '@/pages/catalogPage/catalogPage';
+import { fetchCatalog } from '@/services/slices/catalogSlice';
 import { getCategories } from '@/services/slices/categorySlice';
+import { getCities } from '@/services/slices/citiesSlice';
+import { fetchExchanges } from '@/services/slices/exchangeSlice';
+import { initializeLikes } from '@/services/slices/likeSlice';
+import { getSkills } from '@/services/slices/skillsSlice';
+import { useDispatch } from '@/services/store/store';
+import { fetchUser } from '@/services/thunk/authUser';
+import Loader from '@/shared/ui/Loader/loader';
+import { ProtectedRoute } from '@/shared/ui/protectedRoute/protectedRoute';
+import { MainLayout } from '@/widgets/Layout/MainLayout';
+import { ComponentType, lazy, Suspense, useEffect } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import './styles/index.css';
 const ProfileDetailsPage = lazy(
   () =>
     new Promise<{ default: ComponentType<unknown> }>(resolve => {
@@ -41,7 +42,8 @@ function App() {
     dispatch(fetchCatalog());
     dispatch(fetchExchanges());
     dispatch(getSkills());
-    dispatch(getCategories())
+    dispatch(getCategories());
+    dispatch(getCities());
   }, [dispatch]);
 
   return (
