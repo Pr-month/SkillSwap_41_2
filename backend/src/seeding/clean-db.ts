@@ -14,7 +14,7 @@ async function cleanDb() {
       CASCADE;
     `);
 
-    console.log('База данных очищена');
+    console.log('✅ База данных очищена');
   } finally {
     if (dataSource.isInitialized) {
       await dataSource.destroy();
@@ -23,5 +23,5 @@ async function cleanDb() {
 }
 
 cleanDb().catch((error) => {
-  console.error('Ошибка при очистке базы данных:', error);
+  console.error('❌ Ошибка при очистке базы данных:', error);
 });

@@ -42,7 +42,7 @@ async function bootstrap() {
       console.log(`user ${userData.email} created`);
     }
     console.log(
-      `seeding finished. Created users ${createdUser}, skipped users ${skippedUser}`,
+      `✅ Seeding finished\nCreated users ${createdUser}\nskipped users ${skippedUser}`,
     );
   } catch (error) {
     console.error('seeding finished error', error);

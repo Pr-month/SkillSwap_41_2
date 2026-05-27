@@ -45,7 +45,7 @@ async function seedCategories() {
     }
   }
 
-  console.log('Categories seeded');
+  console.log('✅ Categories seeded');
 
   await AppDataSource.destroy();
 }

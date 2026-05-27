@@ -31,7 +31,7 @@ export async function seedCities() {
 
     await citiesRepository.save(newCities);
 
-    console.log(`Добавлено городов: ${newCities.length}`);
+    console.log(`✅ Добавлено городов: ${newCities.length}`);
   } finally {
     // Закрытие соединения (перенести в root-seed)
     if (dataSource.isInitialized) {
@@ -42,5 +42,5 @@ export async function seedCities() {
 
 // Автозапуск (убрать после переноса в root-seed)
 seedCities().catch((error) => {
-  console.error('Ошибка при сидинге городов:', error);
+  console.error('❌ Ошибка при сидинге городов:', error);
 });
