@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SendmailDto } from './dto/sendmail.dto';
 import { sendmailConfig } from '../config/sendmail.config';
@@ -13,7 +13,20 @@ export class SendmailService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    // Проверяем, не отключена ли отправка писем
+    if (this.isEmailDisabled()) {
+      console.log('Email sending is DISABLED (seeding/testing mode)');
+      return;
+    }
     await this.verifyConnection();
+  }
+
+  private isEmailDisabled(): boolean {
+    // Проверяем переменные окружения
+    return (
+      process.env. DISABLE_EMAIL=== 'true' ||
+      process.env.NODE_ENV === 'test'
+    );
   }
 
   private sleep(ms: number): Promise<void> {
@@ -38,6 +51,14 @@ export class SendmailService implements OnModuleInit {
   }
 
   async sendEmail(dto: SendmailDto): Promise<void> {
+    // Если отправка отключена - просто логируем и выходим
+    if (this.isEmailDisabled()) {
+      console.log(`[EMAIL DISABLED] Would send email to: ${dto.to}`);
+      console.log(`Subject: ${dto.subject}`);
+      console.log(`Text: ${dto.text?.substring(0, 100)}...`);
+      return;
+    }
+
     const { maxRetries, delayMs } = this.config.retry;
 
     let lastError: unknown;
@@ -51,6 +72,7 @@ export class SendmailService implements OnModuleInit {
           html: dto.html,
         });
 
+        console.log(`✅ Email sent successfully to: ${dto.to}`);
         return;
       } catch (error) {
         lastError = error;
