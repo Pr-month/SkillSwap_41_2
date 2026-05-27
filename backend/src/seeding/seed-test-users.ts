@@ -31,6 +31,10 @@ async function bootstrap() {
         name: userData.name,
         email: userData.email,
         password: hashedPassword,
+        about: userData.about,
+        birthdate: userData.birthdate,
+        gender: userData.gender,
+        avatar: userData.avatar,
         role: userData.role,
       });
       createdUser++;
