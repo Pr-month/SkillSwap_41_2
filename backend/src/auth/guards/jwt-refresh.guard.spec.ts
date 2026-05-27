@@ -24,7 +24,7 @@ const jwtPayload: TJwtPayload = {
 };
 
 type TestRequest = Partial<Request> & {
-  body?: Record<string, unknown>;
+  cookies?: { refreshToken?: string };
   user?: unknown;
 };
 
@@ -58,12 +58,12 @@ describe('JwtRefreshGuard', () => {
     jwtService = module.get<JwtService>(JwtService);
   });
 
-  it('should extract refresh token from body and attach payload with token to request user', async () => {
+  it('should extract refresh token from cookies and attach payload with token to request user', async () => {
     const refreshToken = jwtService.sign(jwtPayload, {
       secret: testJwtConfig.refreshSecret,
     });
     const request: TestRequest = {
-      body: {
+      cookies: {
         refreshToken,
       },
     };
@@ -82,7 +82,20 @@ describe('JwtRefreshGuard', () => {
 
   it('should reject request without refresh token', async () => {
     const request: TestRequest = {
-      body: {},
+      cookies: {},
+    };
+
+    await expect(
+      guard.canActivate(createExecutionContext(request)),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(request.user).toBeUndefined();
+  });
+
+  it('should reject request with invalid refresh token', async () => {
+    const request: TestRequest = {
+      cookies: {
+        refreshToken: 'invalid-token',
+      },
     };
 
     await expect(
