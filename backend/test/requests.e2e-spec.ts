@@ -11,7 +11,7 @@ import { Skill } from '../src/skills/entities/skill.entity';
 import { Category } from '../src/categories/entities/category.entity';
 import { Request as RequestEntity } from '../src/requests/entities/request.entity';
 import { AuthService } from '../src/auth/auth.service';
-import { RequestStatus } from '../src/requests/requests.enum';
+import { RequestStatus } from '../src/requests/enums/request.enums';
 import { SendmailService } from '../src/sendmail/sendmail.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { ConfigService } from '@nestjs/config';
@@ -40,6 +40,10 @@ interface OutgoingRequestResponse {
   id: string;
   sender: { id: number };
   offeredSkill: { title: string };
+}
+
+interface UpdateRequestResponse {
+  status: RequestStatus;
 }
 
 describe('RequestsController (e2e)', () => {
@@ -133,18 +137,17 @@ describe('RequestsController (e2e)', () => {
     });
 
     // 4. Получаем токены
-    authTokenSender = (
-      await authService.login({
-        email: senderEmail,
-        password,
-      })
-    ).accessToken;
-    authTokenReceiver = (
-      await authService.login({
-        email: receiverEmail,
-        password,
-      })
-    ).accessToken;
+    const loginSenderResult = await authService.login({
+      email: senderEmail,
+      password,
+    });
+    authTokenSender = loginSenderResult.accessToken;
+
+    const loginReceiverResult = await authService.login({
+      email: receiverEmail,
+      password,
+    });
+    authTokenReceiver = loginReceiverResult.accessToken;
   });
 
   afterAll(async () => {
@@ -320,7 +323,7 @@ describe('RequestsController (e2e)', () => {
         .set('Authorization', `Bearer ${authTokenReceiver}`)
         .send(updateDto)
         .expect(200);
-      const updated = response.body as { status: RequestStatus };
+      const updated = response.body as UpdateRequestResponse;
       expect(updated.status).toBe(RequestStatus.ACCEPTED);
     });
 

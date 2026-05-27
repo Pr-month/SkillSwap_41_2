@@ -24,7 +24,9 @@ export class Skill {
   @Column({ type: 'varchar', length: 200 })
   title!: string;
 
-  @ApiProperty({ example: 'Building scalable SPA with modern state management' })
+  @ApiProperty({
+    example: 'Building scalable SPA with modern state management',
+  })
   @Column({ type: 'text' })
   description!: string;
 

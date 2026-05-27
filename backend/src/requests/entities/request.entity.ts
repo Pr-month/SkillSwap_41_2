@@ -20,11 +20,11 @@ export class Request {
   @CreateDateColumn()
   createdAt!: Date;
 
-  @ApiProperty({ example: {id: 123} })
+  @ApiProperty({ example: { id: 123 } })
   @ManyToOne(() => User, (user) => user.sentRequests, { nullable: false })
   sender!: User;
 
-  @ApiProperty({ example: {id: 321} })
+  @ApiProperty({ example: { id: 321 } })
   @ManyToOne(() => User, (user) => user.receivedRequests, { nullable: false })
   receiver!: User;
 

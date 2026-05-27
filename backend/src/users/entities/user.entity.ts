@@ -14,7 +14,6 @@ import { Gender, UserRole } from '../enums/users.enums';
 import { City } from 'src/cities/entities/city.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { expand } from 'rxjs';
 
 @Entity('users')
 export class User {
@@ -41,7 +40,7 @@ export class User {
   @ApiProperty({ example: '1990-01-01' })
   @Column({ type: 'date', nullable: true })
   birthdate?: Date;
-  
+
   @ApiProperty({ example: City })
   @ManyToOne(() => City, { nullable: true })
   city?: City;

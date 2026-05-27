@@ -6,13 +6,11 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TJwtPayload } from '../auth/auth.types';
 import { NotificationService } from '../notification/notification.service';
 import { Skill } from '../skills/entities/skill.entity';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
 import { Request } from './entities/request.entity';
 import { RequestStatus } from './enums/request.enums';
 import { RequestsService } from './requests.service';
