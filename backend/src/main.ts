@@ -8,8 +8,7 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/all-exception.filter';
-import { ConfigService } from '@nestjs/config';
-import { TAppConfig } from './config/app.config';
+import { appConfig, TAppConfig } from './config/app.config';
 import {
   DocumentBuilder,
   SwaggerDocumentOptions,
@@ -36,8 +35,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const configService = app.get(ConfigService);
-  const config = configService.get('app') as TAppConfig;
+  const config = app.get<TAppConfig>(appConfig.KEY);
 
   if (!config) {
     throw new Error(

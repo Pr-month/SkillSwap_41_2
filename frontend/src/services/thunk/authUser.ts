@@ -23,7 +23,7 @@ export const loginUser = createAsyncThunk<TAuthResponse, TLoginData>(
   async (dataUser, { rejectWithValue }) => {
     try {
       const data = await loginUserApi(dataUser);
-      if (data.success) {
+      if (data.accessToken) {
         // Сохраняем токены
         setCookie('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);

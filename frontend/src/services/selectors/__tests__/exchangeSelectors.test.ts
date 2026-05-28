@@ -98,6 +98,7 @@ const mockState: RootState = {
     authStatus: RequestStatus.Idle,
     userCheck: false,
   },
+  categories: { categories: [], loading: false, error: undefined },
 };
 
 describe('exchangeSelectors', () => {

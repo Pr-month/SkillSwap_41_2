@@ -1,7 +1,7 @@
 import { User } from '@/entities/user/model/types';
 import { setCookie, getCookie, deleteCookie } from './cookies';
 
-const API_BASE_URL = import.meta.env.VITE_SKILLSWAP_API_URL || '';
+const API_BASE_URL = `${import.meta.env.VITE_SKILLSWAP_API_URL || ''}/api`;
 
 const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then(err => Promise.reject(err));
