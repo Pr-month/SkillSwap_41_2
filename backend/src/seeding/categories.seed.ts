@@ -5,7 +5,7 @@ import { User } from 'src/users/entities/user.entity';
 import { City } from 'src/cities/entities/city.entity';
 import { Skill } from 'src/skills/entities/skill.entity';
 import { Request } from 'src/requests/entities/request.entity';
-import { CategoriesDataDefault } from './categories.data';
+import { CategoriesData } from './categories.data';
 
 const AppDataSource = new DataSource({
   ...databaseConfig(),
@@ -17,7 +17,7 @@ async function seedCategories() {
 
   const repo = AppDataSource.getRepository(Category);
 
-  for (const category of CategoriesDataDefault) {
+  for (const category of CategoriesData) {
     let parent = await repo.findOne({
       where: { name: category.name },
     });
@@ -45,7 +45,7 @@ async function seedCategories() {
     }
   }
 
-  console.log('Categories seeded');
+  console.log('✅ Categories seeded');
 
   await AppDataSource.destroy();
 }

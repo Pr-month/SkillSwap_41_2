@@ -6,7 +6,7 @@ import { AppModule } from '../app.module';
 import { Category } from '../categories/entities/category.entity';
 import { Skill } from '../skills/entities/skill.entity';
 import { User } from '../users/entities/user.entity';
-import { seedTestSkills } from './seed-test-skills.data';
+import { seedTestSkillsExtended } from './seed-test-skills.data';
 import { seedTestUsers } from './seed-test-users.data';
 
 async function bootstrap() {
@@ -27,7 +27,10 @@ async function bootstrap() {
     // --- Тестовые пользователи ---
     const testUsers: User[] = [];
     for (const userData of seedTestUsers) {
-      const user = await userRepo.findOne({ where: { email: userData.email } });
+      const user = await userRepo.findOne({
+        where: { email: userData.email },
+        relations: ['skills', 'favoriteSkills'],
+      });
       if (!user) {
         throw new Error(
           `User ${userData.email} not found. Run seed-test-users.ts first`,
@@ -36,49 +39,178 @@ async function bootstrap() {
       testUsers.push(user);
     }
 
-    // --- Категории ---
-    const backendCat = await categoryRepo.findOne({
-      where: { name: 'Backend' },
+    // --- Получаем все категории с их children для поиска по имени ---
+    const allCategories = await categoryRepo.find({
+      relations: ['parent'],
     });
-    const frontendCat = await categoryRepo.findOne({
-      where: { name: 'Frontend' },
-    });
-    if (!backendCat || !frontendCat) {
-      throw new Error('Categories not found. Run categories.seed.ts first');
+
+    // Создаем карту для быстрого поиска категории по имени (учитываем только дочерние категории)
+    const categoryByNameMap = new Map<string, Category>();
+
+    // Проходим по всем категориям и сохраняем только те, у которых есть parent (дочерние)
+    for (const category of allCategories) {
+      if (category.parent !== null && category.parent !== undefined) {
+        categoryByNameMap.set(category.name, category);
+      }
     }
 
-    // --- Навыки ---
-    const owners = [admin, ...testUsers];
-    const categories = [backendCat, frontendCat];
+    // --- Создаем карту пользователей по email для быстрого доступа ---
+    const userByEmailMap = new Map<string, User>();
+    for (const user of testUsers) {
+      userByEmailMap.set(user.email, user);
+    }
+
+    // --- Создаем карту навыков по ID ---
+    const skillByIdMap = new Map<number, Skill>();
 
     let createdSkill = 0;
     let skippedSkill = 0;
 
-    for (let i = 0; i < seedTestSkills.length; i++) {
-      const skillData = seedTestSkills[i];
-
+    // --- Создаем навыки согласно расширенным данным ---
+    for (const skillData of seedTestSkillsExtended) {
+      // Проверяем, существует ли уже навык с таким title
       const exists = await skillRepo.findOne({
         where: { title: skillData.title },
       });
+
       if (exists) {
         skippedSkill++;
         console.log(`skill "${skillData.title}" already exists`);
+        skillByIdMap.set(skillData.id as number, exists);
         continue;
       }
 
-      const owner = owners[i % owners.length];
-      const category = categories[i % categories.length];
+      // Ищем пользователя, у которого в skills есть id этого навыка
+      let owner: User | undefined;
 
-      await skillRepo.save({ ...skillData, owner, category });
+      for (const user of testUsers) {
+        const userFromSeed = seedTestUsers.find((u) => u.email === user.email);
+        if (userFromSeed?.skills?.includes(skillData.id as number)) {
+          owner = user;
+          break;
+        }
+      }
+
+      if (!owner) {
+        console.warn(
+          `No owner found for skill "${skillData.title}" (id: ${skillData.id}), skipping...`,
+        );
+        skippedSkill++;
+        continue;
+      }
+
+      // Ищем категорию по имени среди дочерних категорий
+      const categoryName = skillData.category?.name;
+      if (!categoryName) {
+        console.warn(
+          `No category specified for skill "${skillData.title}", skipping...`,
+        );
+        skippedSkill++;
+        continue;
+      }
+
+      const category = categoryByNameMap.get(categoryName);
+      if (!category) {
+        console.warn(
+          `Category "${categoryName}" not found in database (must be a child category), skipping skill "${skillData.title}"...`,
+        );
+        skippedSkill++;
+        continue;
+      }
+
+      // Создаем навык
+      const newSkill = new Skill();
+      newSkill.title = skillData.title || '';
+      newSkill.description = skillData.description || '';
+      newSkill.images = skillData.images || [];
+      newSkill.owner = owner;
+      newSkill.category = category;
+
+      const savedSkill = await skillRepo.save(newSkill);
+
       createdSkill++;
-      console.log(`skill "${skillData.title}" created → owner: ${owner.email}`);
+      console.log(
+        `Skill "${skillData.title}" created. -> owner: ${owner.name},category: ${category.name}`,
+      );
+      skillByIdMap.set(skillData.id as number, savedSkill);
     }
 
     console.log(
-      `seeding finished. Created skills: ${createdSkill}, skipped skills: ${skippedSkill}`,
+      `✅ Seeding skills finished. Created skills: ${createdSkill}, skipped skills: ${skippedSkill}`,
+    );
+
+    // --- Добавляем избранные навыки ---
+    let addedFavoriteSkills = 0;
+    let skippedFavoriteSkills = 0;
+
+    console.log('\n--- Adding favorite skills to users ---');
+
+    for (const userData of seedTestUsers) {
+      const user = userByEmailMap.get(userData.email);
+      if (
+        !user ||
+        !userData.favoriteSkills ||
+        userData.favoriteSkills.length === 0
+      ) {
+        continue;
+      }
+
+      const currentFavorites = user.favoriteSkills || [];
+      const existingIds = new Set(currentFavorites.map((s) => s.id));
+
+      const newFavoriteSkills: Skill[] = [];
+
+      for (const skillId of userData.favoriteSkills) {
+        const skill = skillByIdMap.get(skillId);
+        if (skill && !existingIds.has(skill.id)) {
+          newFavoriteSkills.push(skill);
+        } else if (!skill) {
+          console.warn(
+            `Skill with id ${skillId} not found for user ${user.email}`,
+          );
+          skippedFavoriteSkills++;
+        }
+      }
+
+      if (newFavoriteSkills.length > 0) {
+        // Обновляем пользователя напрямую через репозиторий с кастомным запросом
+        for (const skill of newFavoriteSkills) {
+          try {
+            await skillRepo.manager
+              .createQueryBuilder()
+              .relation(User, 'favoriteSkills')
+              .of(user)
+              .add(skill);
+            addedFavoriteSkills++;
+          } catch (error) {
+            // Игнорируем дубликаты
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            if (
+              !errorMessage.includes('duplicate') &&
+              !errorMessage.includes('already exists')
+            ) {
+              console.error(
+                `Error adding favorite skill ${skill.id}:`,
+                errorMessage,
+              );
+              skippedFavoriteSkills++;
+            } else {
+              addedFavoriteSkills++;
+            }
+          }
+        }
+        console.log(
+          `Added ${newFavoriteSkills.length} f-skills to ${user.name}`,
+        );
+      }
+    }
+
+    console.log(
+      `✅ FavoriteSkills added: ${addedFavoriteSkills}, skipped: ${skippedFavoriteSkills}`,
     );
   } catch (error) {
-    console.error('seeding finished error', error);
+    console.error('❌ seeding finished error', error);
     process.exitCode = 1;
   } finally {
     await app.close();
@@ -86,6 +218,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('Fatal error during seeding:', err);
+  console.error('❌ Fatal error during seeding:', err);
   process.exit(1);
 });

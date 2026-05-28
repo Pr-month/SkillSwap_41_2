@@ -31,13 +31,18 @@ async function bootstrap() {
         name: userData.name,
         email: userData.email,
         password: hashedPassword,
+        about: userData.about,
+        birthdate: userData.birthdate,
+        city: userData.city ? { id: userData.city } : undefined,
+        gender: userData.gender,
+        avatar: userData.avatar,
         role: userData.role,
       });
       createdUser++;
       console.log(`user ${userData.email} created`);
     }
     console.log(
-      `seeding finished. Created users ${createdUser}, skipped users ${skippedUser}`,
+      `✅ Seeding finished\nCreated users ${createdUser}\nskipped users ${skippedUser}`,
     );
   } catch (error) {
     console.error('seeding finished error', error);

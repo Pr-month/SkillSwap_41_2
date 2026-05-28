@@ -8,6 +8,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Request } from 'src/requests/entities/request.entity';
@@ -15,6 +16,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SkillStatus } from '../enums/skills.enums';
 
 @Entity('skills')
+@Unique(['owner', 'title'])
 export class Skill {
   @ApiProperty({ example: 12345 })
   @PrimaryGeneratedColumn()
