@@ -1,23 +1,23 @@
-import { useMemo, useState } from 'react';
-import { RadioGroupSection } from '@/shared/ui/radioGroupSection/radioGroupSection';
-import { CheckboxDropdownSection } from '@/shared/ui//checkboxDropdownSection/checkboxDropdownSection';
-import { experienceOptions, genderOptions } from './constants';
-import { SkillsCategories, City } from './types';
-import styles from './filtersPanel.module.css';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/services/store/store';
-import {
-  setMode,
-  setGender,
-  setCities,
-  setSkills,
-  resetFilters,
-} from '@/services/slices/filtersSlice';
 import { setSearchQuery } from '@/services/slices/catalogSlice';
+import {
+  resetFilters,
+  setCities,
+  setGender,
+  setMode,
+  setSkills,
+} from '@/services/slices/filtersSlice';
+import { RootState } from '@/services/store/store';
+import { CheckboxDropdownSection } from '@/shared/ui//checkboxDropdownSection/checkboxDropdownSection';
+import { RadioGroupSection } from '@/shared/ui/radioGroupSection/radioGroupSection';
+import { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { experienceOptions, genderOptions } from './constants';
+import styles from './filtersPanel.module.css';
+import { SkillsCategories } from './types';
 
 interface FiltersPanelProps {
   skillsCategories: SkillsCategories;
-  cities: City;
+  cities: string[];
 }
 
 export const FiltersPanel = ({ skillsCategories, cities }: FiltersPanelProps) => {

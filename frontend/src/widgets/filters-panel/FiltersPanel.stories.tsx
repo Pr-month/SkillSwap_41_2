@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { FiltersPanel } from './filtersPanel';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import filtersSlice from '@/services/slices/filtersSlice';
+import { configureStore } from '@reduxjs/toolkit';
+import type { Meta, StoryObj } from '@storybook/react';
+import { Provider } from 'react-redux';
+import { FiltersPanel } from './filtersPanel';
 
 // Используем типы из вашего слайса
 type FiltersState = {
@@ -13,7 +13,6 @@ type FiltersState = {
 };
 
 type SkillsCategories = Record<string, readonly string[]>;
-type City = Record<string, readonly string[]>;
 
 const createMockStore = (preloadedState?: Partial<FiltersState>) => {
   return configureStore({
@@ -65,10 +64,7 @@ const baseSkills: SkillsCategories = {
   Дизайн: ['UI/UX', 'Графический дизайн'],
 };
 
-const baseCities: City = {
-  Москва: [],
-  'Санкт-Петербург': [],
-};
+const baseCities: string[] = ['Москва', 'Санкт-Петербург'];
 
 export const Default: Story = {
   args: {
