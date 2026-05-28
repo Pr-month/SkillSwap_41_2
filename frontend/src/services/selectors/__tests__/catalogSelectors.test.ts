@@ -1,5 +1,5 @@
-import type { RootState } from '@/services/store/store';
 import { RequestStatus } from '@/entities/auth/model/types';
+import type { RootState } from '@/services/store/store';
 import { selectCatalogItems, selectCatalogLoading } from '../catalogSelectors';
 
 describe('catalogSelectors', () => {

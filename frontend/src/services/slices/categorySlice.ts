@@ -14,7 +14,9 @@ const initialState: CategoriesState = {
   error: undefined,
 };
 
-export const getCategories = createAsyncThunk<Category[]>('categies/getAll', async () => getCategoriesApi());
+export const getCategories = createAsyncThunk<Category[]>('categories/getAll', async () =>
+  getCategoriesApi(),
+);
 
 const categoriesSlice = createSlice({
   name: 'categories',

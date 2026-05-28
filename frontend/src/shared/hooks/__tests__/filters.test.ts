@@ -1,7 +1,7 @@
-import { describe, test, expect } from 'vitest';
+import { User } from '@/entities/user/model/types';
 import { RootState } from '@/services/store/store';
 import { selectFilteredUsers } from '@/shared/hooks/useFilterCatalog';
-import { User } from '@/entities/user/model/types';
+import { describe, expect, test } from 'vitest';
 
 // Мокируем пользователей
 const mockUsers: User[] = [

@@ -95,7 +95,6 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 // ======================
 // Методы-обертки
 // ======================
-
 export const api = {
   get: <T>(path: string, options?: ApiRequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'GET' }),
