@@ -1,50 +1,29 @@
+import { ApiClientError } from "./errors";
+
+type ApiError = {
+  status: number;
+  message: string;
+  errors?: Record<string, string[]>;
+}
+
 const API_URL = import.meta.env.VITE_SKILLSWAP_API_URL;
 
 if (!API_URL) {
   throw new Error('VITE_SKILLSWAP_API_URL is not defined in environment variables');
 }
 
-interface ApiError {
-  status: number;
-  message: string;
-  errors?: Record<string, string[]>;
-}
-
-class ApiClientError extends Error {
-  constructor(
-    public status: number,
-    public message: string,
-    public errors?: Record<string, string[]>,
-  ) {
-    super(message);
-    this.name = 'ApiClientError';
-  }
-}
-
-type ApiRequestOptions = RequestInit & {
-  accessToken?: string;
-};
+export type ApiRequestOptions = RequestInit;
 
 // ======================
 // API-клиент
 // ======================
-async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { accessToken, headers: customHeaders, body, ...restOptions } = options;
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const { headers: customHeaders, body, ...restOptions } = options;
 
   const headers = new Headers(customHeaders);
 
-  /**
-   * Если тело запроса не FormData, устанавливаем Content-Type
-   */
   if (!(body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
-  }
-
-  /**
-   * Установить токен при его наличии
-   */
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
   // ======================
@@ -93,9 +72,7 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
     const contentType = response.headers.get('Content-Type');
 
     if (contentType?.includes('application/json')) {
-      const result = await response.json();
-
-      return result as T;
+      return await response.json() as T
     }
 
     /**
@@ -108,7 +85,7 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
     }
 
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new ApiClientError(0, 'Ошибка соединения: невозможно подключиться к серверу');
+      throw new ApiClientError(0, 'Ошибка соединения c сервером');
     }
 
     throw new ApiClientError(500, 'Неизвестная ошибка сети');
@@ -118,31 +95,32 @@ async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Pro
 // ======================
 // Методы-обертки
 // ======================
-export const api = {
-  get: <T>(path: string, accessToken?: string) =>
-    apiRequest<T>(path, { method: 'GET', accessToken }),
 
-  post: <TRes, TBody = unknown>(path: string, data?: TBody, accessToken?: string) =>
+export const api = {
+  get: <T>(path: string, options?: ApiRequestOptions) =>
+    apiRequest<T>(path, { ...options, method: 'GET' }),
+
+  post: <TRes, TBody = unknown>(path: string, data?: TBody, options?: ApiRequestOptions) =>
     apiRequest<TRes>(path, {
+      ...options,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-      accessToken,
     }),
 
-  put: <TRes, TBody = unknown>(path: string, data?: TBody, accessToken?: string) =>
+  put: <TRes, TBody = unknown>(path: string, data?: TBody, options?: ApiRequestOptions) =>
     apiRequest<TRes>(path, {
+      ...options,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-      accessToken,
     }),
 
-  patch: <TRes, TBody = unknown>(path: string, data?: TBody, accessToken?: string) =>
+  patch: <TRes, TBody = unknown>(path: string, data?: TBody, options?: ApiRequestOptions) =>
     apiRequest<TRes>(path, {
+      ...options,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
-      accessToken,
     }),
 
-  delete: <T>(path: string, accessToken?: string) =>
-    apiRequest<T>(path, { method: 'DELETE', accessToken }),
+  delete: <T>(path: string, options?: ApiRequestOptions) =>
+    apiRequest<T>(path, { ...options, method: 'DELETE' }),
 };

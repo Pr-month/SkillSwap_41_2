@@ -1,13 +1,16 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AUTH_USER_SLICE } from '../slices/slicesName';
-import { TAuthResponse, TLoginData, TUserResponse, getCurrentUserApi, loginUserApi, logoutApi } from '@/shared/utils/api';
 import { deleteCookie, setCookie } from '@/shared/utils/cookies';
+import { getProfileApi } from '@/entities/user/api/user.api';
+import { TUserResponse } from '@/entities/user/api/user.types';
+import { TAuthResponse, TLoginData } from '@/entities/auth/api/auth.types';
+import { loginUserApi, logoutApi } from '@/entities/auth/api/auth.api';
 
 export const fetchUser = createAsyncThunk<TUserResponse, void>(
   `${AUTH_USER_SLICE}/fetchUser`,
   async (_, { rejectWithValue }) => {
     try {
-      const data = await getCurrentUserApi();
+      const data = await getProfileApi();
       return data;
     } catch (error) {
       return rejectWithValue(error);

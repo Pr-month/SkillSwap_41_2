@@ -1,5 +1,5 @@
+import { TApiResponse } from "@/shared/api/types";
 import { User } from "@/entities/user/model/types";
-import { TApiResponse } from "./common";
 
 export type TAuthResponse = TApiResponse<{
   refreshToken: string;

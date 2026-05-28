@@ -8,7 +8,6 @@ import { useDispatch } from '@/services/store/store';
 import { initializeLikes } from '@/services/slices/likeSlice';
 import { fetchCatalog } from '@/services/slices/catalogSlice';
 import { CatalogPage } from '@/pages/catalogPage/catalogPage';
-import { fetchUser } from '@/services/thunk/authUser';
 import { AboutPage } from '@/pages/AboutPage/AboutPage';
 import { fetchExchanges } from '@/services/slices/exchangeSlice';
 import { getSkills } from '@/services/slices/skillsSlice';
@@ -38,7 +37,7 @@ function App() {
 
   useEffect(() => {
     dispatch(initializeLikes());
-    dispatch(fetchUser());
+    // Получения текущего профиля пользователя не должно быть на главной странице
     dispatch(fetchCatalog());
     dispatch(fetchExchanges());
     dispatch(getSkills());

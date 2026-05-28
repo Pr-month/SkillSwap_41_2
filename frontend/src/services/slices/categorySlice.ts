@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { getCategoriesApi } from '@/api/skillSwapApi';
+import { getCategoriesApi } from '@/entities/categories/api/categories.api';
 import { Category } from '@/entities/categories/model/types';
 
 type CategoriesState = {

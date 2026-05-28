@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
-import { getSkillsApi } from '@/api/skillSwapApi';
+import { getSkillsApi } from '@/entities/skill/api/skill.api';
 import { Skill, SkillCategory } from '@/entities/skill/model/types';
+
 
 type SkillsState = {
   skills: Skill[];

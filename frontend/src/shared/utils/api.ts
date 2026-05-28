@@ -3,33 +3,33 @@ import { setCookie, getCookie, deleteCookie } from './cookies';
 
 const API_BASE_URL = `${import.meta.env.VITE_SKILLSWAP_API_URL || ''}/api`;
 
-export const checkResponse = <T>(res: Response): Promise<T> =>
+const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then(err => Promise.reject(err));
 
-export type TServerResponse<T> = {
+type TServerResponse<T> = {
   success: boolean;
 } & T;
 
-export type TRefreshResponse = TServerResponse<{
+type TRefreshResponse = TServerResponse<{
   refreshToken: string;
   accessToken: string;
 }>;
 
-export type TAuthResponse = TServerResponse<{
+type TAuthResponse = TServerResponse<{
   refreshToken: string;
   accessToken: string;
   user: User;
 }>;
 
-export type TUserResponse = TServerResponse<{ user: User }>;
+type TUserResponse = TServerResponse<{ user: User }>;
 
-export type TLoginData = {
+type TLoginData = {
   email: string;
   password: string;
 };
 
 // Логика обновления токена
-export const refreshToken = async (): Promise<TRefreshResponse> => {
+const refreshToken = async (): Promise<TRefreshResponse> => {
   const refreshToken = localStorage.getItem('refreshToken');
   if (!refreshToken) {
     throw new Error('Нет обновленного токена');
@@ -49,7 +49,7 @@ export const refreshToken = async (): Promise<TRefreshResponse> => {
 }
 
 // Оболочка для функции выборки с автоматическим обновлением.
-export const fetchWithRefresh = async <T>(
+const fetchWithRefresh = async <T>(
   url: RequestInfo,
   options: RequestInit,
 ): Promise<T> => {
@@ -96,13 +96,13 @@ export const fetchWithRefresh = async <T>(
 };
 
 // Функции API
-export const getCurrentUserApi = (): Promise<TUserResponse> => {
-  return fetchWithRefresh<TUserResponse>(`${API_BASE_URL}/users/me`, {
+const getUserApi = (): Promise<TUserResponse> => {
+  return fetchWithRefresh<TUserResponse>(`${API_BASE_URL}/auth/user`, {
     method: 'GET',
   });
 };
 
-export const loginUserApi = (data: TLoginData): Promise<TAuthResponse> => {
+const loginUserApi = (data: TLoginData): Promise<TAuthResponse> => {
   return fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
@@ -110,7 +110,7 @@ export const loginUserApi = (data: TLoginData): Promise<TAuthResponse> => {
   }).then(res => checkResponse<TAuthResponse>(res));
 };
 
-export const logoutApi = (): Promise<TServerResponse<object>> => {
+const logoutApi = (): Promise<TServerResponse<object>> => {
   const accessToken = getCookie('accessToken');
   return fetch(`${API_BASE_URL}/auth/logout`, {
     method: 'POST',
