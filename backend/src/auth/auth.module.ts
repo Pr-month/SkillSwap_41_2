@@ -11,6 +11,7 @@ import { jwtConfig, TJwtConfig } from '../config/jwt.config';
 import type { StringValue } from 'ms';
 import { UsersModule } from '../users/users.module';
 import { YandexStrategy } from './strategies/yandex.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { YandexStrategy } from './strategies/yandex.strategy';
     JwtAccessStrategy,
     JwtRefreshStrategy,
     YandexStrategy,
+    GoogleStrategy,
   ],
   exports: [JwtModule],
 })

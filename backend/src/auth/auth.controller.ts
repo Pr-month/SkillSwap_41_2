@@ -23,6 +23,7 @@ import {
 } from './auth.swagger';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { YandexAuthGuard } from './guards/yandex.quard';
+import { GoogleOAuthGuard } from './guards/google.guard';
 import { jwtConfig, TJwtConfig } from 'src/config/jwt.config';
 
 @Controller('auth')
@@ -93,9 +94,20 @@ export class AuthController {
   async yandexCallback(@Req() req: OAuthRequest, @Res() res: Response) {
     const oauthUser = req.user;
     const authData = await this.authService.findOrCreateOAuthUser(oauthUser);
-
     this.authService.setRefreshTokenCookie(res, authData.refreshToken);
+    return res.redirect(`${this.jwtCfg.frontendUrl}/oauth/success`);
+  }
 
+  @Get('google/login')
+  @UseGuards(GoogleOAuthGuard)
+  googleOAuthLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  async googleOAuthCallback(@Req() req: OAuthRequest, @Res() res: Response) {
+    const oauthUser = req.user;
+    const oauthData = await this.authService.findOrCreateOAuthUser(oauthUser);
+    this.authService.setRefreshTokenCookie(res, oauthData.refreshToken);
     return res.redirect(`${this.jwtCfg.frontendUrl}/oauth/success`);
   }
 }

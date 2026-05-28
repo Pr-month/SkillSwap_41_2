@@ -18,6 +18,7 @@ import { uploadConfig } from './config/upload.config';
 import { sendmailConfig } from './config/sendmail.config';
 import { SendmailModule } from './sendmail/sendmail.module';
 import { yandexConfig } from './config/yandex.config';
+import { googleConfig } from './config/google.config';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { yandexConfig } from './config/yandex.config';
         uploadConfig,
         sendmailConfig,
         yandexConfig,
+        googleConfig,
       ],
       isGlobal: true,
     }),
