@@ -4,6 +4,7 @@ import {
   INestApplication,
   ValidationPipe,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import request from 'supertest';
 import express from 'express';
@@ -46,6 +47,15 @@ describe('SendmailController (e2e)', () => {
   };
 
   beforeAll(async () => {
+    // Моки логгера перед созданием приложения
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    jest.spyOn(Logger.prototype, 'verbose').mockImplementation();
+    jest.spyOn(console, 'error').mockImplementation();
+    jest.spyOn(console, 'log').mockImplementation();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [SendmailController],
       providers: [
@@ -90,6 +100,7 @@ describe('SendmailController (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    jest.restoreAllMocks();
   });
 
   beforeEach(() => {
