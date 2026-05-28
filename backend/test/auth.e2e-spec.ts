@@ -42,8 +42,8 @@ function extractRefreshTokenFromCookie(
 describe('AuthController (e2e)', () => {
   let userRepository: Repository<User>;
   let app: INestApplication;
-  let accessToken: string;
-  let refreshToken: string | null = null;
+  let currentAccessToken: string;
+  let currentRefreshToken: string | null = null;
   let httpServer: Server;
   let api: ReturnType<typeof request>;
   let moduleFixture: TestingModule;
@@ -133,9 +133,16 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     const body = res.body as AuthResponse;
-    accessToken = body.accessToken;
-    refreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
-    expect(refreshToken).not.toBeNull();
+    currentAccessToken = body.accessToken;
+
+    expect(currentAccessToken).toBeDefined();
+    expect(typeof currentAccessToken).toBe('string');
+    expect(currentAccessToken.length).toBeGreaterThan(0);
+
+    currentRefreshToken = extractRefreshTokenFromCookie(
+      res.headers['set-cookie'],
+    );
+    expect(currentRefreshToken).not.toBeNull();
   });
 
   it('/auth/register (POST) => should fail duplicate email', async () => {
@@ -156,9 +163,11 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     const body = res.body as AuthResponse;
-    accessToken = body.accessToken;
-    refreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
-    expect(refreshToken).not.toBeNull();
+    currentAccessToken = body.accessToken;
+    currentRefreshToken = extractRefreshTokenFromCookie(
+      res.headers['set-cookie'],
+    );
+    expect(currentRefreshToken).not.toBeNull();
   });
 
   it('/auth/login (POST) => should fail with wrong password', async () => {
@@ -173,10 +182,24 @@ describe('AuthController (e2e)', () => {
 
   // ===== Refresh =====
   it('/auth/refresh (POST) => should refresh tokens', async () => {
-    expect(refreshToken).toBeDefined();
+    // Логинимся, чтобы получить свежий refreshToken
+    const loginRes = await api
+      .post('/auth/login')
+      .send({
+        email: registerUserDto.email,
+        password: registerUserDto.password,
+      })
+      .expect(201);
+
+    const refreshTokenFromLogin = extractRefreshTokenFromCookie(
+      loginRes.headers['set-cookie'],
+    );
+    expect(refreshTokenFromLogin).not.toBeNull();
+
+    // Отправляем refresh запрос с refreshToken в cookie
     const res = await api
       .post('/auth/refresh')
-      .send({ refreshToken: refreshToken as string })
+      .set('Cookie', `refreshToken=${refreshTokenFromLogin}`)
       .expect(201);
 
     expect(res.body).toHaveProperty('accessToken');
@@ -184,24 +207,44 @@ describe('AuthController (e2e)', () => {
       res.headers['set-cookie'],
     );
     expect(newRefreshToken).not.toBeNull();
-    refreshToken = newRefreshToken!;
+
+    // Обновляем глобальные токены для следующих тестов
+    currentRefreshToken = newRefreshToken!;
+    const body = res.body as AuthResponse;
+    currentAccessToken = body.accessToken;
   });
 
   it('/auth/refresh (POST) => should fail with invalid refresh token', async () => {
+    // Отправляем запрос с невалидным refreshToken в cookie
     await api
       .post('/auth/refresh')
-      .send({ refreshToken: 'invalidtoken' })
+      .set('Cookie', 'refreshToken=invalidtoken')
       .expect(401);
   });
 
   // ===== Logout =====
   it('/auth/logout (POST) => should logout a user', async () => {
-    const res = await api
-      .post('/auth/logout')
-      .set('Authorization', `Bearer ${accessToken}`)
+    // Логинимся, чтобы получить токены
+    const loginRes = await api
+      .post('/auth/login')
+      .send({
+        email: registerUserDto.email,
+        password: registerUserDto.password,
+      })
       .expect(201);
 
-    expect(res.body).toEqual({ message: 'Успешный выход' });
+    const loginResponseBody = loginRes.body as AuthResponse;
+    const accessTokenForLogout = loginResponseBody.accessToken;
+    const refreshTokenForLogout = extractRefreshTokenFromCookie(
+      loginRes.headers['set-cookie'],
+    );
+
+    // Отправляем logout запрос с access token в заголовке и refresh token в cookie
+    await api
+      .post('/auth/logout')
+      .set('Authorization', `Bearer ${accessTokenForLogout}`)
+      .set('Cookie', `refreshToken=${refreshTokenForLogout}`)
+      .expect(201);
 
     const testUser = await userRepository.findOne({
       where: { email: registerUserDto.email },

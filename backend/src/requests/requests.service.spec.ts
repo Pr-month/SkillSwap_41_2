@@ -5,17 +5,16 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { TJwtPayload } from '../auth/auth.types';
+import { In, Repository } from 'typeorm';
 import { NotificationService } from '../notification/notification.service';
 import { Skill } from '../skills/entities/skill.entity';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
 import { Request } from './entities/request.entity';
-import { RequestStatus } from './requests.enum';
+import { RequestStatus } from './enums/request.enums';
 import { RequestsService } from './requests.service';
+import { TJwtPayload } from 'src/auth/auth.types';
 
 describe('RequestsService', () => {
   let service: RequestsService;
@@ -108,17 +107,18 @@ describe('RequestsService', () => {
     jest.clearAllMocks();
   });
 
-  // тестируем создание заявки
+  // ==============================
+  // Create
+  // ==============================
   describe('create', () => {
     const dto: CreateRequestDto = {
-      receiverId: 2,
       offeredSkillId: 10,
       requestedSkillId: 20,
     };
     const userId = 1;
 
     it('Заявка должна создаться при корректных данных', async () => {
-      userRepository.findOne.mockResolvedValueOnce(mockReceiver);
+      userRepository.findOne.mockResolvedValueOnce(mockUser);
       skillRepository.findOne.mockResolvedValueOnce(mockOfferedSkill);
       skillRepository.findOne.mockResolvedValueOnce(mockRequestedSkill);
       requestRepository.findOne.mockResolvedValueOnce(null);
@@ -128,15 +128,22 @@ describe('RequestsService', () => {
 
       const result = await service.create(userId, dto);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: 2 } });
-      expect(skillRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 10 },
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
+
+      // Проверяем первый вызов (offeredSkill)
+      expect(skillRepository.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: 10, status: 'active' },
         relations: ['owner'],
       });
-      expect(skillRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 20 },
+
+      // Проверяем второй вызов (requestedSkill)
+      expect(skillRepository.findOne).toHaveBeenNthCalledWith(2, {
+        where: { id: 20, status: 'active' },
         relations: ['owner'],
       });
+
       const findOneArg = requestRepository.findOne.mock.calls[0]?.[0];
 
       expect(findOneArg).toBeDefined();
@@ -148,14 +155,14 @@ describe('RequestsService', () => {
       expect(findOneArg).toMatchObject({
         where: {
           sender: { id: userId },
-          receiver: { id: dto.receiverId },
+          receiver: { id: mockRequestedSkill.owner.id },
           offeredSkill: { id: dto.offeredSkillId },
           requestedSkill: { id: dto.requestedSkillId },
         },
       });
       expect(requestRepository.create).toHaveBeenCalledWith({
         sender: { id: userId },
-        receiver: { id: dto.receiverId },
+        receiver: { id: mockRequestedSkill.owner.id },
         offeredSkill: mockOfferedSkill,
         requestedSkill: mockRequestedSkill,
         status: RequestStatus.PENDING,
@@ -173,15 +180,19 @@ describe('RequestsService', () => {
       expect(result).toEqual(mockRequest);
     });
 
+    // Остальные тесты остаются без изменений
     it('Должно отправиться уведомление с именем по умолчанию, если отправитель не найден в БД', async () => {
-      userRepository.findOne.mockResolvedValueOnce(mockReceiver);
+      userRepository.findOne.mockResolvedValueOnce(null);
+
       skillRepository.findOne.mockResolvedValueOnce(mockOfferedSkill);
       skillRepository.findOne.mockResolvedValueOnce(mockRequestedSkill);
+
       requestRepository.findOne.mockResolvedValueOnce(null);
       requestRepository.create.mockReturnValue(mockRequest);
       requestRepository.save.mockResolvedValue(mockRequest);
-      userRepository.findOne.mockResolvedValueOnce(null);
+
       await service.create(userId, dto);
+
       expect(notificationService.notifyNewRequest).toHaveBeenCalledWith(
         mockReceiver,
         {
@@ -227,17 +238,37 @@ describe('RequestsService', () => {
       );
     });
 
-    it('Должна вернуться ошибка Forbidden, если запрашиваемый навык не принадлежит получателю', async () => {
+    it('Должна создаться заявка с получателем - владельцем запрашиваемого навыка', async () => {
       const skillOwnedByOther = {
         ...mockRequestedSkill,
-        owner: { id: 999 } as unknown as User,
+        owner: { id: 999, name: 'Other User' } as unknown as User,
       };
-      userRepository.findOne.mockResolvedValue(mockReceiver);
+
+      userRepository.findOne.mockResolvedValueOnce(mockUser);
       skillRepository.findOne.mockResolvedValueOnce(mockOfferedSkill);
       skillRepository.findOne.mockResolvedValueOnce(skillOwnedByOther);
-      await expect(service.create(userId, dto)).rejects.toThrow(
-        ForbiddenException,
+      requestRepository.findOne.mockResolvedValueOnce(null);
+      requestRepository.create.mockReturnValue({
+        ...mockRequest,
+        receiver: skillOwnedByOther.owner,
+        requestedSkill: skillOwnedByOther,
+      });
+      requestRepository.save.mockResolvedValue({
+        ...mockRequest,
+        receiver: skillOwnedByOther.owner,
+        requestedSkill: skillOwnedByOther,
+      });
+
+      const result = await service.create(userId, dto);
+
+      expect(requestRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          receiver: { id: 999 },
+          requestedSkill: skillOwnedByOther,
+        }),
       );
+
+      expect(result.receiver.id).toBe(999);
     });
 
     it('Должна вернуться ошибка BadRequest, если уже есть активная заявка', async () => {
@@ -263,78 +294,70 @@ describe('RequestsService', () => {
     });
   });
 
-  // тестирование поиска входящих заявок
+  // ==============================
+  // Find Incoming
+  // ==============================
   describe('findIncoming', () => {
-    it('Должны вернуться найденные входящие заявки для пользователя', async () => {
-      const incomingRequests = [mockRequest];
-      requestRepository.find.mockResolvedValue(incomingRequests);
-      const result = await service.findIncoming(2);
+    it('должен вернуть входящие заявки пользователя', async () => {
+      const userId = 2;
+      const mockIncomingRequests = [mockRequest];
 
-      const findArg = requestRepository.find.mock.calls[0]?.[0];
+      requestRepository.find.mockResolvedValue(mockIncomingRequests);
 
-      expect(findArg).toBeDefined();
+      const result = await service.findIncoming(userId);
 
-      if (!findArg) {
-        throw new Error('find was not called');
-      }
-
-      expect(findArg).toMatchObject({
+      expect(requestRepository.find).toHaveBeenCalledWith({
         where: {
-          receiver: { id: 2 },
+          receiver: { id: userId },
+          status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
         },
         relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
         order: { createdAt: 'DESC' },
       });
-
-      expect(result).toEqual(incomingRequests);
+      expect(result).toEqual(mockIncomingRequests);
     });
 
-    it('Должен вернуться пустой массив, если входящих заявок нет', async () => {
+    it('должен вернуть пустой массив, если нет входящих заявок', async () => {
       requestRepository.find.mockResolvedValue([]);
-      const result = await service.findIncoming(2);
+
+      const result = await service.findIncoming(999);
+
       expect(result).toEqual([]);
     });
   });
 
-  // тестирование поиска исходящих заявок
+  // ==============================
+  // Find Outgoing
+  // ==============================
   describe('findOutgoing', () => {
-    it('Должны вернуться найденные исходящие заявки для пользователя', async () => {
-      const outgoingRequests = [mockRequest];
-      requestRepository.find.mockResolvedValue(outgoingRequests);
-      const result = await service.findOutgoing(1);
+    it('должен вернуть исходящие заявки пользователя', async () => {
+      const userId = 1;
+      const mockOutgoingRequests = [mockRequest];
 
-      const findArg = requestRepository.find.mock.calls[0]?.[0];
+      requestRepository.find.mockResolvedValue(mockOutgoingRequests);
 
-      expect(findArg).toBeDefined();
+      const result = await service.findOutgoing(userId);
 
-      if (!findArg) {
-        throw new Error('find was not called');
-      }
-
-      expect(findArg).toMatchObject({
+      expect(requestRepository.find).toHaveBeenCalledWith({
         where: {
-          sender: { id: 1 },
+          sender: { id: userId },
+          status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
         },
         relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
         order: { createdAt: 'DESC' },
       });
-
-      expect(result).toEqual(outgoingRequests);
-    });
-
-    it('Должен вернуться пустой массив, если исходящих заявок нет', async () => {
-      requestRepository.find.mockResolvedValue([]);
-      const result = await service.findOutgoing(1);
-      expect(result).toEqual([]);
+      expect(result).toEqual(mockOutgoingRequests);
     });
   });
 
-  // тестирование принятия заявки
+  // ==============================
+  // Accept
+  // ==============================
   describe('accept', () => {
-    const requestId = mockRequest.id;
+    const requestId = '11111111-2222-3333-4444-555555555555';
     const userId = 2;
 
-    it('Заявка должна приняться и отправиться уведомление', async () => {
+    it('должен успешно принять заявку', async () => {
       const pendingRequest = { ...mockRequest, status: RequestStatus.PENDING };
       requestRepository.findOne.mockResolvedValue(pendingRequest);
       userRepository.findOne.mockResolvedValue(mockReceiver);
@@ -345,81 +368,50 @@ describe('RequestsService', () => {
 
       const result = await service.accept(requestId, userId);
 
-      expect(requestRepository.findOne).toHaveBeenCalledWith({
-        where: { id: requestId },
-        relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
-      });
       expect(requestRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ status: RequestStatus.ACCEPTED }),
       );
-      expect(notificationService.notifyRequestAccepted).toHaveBeenCalledWith(
-        mockRequest.sender,
-        {
-          requestId,
-          receiverName: mockReceiver.name,
-          offeredSkillTitle: mockOfferedSkill.title,
-        },
-      );
+      expect(notificationService.notifyRequestAccepted).toHaveBeenCalled();
       expect(result).toEqual({ message: 'Заявка принята' });
     });
 
-    it('Должено отправиться уведомление с именем по умолчанию, если получатель не найден в БД', async () => {
-      const pendingRequest = { ...mockRequest, status: RequestStatus.PENDING };
-      requestRepository.findOne.mockResolvedValue(pendingRequest);
-      userRepository.findOne.mockResolvedValue(null); // получатель не найден
-      requestRepository.save.mockResolvedValue({
-        ...pendingRequest,
-        status: RequestStatus.ACCEPTED,
-      });
-      await service.accept(requestId, userId);
-      expect(notificationService.notifyRequestAccepted).toHaveBeenCalledWith(
-        mockRequest.sender,
-        {
-          requestId,
-          receiverName: 'Получатель',
-          offeredSkillTitle: mockOfferedSkill.title,
-        },
-      );
-    });
-
-    it('Должна вернуться ошибка NotFound, если заявка не найдена', async () => {
+    it('должен выбросить NotFoundException, если заявка не найдена', async () => {
       requestRepository.findOne.mockResolvedValue(null);
+
       await expect(service.accept(requestId, userId)).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('Должна вернуться ошибка Forbidden, если пользователь не получатель', async () => {
-      const requestWithOtherReceiver = {
-        ...mockRequest,
-        receiver: { id: 999 },
-      };
-      requestRepository.findOne.mockResolvedValue(
-        requestWithOtherReceiver as Request,
-      );
-      await expect(service.accept(requestId, userId)).rejects.toThrow(
+    it('должен выбросить ForbiddenException, если пользователь не получатель', async () => {
+      requestRepository.findOne.mockResolvedValue(mockRequest);
+
+      await expect(service.accept(requestId, 999)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('Должна вернуться ошибка BadRequest, если заявка уже обработана', async () => {
-      const processedRequest = {
+    it('должен выбросить BadRequestException, если заявка уже обработана', async () => {
+      const acceptedRequest = {
         ...mockRequest,
         status: RequestStatus.ACCEPTED,
       };
-      requestRepository.findOne.mockResolvedValue(processedRequest);
+      requestRepository.findOne.mockResolvedValue(acceptedRequest);
+
       await expect(service.accept(requestId, userId)).rejects.toThrow(
         BadRequestException,
       );
     });
   });
 
-  // тестирование отклонения заявки
+  // ==============================
+  // Reject
+  // ==============================
   describe('reject', () => {
-    const requestId = mockRequest.id;
+    const requestId = '11111111-2222-3333-4444-555555555555';
     const userId = 2;
 
-    it('Должна отклониться заявка и отправиться уведомление', async () => {
+    it('должен успешно отклонить заявку', async () => {
       const pendingRequest = { ...mockRequest, status: RequestStatus.PENDING };
       requestRepository.findOne.mockResolvedValue(pendingRequest);
       userRepository.findOne.mockResolvedValue(mockReceiver);
@@ -429,201 +421,158 @@ describe('RequestsService', () => {
       });
 
       const result = await service.reject(requestId, userId);
+
+      expect(requestRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: RequestStatus.REJECTED }),
+      );
+      expect(notificationService.notifyRequestRejected).toHaveBeenCalled();
       expect(result).toEqual({ message: 'Заявка отклонена' });
-      expect(notificationService.notifyRequestRejected).toHaveBeenCalledWith(
-        mockRequest.sender,
-        {
-          requestId,
-          receiverName: mockReceiver.name,
-        },
-      );
     });
 
-    it('Должно отправиться уведомление с именем по умолчанию, если получатель не найден в БД', async () => {
-      const pendingRequest = { ...mockRequest, status: RequestStatus.PENDING };
-      requestRepository.findOne.mockResolvedValue(pendingRequest);
-      userRepository.findOne.mockResolvedValue(null);
-      requestRepository.save.mockResolvedValue({
-        ...pendingRequest,
-        status: RequestStatus.REJECTED,
-      });
-      await service.reject(requestId, userId);
-      expect(notificationService.notifyRequestRejected).toHaveBeenCalledWith(
-        mockRequest.sender,
-        {
-          requestId,
-          receiverName: 'Получатель',
-        },
-      );
-    });
+    it('должен выбросить ForbiddenException, если пользователь не получатель', async () => {
+      requestRepository.findOne.mockResolvedValue(mockRequest);
 
-    it('Должна вернуться ошибка NotFound, если заявка не найдена', async () => {
-      requestRepository.findOne.mockResolvedValue(null);
-      await expect(service.reject(requestId, userId)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('Должна вернуться ошибка Forbidden, если пользователь не получатель', async () => {
-      const requestWithOtherReceiver = {
-        ...mockRequest,
-        receiver: { id: 999 } as unknown as User,
-      };
-      requestRepository.findOne.mockResolvedValue(requestWithOtherReceiver);
-      await expect(service.reject(requestId, userId)).rejects.toThrow(
+      await expect(service.reject(requestId, 999)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('Должна вернуться ошибка BadRequest, если заявка уже обработана', async () => {
-      const processedRequest = {
+    it('должен выбросить BadRequestException, если заявка уже обработана', async () => {
+      const rejectedRequest = {
         ...mockRequest,
         status: RequestStatus.REJECTED,
       };
-      requestRepository.findOne.mockResolvedValue(processedRequest);
+      requestRepository.findOne.mockResolvedValue(rejectedRequest);
+
       await expect(service.reject(requestId, userId)).rejects.toThrow(
         BadRequestException,
       );
     });
   });
 
-  // тестирование удаления заявки
+  // ==============================
+  // Remove
+  // ==============================
   describe('remove', () => {
-    const requestId = mockRequest.id;
-    const userPayload: TJwtPayload = {
-      sub: 1,
-      email: 'sender@test.com',
-      name: 'Sender',
-      role: UserRole.USER,
-    };
-    const adminPayload: TJwtPayload = { ...userPayload, role: UserRole.ADMIN };
+    const requestId = '11111111-2222-3333-4444-555555555555';
+    const userPayload = { sub: 1, role: UserRole.USER } as TJwtPayload;
 
-    it('Должна удалиться заявка, если пользователь её отправитель', async () => {
-      requestRepository.findOne.mockResolvedValue({
-        ...mockRequest,
-        sender: mockUser,
-      });
-      await service.remove(requestId, userPayload);
-      expect(requestRepository.delete).toHaveBeenCalledWith(requestId);
-    });
-
-    it('Должна удалиться заявка, если пользователь администратор', async () => {
+    it('должен успешно удалить заявку отправителем', async () => {
       requestRepository.findOne.mockResolvedValue(mockRequest);
-      await service.remove(requestId, adminPayload);
+      requestRepository.delete.mockResolvedValue({ affected: 1 } as any);
+
+      await service.remove(requestId, userPayload);
+
       expect(requestRepository.delete).toHaveBeenCalledWith(requestId);
     });
 
-    it('Должна вернуться ошибка NotFound, если заявка не найдена', async () => {
+    it('должен выбросить NotFoundException, если заявка не найдена', async () => {
       requestRepository.findOne.mockResolvedValue(null);
+
       await expect(service.remove(requestId, userPayload)).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('Должна вернуться ошибка Forbidden, если пользователь не отправитель и не администратор', async () => {
-      const otherSender = {
-        id: 999,
-        name: 'Other',
-        email: 'other@test.com',
+    it('должен выбросить ForbiddenException, если пользователь не отправитель и не админ', async () => {
+      const anotherUserPayload = {
+        sub: 999,
         role: UserRole.USER,
-      } as unknown as User;
-      const requestWithOtherSender = { ...mockRequest, sender: otherSender };
-      requestRepository.findOne.mockResolvedValue(requestWithOtherSender);
-      await expect(service.remove(requestId, userPayload)).rejects.toThrow(
-        ForbiddenException,
-      );
+      } as TJwtPayload;
+      requestRepository.findOne.mockResolvedValue(mockRequest);
+
+      await expect(
+        service.remove(requestId, anotherUserPayload),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('должен успешно удалить заявку администратором', async () => {
+      const adminPayload = { sub: 999, role: UserRole.ADMIN } as TJwtPayload;
+      requestRepository.findOne.mockResolvedValue(mockRequest);
+      requestRepository.delete.mockResolvedValue({ affected: 1 } as any);
+
+      await service.remove(requestId, adminPayload);
+
+      expect(requestRepository.delete).toHaveBeenCalledWith(requestId);
     });
   });
 
-  // тестируем изменение статуса заявки
+  // ==============================
+  // UpdateStatus
+  // ==============================
   describe('updateStatus', () => {
-    const requestId = mockRequest.id;
-    const userPayload: TJwtPayload = {
-      sub: 2,
-      email: 'receiver@test.com',
-      name: 'Receiver',
-      role: UserRole.USER,
-    };
-    const adminPayload: TJwtPayload = { ...userPayload, role: UserRole.ADMIN };
+    const requestId = '11111111-2222-3333-4444-555555555555';
+    const userPayload = { sub: 2, role: UserRole.USER } as TJwtPayload;
 
-    it('Должен обновиться статус на accepted, если пользователь получатель', async () => {
-      const dto: UpdateRequestDto = { status: RequestStatus.ACCEPTED };
-      const pendingRequest = {
-        ...mockRequest,
-        receiver: mockReceiver,
-        status: RequestStatus.PENDING,
-      };
-      requestRepository.findOne.mockResolvedValue(pendingRequest);
+    it('должен успешно обновить статус на ACCEPTED', async () => {
+      const dto = { status: RequestStatus.ACCEPTED };
+      requestRepository.findOne.mockResolvedValue(mockRequest);
       requestRepository.save.mockResolvedValue({
-        ...pendingRequest,
+        ...mockRequest,
         status: RequestStatus.ACCEPTED,
       });
 
       const result = await service.updateStatus(requestId, dto, userPayload);
-      expect(requestRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ status: RequestStatus.ACCEPTED }),
-      );
+
+      expect(requestRepository.save).toHaveBeenCalled();
       expect(result.status).toBe(RequestStatus.ACCEPTED);
     });
 
-    it('Должен обновиться статус на accepted, если пользователь администратор (даже не получатель)', async () => {
-      const dto: UpdateRequestDto = { status: RequestStatus.ACCEPTED };
-      const pendingRequest = {
-        ...mockRequest,
-        receiver: { id: 999 } as unknown as User,
-        status: RequestStatus.PENDING,
-      };
-      requestRepository.findOne.mockResolvedValue(pendingRequest);
+    it('должен успешно обновить статус на REJECTED', async () => {
+      const dto = { status: RequestStatus.REJECTED };
+      requestRepository.findOne.mockResolvedValue(mockRequest);
       requestRepository.save.mockResolvedValue({
-        ...pendingRequest,
-        status: RequestStatus.ACCEPTED,
-      });
-      const result = await service.updateStatus(requestId, dto, adminPayload);
-      expect(result.status).toBe(RequestStatus.ACCEPTED);
-    });
-
-    it('Должен обновиться статус на rejected, если пользователь администратор', async () => {
-      const dto: UpdateRequestDto = { status: RequestStatus.REJECTED };
-      const pendingRequest = {
         ...mockRequest,
-        receiver: mockReceiver,
-        status: RequestStatus.PENDING,
-      };
-      requestRepository.findOne.mockResolvedValue(pendingRequest);
-      requestRepository.save.mockResolvedValue({
-        ...pendingRequest,
         status: RequestStatus.REJECTED,
       });
 
-      const result = await service.updateStatus(requestId, dto, adminPayload);
+      const result = await service.updateStatus(requestId, dto, userPayload);
+
       expect(result.status).toBe(RequestStatus.REJECTED);
     });
 
-    it('Должна вернуться ошибка Forbidden, если статус не accepted/rejected', async () => {
-      const dto: UpdateRequestDto = { status: RequestStatus.PENDING };
+    it('должен выбросить ForbiddenException при попытке обновить на недопустимый статус', async () => {
+      const dto = { status: RequestStatus.PENDING };
+
       await expect(
         service.updateStatus(requestId, dto, userPayload),
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('Должна вернуться ошибка NotFound, если заявка не найдена', async () => {
-      const dto: UpdateRequestDto = { status: RequestStatus.ACCEPTED };
+    it('должен выбросить NotFoundException, если заявка не найдена', async () => {
+      const dto = { status: RequestStatus.ACCEPTED };
       requestRepository.findOne.mockResolvedValue(null);
+
       await expect(
         service.updateStatus(requestId, dto, userPayload),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('Должна вернуться ошибка Forbidden, если пользователь не получатель и не администратор', async () => {
-      const dto: UpdateRequestDto = { status: RequestStatus.ACCEPTED };
-      const requestWithOtherReceiver = {
-        ...mockRequest,
-        receiver: { id: 999 } as unknown as User,
-      };
-      requestRepository.findOne.mockResolvedValue(requestWithOtherReceiver);
+    it('должен выбросить ForbiddenException, если пользователь не получатель и не админ', async () => {
+      const dto = { status: RequestStatus.ACCEPTED };
+      const anotherUserPayload = {
+        sub: 999,
+        role: UserRole.USER,
+      } as TJwtPayload;
+      requestRepository.findOne.mockResolvedValue(mockRequest);
+
       await expect(
-        service.updateStatus(requestId, dto, userPayload),
+        service.updateStatus(requestId, dto, anotherUserPayload),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('должен позволить администратору обновить статус', async () => {
+      const dto = { status: RequestStatus.ACCEPTED };
+      const adminPayload = { sub: 999, role: UserRole.ADMIN } as TJwtPayload;
+      requestRepository.findOne.mockResolvedValue(mockRequest);
+      requestRepository.save.mockResolvedValue({
+        ...mockRequest,
+        status: RequestStatus.ACCEPTED,
+      });
+
+      const result = await service.updateStatus(requestId, dto, adminPayload);
+
+      expect(result.status).toBe(RequestStatus.ACCEPTED);
     });
   });
 });

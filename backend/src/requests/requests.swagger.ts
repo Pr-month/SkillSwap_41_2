@@ -5,6 +5,7 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
+import { Request } from './entities/request.entity';
 
 const ApiRequestIdParam = () =>
   ApiParam({
@@ -16,13 +17,13 @@ const ApiRequestIdParam = () =>
 
 export function ApiRequestsCreate() {
   return applyDecorators(
-    ApiBearerAuth(),
+    ApiBearerAuth('accessToken'),
     ApiOperation({
       summary: 'Создание заявки на обмен навыками',
       description:
         'Создаёт запрос другому пользователю на обмен навыками: ты предлагаешь свой навык, а просишь навык другого пользователя.',
     }),
-    ApiResponse({ status: 201, description: 'Заявка создана' }),
+    ApiResponse({ status: 201, description: 'Заявка создана', type: Request }),
     ApiResponse({
       status: 400,
       description: 'Ошибка валидации или такая заявка уже существует',

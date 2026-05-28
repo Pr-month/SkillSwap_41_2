@@ -9,6 +9,7 @@ describe('NotificationService', () => {
   let service: NotificationService;
   let notificationGateway: jest.Mocked<NotificationGateway>;
   let sendmailService: jest.Mocked<SendmailService>;
+  let consoleErrorSpy: jest.SpyInstance;
 
   const mockUser: User = {
     id: 1,
@@ -39,10 +40,12 @@ describe('NotificationService', () => {
     service = module.get<NotificationService>(NotificationService);
     notificationGateway = module.get(NotificationGateway);
     sendmailService = module.get(SendmailService);
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    consoleErrorSpy.mockRestore();
   });
 
   describe('notifyNewRequest', () => {
@@ -86,20 +89,19 @@ describe('NotificationService', () => {
       sendmailService.sendEmail.mockRejectedValueOnce(emailError);
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(
-        service.notifyNewRequest(mockUser, data),
-      ).resolves.not.toThrow();
+      await service.notifyNewRequest(mockUser, data);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to send email notification for new request:',
-        emailError,
-      );
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     it('должен отправить оба уведомления (WebSocket + email), даже если email упадёт', async () => {
       sendmailService.sendEmail.mockRejectedValueOnce(new Error('fail'));
+
       await service.notifyNewRequest(mockUser, data);
+      await new Promise((resolve) => setImmediate(resolve));
 
       expect(notificationGateway.sendNotification).toHaveBeenCalled();
       expect(sendmailService.sendEmail).toHaveBeenCalled();

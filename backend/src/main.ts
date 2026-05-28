@@ -81,8 +81,11 @@ async function bootstrap() {
     .setTitle('SkillSwap API')
     .setDescription('Описание API SkillSwap')
     .setVersion('1.0')
-    .addBearerAuth()
-    .addCookieAuth('refresh_token')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'accessToken',
+    )
+    .addCookieAuth('refreshToken')
     .build();
   const options: SwaggerDocumentOptions = {
     include: [

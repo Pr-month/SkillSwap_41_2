@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -14,7 +15,8 @@ import { UserRole } from '../users/enums/users.enums';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { Request } from './entities/request.entity';
-import { RequestStatus } from './requests.enum';
+import { RequestStatus } from './enums/request.enums';
+import { SkillStatus } from 'src/skills/enums/skills.enums';
 
 @Injectable()
 export class RequestsService {
@@ -29,37 +31,39 @@ export class RequestsService {
   ) {}
 
   async create(userId: number, dto: CreateRequestDto) {
-    const receiver = await this.usersRepository.findOne({
-      where: { id: dto.receiverId },
-    });
-    if (!receiver) throw new NotFoundException('Получатель не найден');
-
-    if (userId === dto.receiverId) {
-      throw new ForbiddenException('Нельзя отправить заявку самому себе');
-    }
-
     const offeredSkill = await this.skillsRepository.findOne({
-      where: { id: dto.offeredSkillId },
+      where: { id: dto.offeredSkillId, status: SkillStatus.ACTIVE },
       relations: ['owner'],
     });
+
     if (!offeredSkill) {
       throw new NotFoundException('Предлагаемый навык не найден');
     }
+
     if (offeredSkill.owner.id !== userId) {
       throw new ForbiddenException('Вы можете предлагать только свои навыки');
     }
 
     const requestedSkill = await this.skillsRepository.findOne({
-      where: { id: dto.requestedSkillId },
+      where: {
+        id: dto.requestedSkillId,
+        status: SkillStatus.ACTIVE,
+      },
       relations: ['owner'],
     });
+
     if (!requestedSkill) {
       throw new NotFoundException('Запрашиваемый навык не найден');
     }
-    if (requestedSkill.owner.id !== receiver.id) {
-      throw new ForbiddenException(
-        'Запрашиваемый навык должен принадлежать получателю',
-      );
+
+    if (!requestedSkill.owner) {
+      throw new ConflictException('У навыка отсутствует владелец');
+    }
+
+    const receiver = requestedSkill.owner;
+
+    if (receiver.id === userId) {
+      throw new ForbiddenException('Нельзя отправить заявку самому себе');
     }
 
     const existing = await this.requestsRepository.findOne({
@@ -71,9 +75,16 @@ export class RequestsService {
         status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
       },
     });
+
     if (existing) {
       throw new BadRequestException(
         'Такая заявка уже существует и не завершена',
+      );
+    }
+
+    if (dto.offeredSkillId === dto.requestedSkillId) {
+      throw new BadRequestException(
+        'Нельзя указать один и тот же навык для обмена',
       );
     }
 
@@ -85,11 +96,13 @@ export class RequestsService {
       status: RequestStatus.PENDING,
       isRead: false,
     });
+
     const saved = await this.requestsRepository.save(request);
 
     const sender = await this.usersRepository.findOne({
       where: { id: userId },
     });
+
     const senderName = sender?.name ?? 'Пользователь';
 
     await this.notificationService.notifyNewRequest(receiver, {
