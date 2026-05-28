@@ -173,10 +173,22 @@ describe('AuthController (e2e)', () => {
 
   // ===== Refresh =====
   it('/auth/refresh (POST) => should refresh tokens', async () => {
-    expect(refreshToken).toBeDefined();
+    // Логинимся, чтобы получить свежий refreshToken
+    const loginRes = await api
+      .post('/auth/login')
+      .send({
+        email: registerUserDto.email,
+        password: registerUserDto.password,
+      })
+      .expect(201);
+
+    const currentRefreshToken = extractRefreshTokenFromCookie(loginRes.headers['set-cookie']);
+    expect(currentRefreshToken).not.toBeNull();
+
+    // Отправляем refresh запрос с refreshToken в cookie
     const res = await api
       .post('/auth/refresh')
-      .send({ refreshToken: refreshToken as string })
+      .set('Cookie', `refreshToken=${currentRefreshToken}`)
       .expect(201);
 
     expect(res.body).toHaveProperty('accessToken');
@@ -184,21 +196,39 @@ describe('AuthController (e2e)', () => {
       res.headers['set-cookie'],
     );
     expect(newRefreshToken).not.toBeNull();
+    
+    // Обновляем глобальные токены для следующих тестов
     refreshToken = newRefreshToken!;
+    accessToken = res.body.accessToken;
   });
 
   it('/auth/refresh (POST) => should fail with invalid refresh token', async () => {
+    // Отправляем запрос с невалидным refreshToken в cookie
     await api
       .post('/auth/refresh')
-      .send({ refreshToken: 'invalidtoken' })
+      .set('Cookie', 'refreshToken=invalidtoken')
       .expect(401);
   });
 
   // ===== Logout =====
   it('/auth/logout (POST) => should logout a user', async () => {
+    // Логинимся, чтобы получить токены
+    const loginRes = await api
+      .post('/auth/login')
+      .send({
+        email: registerUserDto.email,
+        password: registerUserDto.password,
+      })
+      .expect(201);
+    
+    const currentAccessToken = loginRes.body.accessToken;
+    const currentRefreshToken = extractRefreshTokenFromCookie(loginRes.headers['set-cookie']);
+
+    // Отправляем logout запрос с access token в заголовке и refresh token в cookie
     const res = await api
       .post('/auth/logout')
-      .set('Authorization', `Bearer ${accessToken}`)
+      .set('Authorization', `Bearer ${currentAccessToken}`)
+      .set('Cookie', `refreshToken=${currentRefreshToken}`)
       .expect(201);
 
     expect(res.body).toEqual({ message: 'Успешный выход' });
