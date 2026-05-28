@@ -3,14 +3,16 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useState, useRef, useEffect } from 'react';
 import { NotificationMenu } from '../NotificationMenu/NotificationMenu';
 import styles from './UserPanel.module.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { logoutUserApi } from '@/services/thunk/authUser';
+import { useDispatch } from '@/services/store/store';
 
 export const UserPanel = () => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleNotifications = () => setIsNotificationsOpen(!isNotificationsOpen);
@@ -19,9 +21,9 @@ export const UserPanel = () => {
     setIsNotificationsOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await dispatch(logoutUserApi());
     logout();
-    navigate('/');
   };
 
   useClickOutside(panelRef, closeAll);

@@ -1,7 +1,7 @@
 import { User } from '@/entities/user/model/types';
 import { setCookie, getCookie, deleteCookie } from './cookies';
 
-const API_BASE_URL = import.meta.env.VITE_SKILLSWAP_API_URL || '';
+const API_BASE_URL = `${import.meta.env.VITE_SKILLSWAP_API_URL || ''}/api`;
 
 export const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then(err => Promise.reject(err));
@@ -96,8 +96,8 @@ export const fetchWithRefresh = async <T>(
 };
 
 // Функции API
-export const getUserApi = (): Promise<TUserResponse> => {
-  return fetchWithRefresh<TUserResponse>(`${API_BASE_URL}/auth/user`, {
+export const getCurrentUserApi = (): Promise<TUserResponse> => {
+  return fetchWithRefresh<TUserResponse>(`${API_BASE_URL}/users/me`, {
     method: 'GET',
   });
 };

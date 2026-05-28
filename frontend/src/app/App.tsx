@@ -1,6 +1,7 @@
 import { MainLayout } from '@/widgets/Layout/MainLayout';
 import './styles/index.css';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { ComponentType, lazy, Suspense, useEffect } from 'react';
 import { ProtectedRoute } from '@/shared/ui/protectedRoute/protectedRoute';
 import { useDispatch } from '@/services/store/store';
@@ -45,6 +46,7 @@ function App() {
   }, [dispatch]);
 
   return (
+    <AuthProvider>
     <Suspense fallback={<Loader />}>
       {/* 
         Основной блок <Routes> для отображения страниц.
@@ -144,6 +146,7 @@ function App() {
         </Routes>
       )}
     </Suspense>
+    </AuthProvider>
   );
 }
 
