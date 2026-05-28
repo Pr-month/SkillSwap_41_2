@@ -17,6 +17,7 @@ import { CitiesModule } from './cities/cities.module';
 import { uploadConfig } from './config/upload.config';
 import { sendmailConfig } from './config/sendmail.config';
 import { SendmailModule } from './sendmail/sendmail.module';
+import { yandexConfig } from './config/yandex.config';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { SendmailModule } from './sendmail/sendmail.module';
         appConfig,
         uploadConfig,
         sendmailConfig,
+        yandexConfig,
       ],
       isGlobal: true,
     }),

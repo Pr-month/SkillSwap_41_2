@@ -10,6 +10,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { jwtConfig, TJwtConfig } from '../config/jwt.config';
 import type { StringValue } from 'ms';
 import { UsersModule } from '../users/users.module';
+import { YandexStrategy } from './strategies/yandex.strategy';
 
 @Module({
   imports: [
@@ -30,7 +31,12 @@ import { UsersModule } from '../users/users.module';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
+  providers: [
+    AuthService,
+    JwtAccessStrategy,
+    JwtRefreshStrategy,
+    YandexStrategy,
+  ],
   exports: [JwtModule],
 })
 export class AuthModule {}

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -16,6 +17,7 @@ import { TJwtConfig, jwtConfig } from '../config/jwt.config';
 import { StringValue } from 'ms';
 import { LoginDTO } from './dto/login.dto';
 import { TAuthResponse, TTokens } from './auth.types';
+import { OAuthUserDto } from './dto/OAuthUserDto';
 
 @Injectable()
 export class AuthService {
@@ -29,11 +31,11 @@ export class AuthService {
   ) {}
 
   setRefreshTokenCookie(res: Response, refreshToken: string): void {
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      path: '/auth',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
@@ -129,7 +131,10 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
-    const passwordMatches = await bcrypt.compare(dto.password, user.password);
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      user.password || '',
+    );
     if (!passwordMatches) {
       throw new UnauthorizedException('Неверный email или пароль');
     }
@@ -147,5 +152,34 @@ export class AuthService {
       refreshToken: null,
     });
     return { message: 'Успешный выход' };
+  }
+
+  async findOrCreateOAuthUser(data: OAuthUserDto): Promise<TAuthResponse> {
+    if (!data.email) {
+      throw new BadRequestException('Не удалось получить email пользователя');
+    }
+
+    let user = await this.usersRepository.findOne({
+      where: { email: data.email },
+    });
+
+    if (!user) {
+      user = this.usersRepository.create({
+        email: data.email,
+        name: data.name,
+        gender: data.gender,
+        avatar: data.avatar,
+        provider: data.provider,
+      });
+
+      await this.usersRepository.save(user);
+    }
+
+    const tokens = await this.generateTokens(user);
+    return {
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 }

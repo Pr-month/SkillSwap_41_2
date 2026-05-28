@@ -142,7 +142,7 @@ export class UsersService {
 
     const isPasswordValid = await bcrypt.compare(
       dto.oldPassword,
-      user.password,
+      user.password || '',
     );
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid old password');
