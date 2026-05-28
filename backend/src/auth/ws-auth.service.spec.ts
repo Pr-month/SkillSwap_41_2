@@ -37,7 +37,6 @@ const mockJwtConfig: TJwtConfig = {
 
 describe('WsAuthService', () => {
   let service: WsAuthService;
-  let jwtService: JwtService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,7 +54,6 @@ describe('WsAuthService', () => {
     }).compile();
 
     service = module.get<WsAuthService>(WsAuthService);
-    jwtService = module.get<JwtService>(JwtService);
   });
 
   afterEach(() => {
@@ -264,7 +262,9 @@ describe('WsAuthService', () => {
       mockSocket.handshake.query = { token: token };
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
 
-      const result = await service.authenticateSocket(mockSocket as unknown as Socket);
+      const result = await service.authenticateSocket(
+        mockSocket as unknown as Socket,
+      );
 
       expect(result).toEqual(mockPayload);
       expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(token, {
@@ -279,7 +279,9 @@ describe('WsAuthService', () => {
       };
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
 
-      const result = await service.authenticateSocket(mockSocket as unknown as Socket);
+      const result = await service.authenticateSocket(
+        mockSocket as unknown as Socket,
+      );
 
       expect(result).toEqual(mockPayload);
     });
@@ -289,7 +291,9 @@ describe('WsAuthService', () => {
       mockSocket.handshake.auth = { token: token };
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
 
-      const result = await service.authenticateSocket(mockSocket as unknown as Socket);
+      const result = await service.authenticateSocket(
+        mockSocket as unknown as Socket,
+      );
 
       expect(result).toEqual(mockPayload);
     });
