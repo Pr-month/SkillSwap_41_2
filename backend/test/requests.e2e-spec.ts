@@ -43,6 +43,12 @@ interface OutgoingRequestResponse {
   offeredSkill: { title: string };
 }
 
+interface ErrorResponse {
+  message: string | string[];
+  error: string;
+  statusCode: number;
+}
+
 describe('RequestsController (e2e)', () => {
   let app: INestApplication;
   let httpServer: express.Express;
@@ -127,7 +133,7 @@ describe('RequestsController (e2e)', () => {
       images: [],
       status: SkillStatus.ACTIVE,
     });
-    
+
     requestedSkill = await skillRepository.save({
       title: 'Requested Skill',
       description: 'Requested skill description',
@@ -175,7 +181,7 @@ describe('RequestsController (e2e)', () => {
         offeredSkillId: offeredSkill.id,
         requestedSkillId: requestedSkill.id,
       };
-      
+
       const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenSender}`)
@@ -202,7 +208,7 @@ describe('RequestsController (e2e)', () => {
         offeredSkillId: 99999,
         requestedSkillId: requestedSkill.id,
       };
-      
+
       await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenSender}`)
@@ -215,7 +221,7 @@ describe('RequestsController (e2e)', () => {
         offeredSkillId: offeredSkill.id,
         requestedSkillId: 99999,
       };
-      
+
       await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenSender}`)
@@ -228,12 +234,12 @@ describe('RequestsController (e2e)', () => {
         offeredSkillId: requestedSkill.id, // Навык получателя
         requestedSkillId: requestedSkill.id,
       };
-      
+
       const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenSender}`)
         .send(createRequestDto);
-      
+
       expect(response.status).toBe(403);
     });
 
@@ -247,19 +253,19 @@ describe('RequestsController (e2e)', () => {
         images: [],
         status: SkillStatus.ACTIVE,
       });
-      
+
       const createRequestDto = {
         offeredSkillId: offeredSkill.id,
         requestedSkillId: senderOwnedSkill.id, // Навык принадлежит отправителю
       };
-      
+
       const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenSender}`)
         .send(createRequestDto);
-      
+
       expect(response.status).toBe(403);
-      
+
       // Очищаем
       await skillRepository.delete(senderOwnedSkill.id);
     });
@@ -269,19 +275,20 @@ describe('RequestsController (e2e)', () => {
         offeredSkillId: offeredSkill.id,
         requestedSkillId: offeredSkill.id,
       };
-      
+
       const response = await request(httpServer)
         .post('/requests')
         .set('Authorization', `Bearer ${authTokenSender}`)
         .send(createRequestDto);
-      
+
       // Проверяем, что статус ошибки либо 400, либо 403
       // В зависимости от логики сервера
       expect([400, 403]).toContain(response.status);
-      
+
       // Если хотим проверить конкретное сообщение
       if (response.status === 400) {
-        expect(response.body.message).toContain('Нельзя указать один и тот же навык');
+        const body = response.body as ErrorResponse;
+        expect(body.message).toContain('Нельзя указать один и тот же навык');
       } else if (response.status === 403) {
         // Если возвращается 403, возможно, это из-за того, что навык не принадлежит получателю
         console.log('Response body for same skill:', response.body);
@@ -397,14 +404,16 @@ describe('RequestsController (e2e)', () => {
         .patch(`/requests/${requestId}/accept`)
         .set('Authorization', `Bearer ${authTokenReceiver}`)
         .expect(200);
-      
+
       // Проверяем что статус изменился - заявка больше не в incoming
       const response = await request(httpServer)
         .get('/requests/incoming')
         .set('Authorization', `Bearer ${authTokenReceiver}`)
         .expect(200);
-      
-      const acceptedRequest = (response.body as CreateRequestResponse[]).find(r => r.id === requestId);
+
+      const acceptedRequest = (response.body as CreateRequestResponse[]).find(
+        (r) => r.id === requestId,
+      );
       expect(acceptedRequest).toBeUndefined(); // Принятые заявки не должны попадать в incoming
     });
 
@@ -477,14 +486,16 @@ describe('RequestsController (e2e)', () => {
         .delete(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${authTokenSender}`)
         .expect(200);
-      
-      await request(httpServer)
+
+      const response = await request(httpServer)
         .get('/requests/outgoing')
         .set('Authorization', `Bearer ${authTokenSender}`)
-        .expect(200)
-        .expect(res => {
-          expect(res.body.some((r: any) => r.id === requestId)).toBe(false);
-        });
+        .expect(200);
+
+      const body = response.body as OutgoingRequestResponse[];
+      expect(
+        body.some((r: OutgoingRequestResponse) => r.id === requestId),
+      ).toBe(false);
     });
 
     it('должен вернуть 403 при попытке удалить заявку получателем', async () => {

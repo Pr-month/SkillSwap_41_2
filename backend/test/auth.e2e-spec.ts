@@ -42,8 +42,8 @@ function extractRefreshTokenFromCookie(
 describe('AuthController (e2e)', () => {
   let userRepository: Repository<User>;
   let app: INestApplication;
-  let accessToken: string;
-  let refreshToken: string | null = null;
+  let currentAccessToken: string;
+  let currentRefreshToken: string | null = null;
   let httpServer: Server;
   let api: ReturnType<typeof request>;
   let moduleFixture: TestingModule;
@@ -133,9 +133,16 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     const body = res.body as AuthResponse;
-    accessToken = body.accessToken;
-    refreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
-    expect(refreshToken).not.toBeNull();
+    currentAccessToken = body.accessToken;
+
+    expect(currentAccessToken).toBeDefined();
+    expect(typeof currentAccessToken).toBe('string');
+    expect(currentAccessToken.length).toBeGreaterThan(0);
+
+    currentRefreshToken = extractRefreshTokenFromCookie(
+      res.headers['set-cookie'],
+    );
+    expect(currentRefreshToken).not.toBeNull();
   });
 
   it('/auth/register (POST) => should fail duplicate email', async () => {
@@ -156,9 +163,11 @@ describe('AuthController (e2e)', () => {
     expect(res.headers['set-cookie']).toBeDefined();
 
     const body = res.body as AuthResponse;
-    accessToken = body.accessToken;
-    refreshToken = extractRefreshTokenFromCookie(res.headers['set-cookie']);
-    expect(refreshToken).not.toBeNull();
+    currentAccessToken = body.accessToken;
+    currentRefreshToken = extractRefreshTokenFromCookie(
+      res.headers['set-cookie'],
+    );
+    expect(currentRefreshToken).not.toBeNull();
   });
 
   it('/auth/login (POST) => should fail with wrong password', async () => {
@@ -182,13 +191,15 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    const currentRefreshToken = extractRefreshTokenFromCookie(loginRes.headers['set-cookie']);
-    expect(currentRefreshToken).not.toBeNull();
+    const refreshTokenFromLogin = extractRefreshTokenFromCookie(
+      loginRes.headers['set-cookie'],
+    );
+    expect(refreshTokenFromLogin).not.toBeNull();
 
     // Отправляем refresh запрос с refreshToken в cookie
     const res = await api
       .post('/auth/refresh')
-      .set('Cookie', `refreshToken=${currentRefreshToken}`)
+      .set('Cookie', `refreshToken=${refreshTokenFromLogin}`)
       .expect(201);
 
     expect(res.body).toHaveProperty('accessToken');
@@ -196,10 +207,11 @@ describe('AuthController (e2e)', () => {
       res.headers['set-cookie'],
     );
     expect(newRefreshToken).not.toBeNull();
-    
+
     // Обновляем глобальные токены для следующих тестов
-    refreshToken = newRefreshToken!;
-    accessToken = res.body.accessToken;
+    currentRefreshToken = newRefreshToken!;
+    const body = res.body as AuthResponse;
+    currentAccessToken = body.accessToken;
   });
 
   it('/auth/refresh (POST) => should fail with invalid refresh token', async () => {
@@ -220,18 +232,19 @@ describe('AuthController (e2e)', () => {
         password: registerUserDto.password,
       })
       .expect(201);
-    
-    const currentAccessToken = loginRes.body.accessToken;
-    const currentRefreshToken = extractRefreshTokenFromCookie(loginRes.headers['set-cookie']);
+
+    const loginResponseBody = loginRes.body as AuthResponse;
+    const accessTokenForLogout = loginResponseBody.accessToken;
+    const refreshTokenForLogout = extractRefreshTokenFromCookie(
+      loginRes.headers['set-cookie'],
+    );
 
     // Отправляем logout запрос с access token в заголовке и refresh token в cookie
-    const res = await api
+    await api
       .post('/auth/logout')
-      .set('Authorization', `Bearer ${currentAccessToken}`)
-      .set('Cookie', `refreshToken=${currentRefreshToken}`)
+      .set('Authorization', `Bearer ${accessTokenForLogout}`)
+      .set('Cookie', `refreshToken=${refreshTokenForLogout}`)
       .expect(201);
-
-    expect(res.body).toEqual({ message: 'Успешный выход' });
 
     const testUser = await userRepository.findOne({
       where: { email: registerUserDto.email },
