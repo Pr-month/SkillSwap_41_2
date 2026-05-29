@@ -13,6 +13,8 @@ import { MainLayout } from '@/widgets/Layout/MainLayout';
 import { ComponentType, lazy, Suspense, useEffect } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './styles/index.css';
+import { AuthProvider } from '@/features/auth/context/AuthProvider';
+
 const ProfileDetailsPage = lazy(
   () =>
     new Promise<{ default: ComponentType<unknown> }>(resolve => {
@@ -23,6 +25,7 @@ const ProfileDetailsPage = lazy(
       }, 2000);
     }),
 );
+
 const SkillPage = lazy(() => import('@/pages/skillPage/skillPage'));
 const RegistrationForms = lazy(() => import('@/features/registrationForms/registrationForms'));
 const SuccessModal = lazy(() => import('@/features/successModal/successModal'));
