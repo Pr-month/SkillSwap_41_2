@@ -2,7 +2,6 @@ import { getCookie } from '@/shared/utils/cookies';
 import { api } from './apiClient';
 import { TAuthResponse, TLoginData } from './types/auth';
 import { TCategoriesResponse } from './types/categories';
-import { TCitiesResponse } from './types/cities';
 import { TSkillResponse } from './types/skill';
 import { TUpdateProfileData, TUpdateProfileResponse, TUsersResponse } from './types/users';
 
@@ -18,12 +17,6 @@ export const getCategoriesApi = async () => {
  */
 export const getSkillsApi = async () => {
   return api.get<TSkillResponse>('/api/skills');
-};
-/**
- * Получение списка городов
- */
-export const getCitiesApi = async () => {
-  return api.get<TCitiesResponse>('/api/cities');
 };
 
 /**

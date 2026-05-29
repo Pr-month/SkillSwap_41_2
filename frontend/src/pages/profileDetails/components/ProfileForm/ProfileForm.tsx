@@ -1,15 +1,15 @@
-import { updateProfileApi } from '@/api/skillSwapApi';
-import { useAuth } from '@/features/auth/context/AuthContext';
-import { userSliceActions, userSliceSelectors } from '@/services/slices/authSlice';
-import { getCitiesSelector } from '@/services/slices/citiesSlice';
-import { updateStepTwoData } from '@/services/slices/registrationSlice';
-import { useDispatch, useSelector } from '@/services/store/store';
-import { Button } from '@/shared/ui/button/button';
-import { ChangeEvent, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import * as yup from 'yup';
+import { useState, useRef, ChangeEvent } from 'react';
 import { PasswordChangeForm } from '../../components/PasswordChangeForm/PasswordChangeForm';
+import { useDispatch, useSelector } from '@/services/store/store';
+import { updateStepTwoData } from '@/services/slices/registrationSlice';
+import { userSliceSelectors, userSliceActions } from '@/services/slices/authSlice';
+import { Button } from '@/shared/ui/button/button';
+import { russianCities } from '@/shared/lib/cities';
+import { updateProfileApi } from '@/api/skillSwapApi';
+import * as yup from 'yup';
 import styles from './ProfileForm.module.css';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 type GenderType = 'Мужской' | 'Женский';
 
@@ -33,6 +33,32 @@ const formatDateForInput = (dateString?: string) => {
   }
 };
 
+const profileSchema = yup.object().shape({
+  name: yup
+    .string()
+    .required('Имя обязательно')
+    .min(2, 'Имя должно содержать минимум 2 символа')
+    .max(30, 'Имя должно содержать максимум 30 символов')
+    .matches(/^[а-яА-ЯёЁ\s-]+$/, 'Имя должно содержать только кириллические буквы'),
+  birthDate: yup
+    .string()
+    .required('Дата рождения обязательна')
+    .test('valid-date', 'Неверная дата рождения', value => {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    })
+    .test('age', 'Вам должно быть больше 12 лет', value => {
+      if (!value) return false;
+      const birthDate = new Date(value);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      return age >= 12;
+    }),
+  city: yup.string().required('Город обязателен').oneOf(russianCities, 'Выберите город из списка'),
+  about: yup.string().max(500, 'Описание должно содержать максимум 500 символов'),
+});
+
 const passwordSchema = yup
   .string()
   .required('Пароль обязателен')
@@ -48,35 +74,6 @@ export function ProfileForm() {
   const dateInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
   const user = useSelector(userSliceSelectors.selectUser);
-  const citiesFromStore = useSelector(getCitiesSelector);
-  const cityNames = citiesFromStore.map(c => c.name);
-
-  const profileSchema = yup.object().shape({
-    name: yup
-      .string()
-      .required('Имя обязательно')
-      .min(2, 'Имя должно содержать минимум 2 символа')
-      .max(30, 'Имя должно содержать максимум 30 символов')
-      .matches(/^[а-яА-ЯёЁ\s-]+$/, 'Имя должно содержать только кириллические буквы'),
-    birthDate: yup
-      .string()
-      .required('Дата рождения обязательна')
-      .test('valid-date', 'Неверная дата рождения', value => {
-        if (!value) return false;
-        const date = new Date(value);
-        return !isNaN(date.getTime());
-      })
-      .test('age', 'Вам должно быть больше 12 лет', value => {
-        if (!value) return false;
-        const birthDate = new Date(value);
-        const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear();
-        return age >= 12;
-      }),
-    city: yup.string().required('Город обязателен').oneOf(cityNames, 'Выберите город из списка'),
-    about: yup.string().max(500, 'Описание должно содержать максимум 500 символов'),
-  });
-
   const registrationData = JSON.parse(localStorage.getItem('registrationData') || '{}');
 
   const [formData, setFormData] = useState({
@@ -371,7 +368,7 @@ export function ProfileForm() {
                 onChange={handleChange}
                 style={{ width: '100%' }}
               >
-                {cityNames.map(city => (
+                {russianCities.map(city => (
                   <option key={city} value={city}>
                     {city}
                   </option>

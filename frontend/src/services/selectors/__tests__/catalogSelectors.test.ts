@@ -89,11 +89,6 @@ describe('catalogSelectors', () => {
       loading: false,
       error: undefined,
     },
-    cities: {
-      cities: [],
-      loading: false,
-      error: undefined,
-    },
   };
 
   test('selectCatalogItems возвращает массив пользователей', () => {

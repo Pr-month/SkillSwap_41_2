@@ -21,7 +21,10 @@ describe('FiltersPanel', () => {
     'Иностранные языки': ['Английский'] as readonly string[],
   };
 
-  const mockCities = ['Москва', 'Санкт-Петербург'];
+  const mockCities = {
+    Москва: ['Москва'] as readonly string[],
+    'Санкт-Петербург': ['Санкт-Петербург'] as readonly string[],
+  };
 
   const createStore = (initialFilters?: Partial<FiltersState>) => {
     return configureStore({
@@ -237,7 +240,7 @@ describe('FiltersPanel', () => {
   test('Должен работать с пустыми списками городов и навыков', () => {
     const store = createStore();
     const emptySkills = {};
-    const emptyCities: [] = [];
+    const emptyCities = {};
     render(
       <Provider store={store}>
         <FiltersPanel skillsCategories={emptySkills} cities={emptyCities} />

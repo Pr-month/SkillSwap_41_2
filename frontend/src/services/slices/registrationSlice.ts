@@ -1,5 +1,7 @@
 import { SkillCategory, SkillSubcategory } from '@/entities/skill/model/types';
+import { russianCities } from '@/shared/lib/cities';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+type City = (typeof russianCities)[number];
 
 export type TFullRegistrationData = TStepOneData & TStepTwoData & TStepThreeData;
 
@@ -13,7 +15,7 @@ export type TStepTwoData = {
   name: string | undefined;
   birthdate: string | undefined;
   gender: 'Мужской' | 'Женский' | undefined;
-  city: string | undefined;
+  city: City | undefined;
   categories: SkillCategory[] | undefined;
   subcategories: SkillSubcategory<SkillCategory>[] | undefined;
 };
