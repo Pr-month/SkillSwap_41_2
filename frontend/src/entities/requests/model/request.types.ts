@@ -1,9 +1,4 @@
-export enum RequestStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-  CANCELLED = 'cancelled'
-}
+import { RequestStatus } from "./request.enums";
 
 export interface Request {
   id: string;
