@@ -15,12 +15,3 @@ export interface Request {
   isRead: boolean;
   createdAt: string;
 }
-
-export interface CreateRequestDto {
-  sender: string;
-  receiver: string;
-  offeredSkill: string;
-  requestedSkill: string;
-  status?: RequestStatus;
-  isRead?: boolean;
-}
