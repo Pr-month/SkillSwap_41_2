@@ -13,6 +13,8 @@ interface MockMailerService {
 describe('MailService', () => {
   let service: SendmailService;
   let mailerService: MockMailerService;
+  let consoleLogSpy: jest.SpyInstance;
+  let consoleErrorSpy: jest.SpyInstance;
 
   const mockConfig = {
     retry: {
@@ -22,6 +24,9 @@ describe('MailService', () => {
   };
 
   beforeEach(async () => {
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SendmailService,
@@ -47,6 +52,8 @@ describe('MailService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   // =========================
