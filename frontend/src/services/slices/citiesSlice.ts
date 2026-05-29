@@ -1,5 +1,5 @@
-import { getCitiesApi } from '@/api/skillSwapApi';
-import { TCity } from '@/api/types/cities';
+import { getCitiesApi } from '@/entities/cities/api/cities.api';
+import { TCity } from '@/entities/cities/api/cities.dto';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 type CitiesState = {
@@ -15,7 +15,6 @@ const initialState: CitiesState = {
 };
 
 export const getCities = createAsyncThunk<TCity[]>('cities', async () => getCitiesApi());
-
 const citiesSlice = createSlice({
   name: 'cities',
   initialState,

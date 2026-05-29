@@ -322,13 +322,7 @@ export function ProfileForm() {
         <div className={styles.profileInputRow}>
           <div className={styles.profileInputBlock}>
             <label htmlFor="birthDate">Дата рождения</label>
-            <div
-              className={styles.profileDateInputWrapper}
-              tabIndex={0}
-              role="button"
-              aria-label="Выбрать дату рождения"
-              onClick={() => dateInputRef.current?.showPicker()}
-            >
+            <div className={styles.profileDateInputWrapper}>
               <input
                 id="birthDate"
                 type="date"
@@ -338,7 +332,13 @@ export function ProfileForm() {
                 onChange={handleDateChange}
                 className={styles.profileDateInput}
               />
-              <span className={`${styles.profileCalendarIcon} ${styles.iconCalendar}`} />
+              <span
+                className={`${styles.profileCalendarIcon} ${styles.iconCalendar}`}
+                onClick={() => dateInputRef.current?.showPicker()}
+                role="button"
+                tabIndex={0}
+                aria-label="Открыть календарь"
+              />
             </div>
             {errors.birthDate && <div className={styles.errorText}>{errors.birthDate}</div>}
           </div>
@@ -362,13 +362,11 @@ export function ProfileForm() {
           </div>
         </div>
         <div className={styles.profileInputBlock}>
-          <label htmlFor='city'>Город</label>
-          <div
-            className={styles.profileCityInputWrapper}
-          >
+          <label htmlFor="city">Город</label>
+          <div className={styles.profileCityInputWrapper}>
             <div className={styles.profileSelectInputWrapper}>
               <select
-                id='city'
+                id="city"
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
@@ -386,10 +384,10 @@ export function ProfileForm() {
           {errors.city && <div className={styles.errorText}>{errors.city}</div>}
         </div>
         <div className={styles.profileInputBlock}>
-          <label htmlFor='about'>О себе</label>
+          <label htmlFor="about">О себе</label>
           <div className={styles.profileAboutInputWrapper}>
             <textarea
-              id='about'
+              id="about"
               name="about"
               value={formData.about}
               onChange={handleChange}

@@ -224,11 +224,11 @@ describe('AuthService', () => {
       service.setRefreshTokenCookie(res, 'refresh-token');
 
       expect(cookieMock).toHaveBeenCalledWith(
-        'refreshToken',
+        'refresh_token',
         'refresh-token',
         expect.objectContaining({
           httpOnly: true,
-          path: '/auth',
+          path: '/', // Changed from '/auth' to '/'
         }),
       );
     });

@@ -14,6 +14,7 @@ const testJwtConfig: TJwtConfig = {
   accessTokenExpires: '15m',
   refreshSecret: 'test-refresh-secret',
   refreshTokenExpires: '7d',
+  frontendUrl: 'http://localhost:8080',
 };
 
 const jwtPayload: TJwtPayload = {

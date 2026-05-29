@@ -130,7 +130,7 @@ describe('UsersService', () => {
       const result = await service.updatePassword(1, dto);
       expect(result.message).toBe('Пароль успешно обновлен.');
       expect(mockRepo.save).toHaveBeenCalledWith(user);
-      const isNewHash = await bcrypt.compare('newPass1', user.password);
+      const isNewHash = await bcrypt.compare('newPass1', user.password || '');
       expect(isNewHash).toBe(true);
     });
 

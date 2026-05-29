@@ -289,9 +289,11 @@ describe('RequestsController (e2e)', () => {
       if (response.status === 400) {
         const body = response.body as ErrorResponse;
         expect(body.message).toContain('Нельзя указать один и тот же навык');
-      } else if (response.status === 403) {
-        // Если возвращается 403, возможно, это из-за того, что навык не принадлежит получателю
-        console.log('Response body for same skill:', response.body);
+      }
+      // Если 403 - проверяем сообщение о заявке самому себе
+      else if (response.status === 403) {
+        const body = response.body as ErrorResponse;
+        expect(body.message).toContain('Нельзя отправить заявку самому себе');
       }
     });
   });

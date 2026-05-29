@@ -3,6 +3,9 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { SendmailDto } from './dto/sendmail.dto';
 import { sendmailConfig } from '../config/sendmail.config';
 import type { TSendmailConfig } from '../config/sendmail.config';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class SendmailService implements OnModuleInit {
@@ -15,7 +18,7 @@ export class SendmailService implements OnModuleInit {
   async onModuleInit() {
     // Проверяем, не отключена ли отправка писем
     if (this.isEmailDisabled()) {
-      console.log('Email sending is DISABLED (seeding/testing mode)');
+      console.log('=== Email sending is DISABLED during seeding ===');
       return;
     }
     await this.verifyConnection();
@@ -23,9 +26,7 @@ export class SendmailService implements OnModuleInit {
 
   private isEmailDisabled(): boolean {
     // Проверяем переменные окружения
-    return (
-      process.env.DISABLE_EMAIL === 'true' || process.env.NODE_ENV === 'test'
-    );
+    return process.env.DISABLE_EMAILS === 'true';
   }
 
   private sleep(ms: number): Promise<void> {
