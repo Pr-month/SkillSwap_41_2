@@ -99,6 +99,7 @@ const mockState: RootState = {
     userCheck: false,
   },
   categories: { categories: [], loading: false, error: undefined },
+  cities: { cities: [], loading: false, error: undefined },
 };
 
 describe('exchangeSelectors', () => {

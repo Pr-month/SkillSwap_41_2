@@ -85,6 +85,7 @@ describe('catalogSelectors', () => {
     likes: { likedItems: {}, loading: false, error: null },
     authUser: { data: null, authStatus: RequestStatus.Idle, userCheck: false },
     categories: { categories: [], loading: false, error: undefined },
+    cities: { cities: [], loading: false, error: undefined },
   };
 
   test('selectCatalogItems возвращает массив пользователей', () => {
