@@ -7,7 +7,6 @@ import { fetchExchanges } from '@/services/slices/exchangeSlice';
 import { initializeLikes } from '@/services/slices/likeSlice';
 import { getSkills } from '@/services/slices/skillsSlice';
 import { useDispatch } from '@/services/store/store';
-import { fetchUser } from '@/services/thunk/authUser';
 import Loader from '@/shared/ui/Loader/loader';
 import { ProtectedRoute } from '@/shared/ui/protectedRoute/protectedRoute';
 import { MainLayout } from '@/widgets/Layout/MainLayout';
