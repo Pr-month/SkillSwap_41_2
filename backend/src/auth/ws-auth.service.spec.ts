@@ -33,6 +33,7 @@ const mockJwtConfig: TJwtConfig = {
   refreshSecret: 'test-refresh-secret',
   accessTokenExpires: '15m',
   refreshTokenExpires: '7d',
+  frontendUrl: 'http://localhost:8080',
 };
 
 describe('WsAuthService', () => {
