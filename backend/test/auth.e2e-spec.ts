@@ -33,7 +33,7 @@ function extractRefreshTokenFromCookie(
   if (!cookieHeader) return null;
   const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
   for (const cookie of cookies) {
-    const match = cookie.match(/refreshToken=([^;]+)/);
+    const match = cookie.match(/refresh_token=([^;]+)/);
     if (match) return match[1];
   }
   return null;
