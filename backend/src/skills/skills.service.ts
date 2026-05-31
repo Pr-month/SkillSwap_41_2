@@ -157,7 +157,7 @@ export class SkillsService {
     qb.orderBy('skill.createdAt', 'DESC');
 
     // пагинация / дефолт
-    const take = limit ?? 21;
+    const take = limit ?? 12;
     const skip = offset ?? 0;
 
     // LIMIT take OFFSET skip

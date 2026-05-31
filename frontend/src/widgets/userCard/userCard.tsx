@@ -53,6 +53,8 @@ export const UserCard: React.FC<UserCardProps> = ({
         {showLike && (
           <div className={styles.cardLike}>
             <button
+              type="button"
+              aria-label={isLiked ? 'Убрать лайк' : 'Поставить лайк'}
               onClick={handleLikeClick}
               className={`${styles.likeButton} ${isLiked ? styles.likeButtonActive : ''}`}
             />
