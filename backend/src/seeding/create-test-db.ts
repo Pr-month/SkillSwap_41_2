@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import 'dotenv/config';
 
 async function createTestDb() {
   const client = new Client({
@@ -19,15 +20,15 @@ async function createTestDb() {
 
   if (result.rowCount === 0) {
     await client.query(`CREATE DATABASE "${dbName}"`);
-    console.log(`Database "${dbName}" created`);
+    console.log(`✅ Database --- ${dbName} --- created`);
   } else {
-    console.log(`Database "${dbName}" already exists`);
+    console.log(`✅ Database --- ${dbName} --- already exists`);
   }
 
   await client.end();
 }
 
 createTestDb().catch((err) => {
-  console.error('Failed to create database:', err);
+  console.error('❌ Failed to create database:', err);
   process.exit(1);
 });

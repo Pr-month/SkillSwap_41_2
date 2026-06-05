@@ -125,8 +125,8 @@
   width: 16px;
   height: 8px;
   background-color: #253017; /* Цвет иконки */
-  mask: url('../../app/assets/static/images/icons/chevron-down.svg') no-repeat center;
   -webkit-mask: url('../../app/assets/static/images/icons/chevron-down.svg') no-repeat center;
+  mask: url('../../app/assets/static/images/icons/chevron-down.svg') no-repeat center;
   transition: transform 0.2s ease;
 }
 
@@ -141,14 +141,14 @@
 }
 
 .moonIcon {
-  mask: url('../../app/assets/static/images/icons/moon.svg') no-repeat center;
   -webkit-mask: url('../../app/assets/static/images/icons/moon.svg') no-repeat center;
+  mask: url('../../app/assets/static/images/icons/moon.svg') no-repeat center;
   background-color: #253017; /* Цвет иконки */
 }
 
 .sunIcon {
-  mask: url('../../app/assets/static/images/icons/sun.svg') no-repeat center;
   -webkit-mask: url('../../app/assets/static/images/icons/sun.svg') no-repeat center;
+  mask: url('../../app/assets/static/images/icons/sun.svg') no-repeat center;
   background-color: #ffb300; /* Цвет иконки */
 }
 
@@ -160,6 +160,17 @@
 
 .header[data-auth='false'] .searchSection {
   width: 515px;
+}
+
+.searchWrapper {
+  width: 515px;
+}
+
+.searchDropdown {
+  list-style: none;
+  margin:0 0 0 45px;
+  padding: 0;
+  cursor: pointer;
 }
 
 /* Мобильная версия (<= 768px) */

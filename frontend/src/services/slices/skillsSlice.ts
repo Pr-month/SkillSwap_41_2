@@ -1,70 +1,85 @@
-import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
-import { getSkillsApi } from '@/api/skillSwapApi';
-import { Skill, SkillCategory } from '@/entities/skill/model/types';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getSkills, searchSkills } from '../thunk/skills.thunk';
+import { Skill } from '@/entities/skill/model/types';
 
 type SkillsState = {
   skills: Skill[];
+  searchResults: Skill[];
   loading: boolean;
   error: string | undefined;
+  searchQuery: string;
 };
 
 const initialState: SkillsState = {
   skills: [],
+  searchResults: [],
   loading: false,
   error: undefined,
+  searchQuery: '',
 };
-// СТАЛО
-export const getSkills = createAsyncThunk<Skill[]>('skills/getAll', async () => getSkillsApi());
 
 const skillsSlice = createSlice({
   name: 'skills',
   initialState,
-  reducers: {},
-  selectors: { getSkillsSelector: state => state.skills },
+  reducers: {
+    clearSkillSearch: state => {
+      state.searchResults = [];
+      state.searchQuery = '';
+      state.error = undefined;
+    },
+    setSearchQuery(state, action: PayloadAction<string>) {
+      state.searchQuery = action.payload.toLowerCase();
+      if (!action.payload || action.payload.length < 3) {
+        state.searchResults = [];
+      }
+    },
+  },
+  selectors: {
+    getSkillsSelector: state => state.skills,
+    getLoadingSelector: state => state.loading,
+    getErrorSelector: state => state.error,
+    getSearchQuerySelector: state => state.searchQuery,
+  },
   extraReducers: builder => {
     builder
+      // getSkills cases
       .addCase(getSkills.pending, state => {
         state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(getSkills.fulfilled, (state, action) => {
+        state.skills = action.payload;
+        state.loading = false;
         state.error = undefined;
       })
       .addCase(getSkills.rejected, state => {
         state.loading = false;
         state.error = 'Не удалось загрузить данные о навыках';
       })
-      .addCase(getSkills.fulfilled, (state, action) => {
-        state.skills = action.payload;
+
+      // searchSkills cases
+      .addCase(searchSkills.pending, state => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(searchSkills.fulfilled, (state, action) => {
+        state.searchResults = action.payload;
+        state.searchQuery = action.meta.arg;
         state.loading = false;
+        state.error = undefined;
+      })
+      .addCase(searchSkills.rejected, state => {
+        state.loading = false;
+        state.error = 'Не удалось выполнить поиск навыков';
       });
   },
 });
 
-export const { getSkillsSelector } = skillsSlice.selectors;
+export const { setSearchQuery, clearSkillSearch } = skillsSlice.actions;
+export const {
+  getSkillsSelector,
+  getLoadingSelector,
+  getErrorSelector,
+  getSearchQuerySelector,
+} = skillsSlice.selectors;
 export const skillsReducer = skillsSlice.reducer;
-
-export const getCategoriesSelector = createSelector(getSkillsSelector, skills =>
-  Array.from(new Set(skills.map(skill => skill.category))),
-); // отдельный селектор с мемоизацией
-
-export const getSkillsBySubcategoryPrefixSelector = createSelector(
-  [getSkillsSelector, (_, prefix: string) => prefix],
-  (skills, prefix) => skills.filter(skill => skill.subcategoryId.startsWith(prefix)),
-);
-
-export const getSubcategoriesByCategory = createSelector(
-  [
-    getSkillsSelector,
-    (_, selectedCategories: SkillCategory[] | SkillCategory) => selectedCategories,
-  ],
-  (skills, selectedCategories) => {
-    const filtered = skills.filter(skill => selectedCategories.includes(skill.category));
-    return Array.from(new Set(filtered.map(skill => skill.subcategory)));
-  },
-);
-
-export const getSubcategoryIdByName = createSelector(
-  [getSkillsSelector, (_, subcategoryName: string) => subcategoryName],
-  (skills, subcategoryName) => {
-    const skill = skills.find(s => s.subcategory === subcategoryName);
-    return skill ? skill.subcategoryId : undefined;
-  },
-);

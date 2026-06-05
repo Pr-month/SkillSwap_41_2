@@ -10,23 +10,23 @@ export const useExchange = () => {
 
   // Мемоизированная функция для проверки заявок
   const hasSentRequest = useCallback(
-    (toUserId: string) => {
+    (toUserId: number) => {
       if (!currentUser) return false;
       return exchangeRequests.some(
-        req => req.fromUserId === currentUser._id && req.toUserId === toUserId,
+        req => req.fromUserId === currentUser.id && req.toUserId === toUserId,
       );
     },
     [currentUser, exchangeRequests],
   );
 
   const sendExchangeRequest = useCallback(
-    (toUserId: string) => {
+    (toUserId: number) => {
       if (!currentUser) {
         throw new Error('Cannot send request: user not authenticated');
       }
 
       const newRequest = {
-        fromUserId: currentUser._id,
+        fromUserId: currentUser.id,
         fromUserName: currentUser.name,
         toUserId,
         isRead: false,

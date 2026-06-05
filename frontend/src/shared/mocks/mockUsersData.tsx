@@ -1,5 +1,5 @@
 export const generateProfiles = (count: number) => {
-  const genders = ['male', 'female', 'any'] as const;
+  const genders = ['male', 'female', 'other'] as const;
 
   return Array.from({ length: count }, (_, i) => ({
     _id: `user_${i + 1}`,

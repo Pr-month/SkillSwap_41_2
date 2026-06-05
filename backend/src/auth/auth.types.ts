@@ -1,6 +1,7 @@
 import { User } from '../users/entities/user.entity';
 import { Request } from 'express';
 import { Socket } from 'socket.io';
+import { OAuthUserDto } from './dto/OAuthUserDto';
 
 type UserBase = Pick<User, 'email' | 'name' | 'role'>;
 
@@ -37,4 +38,8 @@ export interface AuthenticatedSocket extends Socket {
   data: {
     user: TJwtPayload;
   };
+}
+
+export interface OAuthRequest extends Request {
+  user: OAuthUserDto;
 }

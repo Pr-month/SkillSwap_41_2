@@ -35,7 +35,7 @@ async function seedAdmin() {
     console.log('Admin уже существует');
   }
 
-  console.log('Сидинг админа успешно завершен');
+  console.log('✅ Сидинг админа успешно завершен');
   await AppDataSource.destroy();
 }
 

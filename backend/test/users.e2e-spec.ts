@@ -10,12 +10,26 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Server } from 'http';
+import express from 'express';
 import request from 'supertest';
 import { Repository } from 'typeorm';
 import { User } from '../src/users/entities/user.entity';
 import { UserRole } from '../src/users/enums/users.enums';
 import { AppModule } from './../src/app.module';
+import { SendmailService } from '../src/sendmail/sendmail.service';
+import { NotificationService } from '../src/notification/notification.service';
+import { ConfigService } from '@nestjs/config';
+import { sendmailConfig } from '../src/config/sendmail.config';
+import { jwtConfig } from '../src/config/jwt.config';
+import { dataSource } from '../src/config/database.config';
+import { mockConfigService, testSendmailConfig } from './test-utils';
+
+const testJwtConfig = {
+  accessSecret: 'test-access-secret',
+  accessTokenExpires: '15m',
+  refreshSecret: 'test-refresh-secret',
+  refreshTokenExpires: '7d',
+};
 
 type ValidationErrorItem = {
   field: string;
@@ -52,7 +66,7 @@ type SimpleMessageResponse = {
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
-  let httpServer: Server;
+  let httpServer: express.Express;
   let userRepository: Repository<User>;
   let jwtService: JwtService;
 
@@ -68,7 +82,22 @@ describe('Users (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ConfigService)
+      .useValue(mockConfigService)
+      .overrideProvider(SendmailService)
+      .useValue({ sendEmail: jest.fn() })
+      .overrideProvider(NotificationService)
+      .useValue({
+        notifyNewRequest: jest.fn(),
+        notifyRequestAccepted: jest.fn(),
+        notifyRequestRejected: jest.fn(),
+      })
+      .overrideProvider(sendmailConfig.KEY)
+      .useValue(testSendmailConfig)
+      .overrideProvider(jwtConfig.KEY)
+      .useValue(testJwtConfig)
+      .compile();
 
     app = moduleFixture.createNestApplication();
 
@@ -96,7 +125,7 @@ describe('Users (e2e)', () => {
 
     await app.init();
 
-    httpServer = app.getHttpServer() as Server;
+    httpServer = app.getHttpServer() as express.Express;
 
     userRepository = app.get(getRepositoryToken(User));
     jwtService = app.get(JwtService);
@@ -129,10 +158,10 @@ describe('Users (e2e)', () => {
     };
 
     regularAccessToken = jwtService.sign(payloadRegular, {
-      secret: process.env.JWT_ACCESS_SECRET ?? 'skillswap_41_2',
+      secret: testJwtConfig.accessSecret,
     });
     adminAccessToken = jwtService.sign(payloadAdmin, {
-      secret: process.env.JWT_ACCESS_SECRET ?? 'skillswap_41_2',
+      secret: testJwtConfig.accessSecret,
     });
   });
 
@@ -140,6 +169,9 @@ describe('Users (e2e)', () => {
     await userRepository.delete(regularUser.id);
     await userRepository.delete(adminUser.id);
     await app.close();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
   });
 
   describe('GET /users', () => {

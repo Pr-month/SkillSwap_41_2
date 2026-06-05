@@ -22,7 +22,7 @@ const SelectedFilters = () => {
       label: `${mode === 'can-teach' ? 'Могу научить' : 'Хочу научиться'}`,
     },
 
-    gender !== 'any' && {
+    gender !== 'other' && {
       type: 'gender',
       value: gender,
       label: `Пол: ${gender === 'male' ? 'Мужской' : 'Женский'}`,
@@ -51,6 +51,7 @@ const SelectedFilters = () => {
         <div key={`${filter.type}-${filter.value}`} className={styles.filterTag}>
           <span>{filter.label}</span>
           <button
+            type="button"
             onClick={() => handleRemove(filter.type, filter.value)}
             className={styles.removeButton}
             aria-label={`Удалить фильтр ${filter.label}`}

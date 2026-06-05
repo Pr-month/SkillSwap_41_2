@@ -22,7 +22,7 @@ export class CategoriesService {
     return await this.categoryRepository.save(category);
   }
 
-  async findAll() {
+  async findAll(): Promise<Category[]> {
     try {
       const categories = await this.categoryRepository.find({
         where: { parent: IsNull() },
@@ -34,7 +34,16 @@ export class CategoriesService {
         return [];
       }
 
-      return categories;
+      return categories.map((category) => ({
+        id: category.id,
+        slug: category.slug,
+        name: category.name,
+        subCategory:
+          category.children?.map((child) => ({
+            id: child.id,
+            name: child.name,
+          })) || [],
+      }));
     } catch (error) {
       console.error(' Error in findAll:', error);
       throw error;

@@ -5,11 +5,16 @@ import { UserPanel } from '@/features/auth/ui/UserPanel/UserPanel';
 import { GuestPanel } from '@/features/auth/ui/GuestPanel/GuestPanel';
 import styles from './Header.module.css';
 import { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from '@/services/store/store';
-import { setSearchQuery } from '@/services/slices/catalogSlice';
+import { RootState, useDispatch, useSelector } from '@/services/store/store';
 import { SkillsDropdown } from '@/widgets/skillsDropdown/skillsDropdown';
-import { getSkills } from '@/services/slices/skillsSlice';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+import { searchSkills } from '@/services/thunk/skills.thunk';
+import { Skill } from '@/entities/skill/model/types';
+import { clearSkillSearch } from '@/services/slices/skillsSlice';
+
+const MIN_SEARCH_LENGTH = 3;
+const DEBOUNCE_DELAY = 300; // 300ms
 
 export const Header = () => {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
@@ -18,15 +23,40 @@ export const Header = () => {
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const skillsButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchQuery = useSelector(state => state.catalog.searchQuery);
 
-  useEffect(() => {
-    dispatch(getSkills());
-  }, [dispatch]);
+  // Локальное состояние для поиска
+  const [query, setQuery] = useState('');
+  const debouncedSearchValue = useDebounce(query, DEBOUNCE_DELAY);
 
-  const handleSearch = (query: string) => {
-    dispatch(setSearchQuery(query));
+  // Обработчик изменения поиска
+  const handleSearch = (value: string) => {
+    setQuery(value);
   };
+
+  const { searchResults } = useSelector((state: RootState) => state.skills);
+
+  // Эффект для поиска
+  useEffect(() => {
+    const trimmed = debouncedSearchValue?.trim();
+
+    if (trimmed && trimmed.length >= MIN_SEARCH_LENGTH) {
+      dispatch(searchSkills(trimmed));
+    } else {
+      dispatch(clearSkillSearch());
+    }
+  }, [debouncedSearchValue, dispatch]);
+
+  const handleSelectSkill = (skill: Skill) => {
+    setQuery(skill.title.toLowerCase());
+    dispatch(clearSkillSearch());
+  };
+
+  const showDropdown =
+  searchResults.length > 0 &&
+  !(
+    searchResults.length === 1 &&
+    searchResults[0].title.toLowerCase() === query.trim().toLowerCase()
+  );
 
   const toggleSkillsDropdown = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -83,10 +113,12 @@ export const Header = () => {
               О проекте
             </Link>
             <button
+              type="button"
               ref={skillsButtonRef}
               className={`${styles.linkSkills} ${isSkillsDropdownOpen ? styles.active : ''}`}
               onClick={toggleSkillsDropdown}
-              aria-expanded={isSkillsDropdownOpen}
+              // aria-expanded={isSkillsDropdownOpen}
+              aria-haspopup="menu"
             >
               Все навыки
               <span className={styles.chevronIcon} />
@@ -101,10 +133,30 @@ export const Header = () => {
           </nav>
         </div>
 
-        <SearchInput placeholder="Искать навык" onSearch={handleSearch} value={searchQuery || ''} />
+        <div className={styles.searchWrapper}>
+
+          <SearchInput placeholder="Искать навык" onSearch={handleSearch} value={query} />
+
+          {showDropdown && (
+            <ul className={styles.searchDropdown}>
+              {searchResults.map(skill => (
+                <li key={skill.id} onClick={() => handleSelectSkill(skill)}>
+                  {skill.title.toLowerCase()}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         <div className={styles.rightSection}>
-          <button className={styles.themeToggle} onClick={toggleTheme}>
+          <button
+            type="button"
+            className={styles.themeToggle}
+            onClick={toggleTheme}
+            aria-label={
+              currentTheme === 'dark' ? 'Переходи на светлую сторону' : 'Переходи на темную сторону'
+            }
+          >
             <span
               className={`${styles.themeIcon} ${
                 currentTheme === 'dark' ? styles.sunIcon : styles.moonIcon

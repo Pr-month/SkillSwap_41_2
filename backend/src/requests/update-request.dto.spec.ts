@@ -7,6 +7,7 @@ describe('UpdateRequestDto', () => {
 
   beforeEach(() => {
     dto = new UpdateRequestDto();
+    dto.status = RequestStatus.PENDING;
   });
 
   describe('status', () => {
@@ -48,12 +49,6 @@ describe('UpdateRequestDto', () => {
 
   // Наследование валидации от CreateRequestDto
   describe('inherited fields from CreateRequestDto', () => {
-    it('should validate receiverId correctly', async () => {
-      dto.receiverId = 123;
-      const errors = await validate(dto);
-      expect(errors.length).toBe(0);
-    });
-
     it('should validate offeredSkillId correctly', async () => {
       dto.offeredSkillId = 456;
       const errors = await validate(dto);

@@ -1,15 +1,20 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { usersData } from '@/shared/mocks/usersData';
+import { createSlice } from '@reduxjs/toolkit';
 import { User } from '@/entities/user/model/types';
-
-// Ключ для localStorage
-const LS_KEY = 'catalog_profiles';
+import { fetchCatalog, fetchMoreCatalog } from '../thunk/catalog.thunk';
 
 interface CatalogState {
   users: User[];
   loading: boolean;
   error: string | null;
   searchQuery: string;
+  // Пагинация
+  pagination: {
+    offset: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
 }
 
 const initialState: CatalogState = {
@@ -17,54 +22,84 @@ const initialState: CatalogState = {
   loading: false,
   error: null,
   searchQuery: '',
+  pagination: {
+    offset: 0,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasMore: true,
+  },
 };
-
-const getCachedUsers = (): User[] | null => {
-  try {
-    const savedData = localStorage.getItem(LS_KEY);
-    return savedData ? JSON.parse(savedData) : null;
-  } catch (e) {
-    console.error('Ошибка чтения кэша профилей:', e);
-    return null;
-  }
-};
-
-// Async Thunk - единственный источник правды для данных
-export const fetchCatalog = createAsyncThunk('catalog/fetch', async (_, { rejectWithValue }) => {
-  try {
-    const cachedUsers = getCachedUsers();
-    return cachedUsers || usersData;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
-    return rejectWithValue('Ошибка загрузки профилей');
-  }
-});
 
 const catalogSlice = createSlice({
   name: 'catalog',
   initialState,
   reducers: {
     setSearchQuery(state, action) {
-      state.searchQuery = action.payload.toLowerCase(); // Сохраняем в нижнем регистре
+      state.searchQuery = action.payload.toLowerCase();
+    },
+    clearError(state) {
+      state.error = null;
+    },
+    resetCatalog(state) {
+      state.users = [];
+      state.pagination = {
+        offset: 0,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasMore: true,
+      };
     },
   },
   extraReducers: builder => {
     builder
+      // Первая загрузка
       .addCase(fetchCatalog.pending, state => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCatalog.fulfilled, (state, action) => {
-        state.users = action.payload;
+        state.users = action.payload.users;
+        state.pagination = {
+          offset: action.payload.nextOffset,
+          limit: action.payload.limit,
+          total: action.payload.total,
+          totalPages: action.payload.totalPages,
+          hasMore: action.payload.nextOffset < action.payload.total,
+        };
         state.loading = false;
-        localStorage.setItem(LS_KEY, JSON.stringify(action.payload));
       })
       .addCase(fetchCatalog.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message || 'Failed to fetch users';
+      })
+
+      // Подгрузка следующих страниц
+      .addCase(fetchMoreCatalog.pending, state => {
+        state.loading = true;
+      })
+      .addCase(fetchMoreCatalog.fulfilled, (state, action) => {
+        state.users = [...state.users, ...action.payload.users];
+        state.pagination = {
+          offset: action.payload.nextOffset,
+          limit: action.payload.limit,
+          total: action.payload.total,
+          totalPages: action.payload.totalPages,
+          hasMore: action.payload.hasMore,
+        };
+        state.loading = false;
+      })
+      .addCase(fetchMoreCatalog.rejected, (state, action) => {
+        state.loading = false;
+        if (action.payload === 'No more data') {
+          state.pagination.hasMore = false;
+        } else {
+          state.error = action.error.message || 'Failed to load more users';
+        }
       });
   },
 });
 
-export const { setSearchQuery } = catalogSlice.actions;
+export const { setSearchQuery, resetCatalog, clearError } = catalogSlice.actions;
 export const catalogReducer = catalogSlice.reducer;

@@ -1,5 +1,5 @@
-import type { RootState } from '@/services/store/store';
 import { RequestStatus } from '@/entities/auth/model/types';
+import type { RootState } from '@/services/store/store';
 import { selectCatalogItems, selectCatalogLoading } from '../catalogSelectors';
 
 describe('catalogSelectors', () => {
@@ -84,6 +84,8 @@ describe('catalogSelectors', () => {
     filters: { mode: 'all', gender: 'any', city: [], skill: [] },
     likes: { likedItems: {}, loading: false, error: null },
     authUser: { data: null, authStatus: RequestStatus.Idle, userCheck: false },
+    categories: { categories: [], loading: false, error: undefined },
+    cities: { cities: [], loading: false, error: undefined },
   };
 
   test('selectCatalogItems возвращает массив пользователей', () => {

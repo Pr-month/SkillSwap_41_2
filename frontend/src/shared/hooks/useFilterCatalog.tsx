@@ -25,18 +25,20 @@ export const selectFilteredUsers = createSelector(
 
     return users.filter(user => {
       // 1. Фильтрация по полу
-      if (filters.gender !== 'any' && user.gender !== filters.gender) return false;
+      if (filters.gender !== 'other' && user.gender !== filters.gender) return false;
 
       // 2. Фильтрация по городам
-      if (filters.city.length > 0 && !filters.city.includes(user.city)) return false;
+      if (filters.city.length > 0 && !filters.city.includes(user.city.name)) return false;
 
       // 3. Поиск по названию навыка
       let foundInCanTeach = false;
       let foundInWantsToLearn = false;
 
       if (normalizedQuery) {
-        foundInCanTeach = cleanStringForSearch(user.canTeach.name).includes(normalizedQuery);
-        foundInWantsToLearn = user.wantsToLearn.some(item =>
+        foundInCanTeach = user.skills.some(skill =>
+          cleanStringForSearch(skill.title).includes(normalizedQuery),
+        );
+        foundInWantsToLearn = user.wantToLearn.some(item =>
           cleanStringForSearch(item.name).includes(normalizedQuery),
         );
 
@@ -49,24 +51,34 @@ export const selectFilteredUsers = createSelector(
         case 'want-to-learn':
           // Должно быть совпадение в wantsToLearn И соответствие подкатегориям
           if (normalizedQuery && !foundInWantsToLearn) return false;
-          return user.wantsToLearn.some(
-            sub => filters.skill.length === 0 || filters.skill.includes(sub.subcategory),
+
+          if (filters.skill.length === 0) return true;
+          return user.wantToLearn.some(
+            category => filters.skill.includes(category.name),
           );
 
         case 'can-teach':
           // Должно быть совпадение в canTeach И соответствие подкатегориям
           if (normalizedQuery && !foundInCanTeach) return false;
-          return filters.skill.length === 0 || filters.skill.includes(user.canTeach.subcategory);
+
+          if (filters.skill.length === 0) return true;
+          return user.skills.some(skill => filters.skill.includes(skill.category.parentSlug || ''))
+          ;
 
         case 'all':
         default:
           // Должно быть совпадение в любом поле И соответствие подкатегориям
           if (normalizedQuery && !foundInCanTeach && !foundInWantsToLearn) return false;
           if (filters.skill.length === 0) return true;
-          return (
-            filters.skill.includes(user.canTeach.subcategory) ||
-            user.wantsToLearn.some(sub => filters.skill.includes(sub.subcategory))
+
+          const canTeachMatch = user.skills.some(skill =>
+            filters.skill.includes(skill.category.parentSlug || ''),
           );
+          const wantToLearnMatch = user.wantToLearn.some(category =>
+            filters.skill.includes(category.name),
+          );
+
+          return canTeachMatch || wantToLearnMatch;
       }
     });
   },

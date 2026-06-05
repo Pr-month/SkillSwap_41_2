@@ -1,7 +1,7 @@
-import { describe, test, expect } from 'vitest';
+import { User } from '@/entities/user/model/types';
 import { RootState } from '@/services/store/store';
 import { selectFilteredUsers } from '@/shared/hooks/useFilterCatalog';
-import { User } from '@/entities/user/model/types';
+import { describe, expect, test } from 'vitest';
 
 // Мокируем пользователей
 const mockUsers: User[] = [
@@ -117,6 +117,8 @@ const mockState = (filters: Partial<RootState['filters']>, searchQuery = ''): Ro
   step: {} as RootState['step'],
   likes: {} as RootState['likes'],
   authUser: {} as RootState['authUser'],
+  categories: {} as RootState['categories'],
+  cities: {} as RootState['cities'],
 });
 
 describe('Фильтрация карточек навыков', () => {

@@ -40,6 +40,8 @@ const mockState: RootState = {
   filters: { mode: 'all', gender: 'any', city: [], skill: [] },
   likes: { likedItems: { 'item-1': true, 'item-2': false }, loading: true, error: 'Ошибка' },
   authUser: { data: null, authStatus: RequestStatus.Idle, userCheck: false },
+  categories: { categories: [], loading: false, error: undefined },
+  cities: { cities: [], loading: false, error: undefined },
 };
 
 describe('likeSelectors', () => {

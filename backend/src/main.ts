@@ -1,32 +1,60 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import cookieParser from 'cookie-parser';
-import { AppModule } from './app.module';
 import {
-  ValidationPipe,
   BadRequestException,
   ClassSerializerInterceptor,
+  ValidationPipe,
 } from '@nestjs/common';
-import { AllExceptionsFilter } from './common/all-exception.filter';
-import { ConfigService } from '@nestjs/config';
-import { appConfig, TAppConfig } from './config/app.config';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { appConfig } from './config/app.config';
 import {
   DocumentBuilder,
   SwaggerDocumentOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
-import { UsersModule } from './users/users.module';
-import { SkillsModule } from './skills/skills.module';
-import { RequestsModule } from './requests/requests.module';
-import { FileUploadModule } from './file-upload/file-upload.module';
-import { CitiesModule } from './cities/cities.module';
-import { CategoriesModule } from './categories/categories.module';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { join } from 'path';
+import { AppModule } from './app.module';
 import { AuthModule } from './auth/auth.module';
+import { CategoriesModule } from './categories/categories.module';
+import { CitiesModule } from './cities/cities.module';
+import { AllExceptionsFilter } from './common/all-exception.filter';
+import { TAppConfig } from './config/app.config';
+import { FileUploadModule } from './file-upload/file-upload.module';
+import { RequestsModule } from './requests/requests.module';
+import { SkillsModule } from './skills/skills.module';
+import { UsersModule } from './users/users.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const configService = app.get(ConfigService);
-  const config = configService.get<TAppConfig>(appConfig.KEY);
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+  app.setGlobalPrefix('api');
+
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
+  const config = app.get<TAppConfig>(appConfig.KEY);
+
+  if (!config) {
+    throw new Error(
+      'App configuration not loaded. Check appConfig registration.',
+    );
+  }
+
+  const uploadFolder = config.uploadFolder;
+
+  app.useStaticAssets(join(process.cwd(), uploadFolder), {
+    prefix: '/uploads',
+  });
+
   app.use(cookieParser());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -59,8 +87,11 @@ async function bootstrap() {
     .setTitle('SkillSwap API')
     .setDescription('Описание API SkillSwap')
     .setVersion('1.0')
-    .addBearerAuth()
-    .addCookieAuth('refresh_token')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'accessToken',
+    )
+    .addCookieAuth('refreshToken')
     .build();
   const options: SwaggerDocumentOptions = {
     include: [

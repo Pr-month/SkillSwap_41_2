@@ -207,7 +207,7 @@ describe('AuthService', () => {
       const result = await service.logout(1);
 
       expect(mockUserRepository.update).toHaveBeenCalledWith(1, {
-        refreshToken: expect.any(Function),
+        refreshToken: null,
       });
       expect(result).toEqual({ message: 'Успешный выход' });
     });
@@ -224,11 +224,11 @@ describe('AuthService', () => {
       service.setRefreshTokenCookie(res, 'refresh-token');
 
       expect(cookieMock).toHaveBeenCalledWith(
-        'refreshToken',
+        'refresh_token',
         'refresh-token',
         expect.objectContaining({
           httpOnly: true,
-          path: '/auth',
+          path: '/', // Changed from '/auth' to '/'
         }),
       );
     });

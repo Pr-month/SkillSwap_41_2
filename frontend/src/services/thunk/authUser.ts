@@ -1,14 +1,16 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AUTH_USER_SLICE } from '../slices/slicesName';
-import { TAuthResponse, TLoginData, TUserResponse } from '@/shared/utils/api';
-import { getUserApi, loginUserApi, logoutApi } from '@/shared/mocks/authMock';
 import { deleteCookie, setCookie } from '@/shared/utils/cookies';
+import { getProfileApi } from '@/entities/user/api/user.api';
+import { TUserResponse } from '@/entities/user/api/user.types';
+import { TAuthResponse, TLoginData } from '@/entities/auth/api/auth.types';
+import { loginUserApi, logoutApi } from '@/entities/auth/api/auth.api';
 
 export const fetchUser = createAsyncThunk<TUserResponse, void>(
   `${AUTH_USER_SLICE}/fetchUser`,
   async (_, { rejectWithValue }) => {
     try {
-      const data = await getUserApi();
+      const data = await getProfileApi();
       return data;
     } catch (error) {
       return rejectWithValue(error);
@@ -21,8 +23,11 @@ export const loginUser = createAsyncThunk<TAuthResponse, TLoginData>(
   async (dataUser, { rejectWithValue }) => {
     try {
       const data = await loginUserApi(dataUser);
-      setCookie('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      if (data.accessToken) {
+        // Сохраняем токены
+        setCookie('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
       return data;
     } catch (error) {
       return rejectWithValue(error);
@@ -36,7 +41,7 @@ export const logoutUserApi = createAsyncThunk(
     try {
       const data = await logoutApi();
       deleteCookie('accessToken');
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       return data;
     } catch (error) {
       return rejectWithValue(error);

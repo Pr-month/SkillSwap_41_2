@@ -7,7 +7,7 @@ export const experienceOptions: ExperienceOption[] = [
 ];
 
 export const genderOptions: GenderOption[] = [
-  { value: 'any', label: 'Не имеет значения' },
+  { value: 'other', label: 'Не имеет значения' },
   { value: 'male', label: 'Мужской' },
   { value: 'female', label: 'Женский' },
 ];

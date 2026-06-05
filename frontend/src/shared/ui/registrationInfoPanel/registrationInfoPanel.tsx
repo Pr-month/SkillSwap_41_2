@@ -14,7 +14,7 @@ export const RegistrationInfoPanel: FC<RegistrationInfoPanelProps> = ({
 }) => {
   return (
     <section className={styles.aboutSection}>
-      <img src={icon} className={styles.icon} />
+      <img src={icon} className={styles.icon} alt="icon" />
       <div className={styles.infoBlock}>
         <header className={styles.infoBlockHeader}>{headerText}</header>
         <p className={styles.infoBlockText}>{text}</p>

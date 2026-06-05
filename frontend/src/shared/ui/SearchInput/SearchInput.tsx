@@ -1,6 +1,5 @@
 import styles from './SearchInput.module.css';
-import { ChangeEvent, useState, useEffect } from 'react';
-import { useDebounce } from '@/shared/hooks/useDebounce';
+import { ChangeEvent } from 'react';
 
 type SearchInputProps = {
   placeholder?: string;
@@ -9,21 +8,9 @@ type SearchInputProps = {
 };
 
 export const SearchInput = ({ placeholder, value, onSearch }: SearchInputProps) => {
-  const [localValue, setLocalValue] = useState(value);
-  const debouncedValue = useDebounce(localValue, 300);
-
-  useEffect(() => {
-    if (value !== localValue) {
-      setLocalValue(value);
-    }
-  }, [value, localValue]);
-
-  useEffect(() => {
-    onSearch(debouncedValue);
-  }, [debouncedValue, onSearch]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setLocalValue(e.target.value);
+    onSearch(e.target.value);
   };
 
   return (
@@ -33,7 +20,7 @@ export const SearchInput = ({ placeholder, value, onSearch }: SearchInputProps) 
         type="text"
         placeholder={placeholder}
         className={styles.input}
-        value={localValue}
+        value={value}
         onChange={handleChange}
       />
     </div>

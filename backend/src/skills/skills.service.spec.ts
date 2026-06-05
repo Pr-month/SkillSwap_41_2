@@ -23,6 +23,7 @@ import { GetSkillsQueryDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
 import { SkillsService } from './skills.service';
+import { SkillStatus } from './enums/skills.enums';
 
 // мокаем fs/promises для тестирования работы с файлами
 jest.mock('fs/promises');
@@ -40,12 +41,15 @@ describe('SkillsService', () => {
     name: 'Test Category',
     parent: null,
     children: [],
+    slug: 'test-category',
   };
+
   const mockUser: User = {
     id: 10,
     name: 'John Doe',
     email: 'john@example.com',
   } as User;
+
   const mockSkill: Skill = {
     id: 100,
     title: 'Test Skill',
@@ -57,6 +61,7 @@ describe('SkillsService', () => {
     updatedAt: new Date(),
     offeredInRequests: [],
     requestedInRequests: [],
+    status: SkillStatus.ACTIVE,
   };
 
   // перед каждым тестом инициализируем сервис
@@ -216,7 +221,11 @@ describe('SkillsService', () => {
     });
 
     it('Должна вернуться ошибка NotFound, если пытаемся удалить из Избранного навык, которого нет в Избранном', async () => {
-      const anotherSkill = { ...mockSkill, id: 999 };
+      const anotherSkill = {
+        ...mockSkill,
+        id: 999,
+        status: SkillStatus.ACTIVE,
+      };
       const userWithOtherFavorite = {
         ...mockUser,
         favoriteSkills: [anotherSkill],
@@ -244,8 +253,17 @@ describe('SkillsService', () => {
     it('Должен создаться новый навык', async () => {
       categoryRepository.findOne.mockResolvedValue(mockCategory);
       userRepository.findOne.mockResolvedValue(mockUser);
-      skillRepository.create.mockReturnValue(mockSkill);
-      skillRepository.save.mockResolvedValue(mockSkill);
+      const newSkill = {
+        ...mockSkill,
+        title: dto.title,
+        description: dto.description,
+        category: mockCategory,
+        images: dto.images,
+        owner: mockUser,
+        status: SkillStatus.ACTIVE,
+      };
+      skillRepository.create.mockReturnValue(newSkill);
+      skillRepository.save.mockResolvedValue(newSkill);
 
       const result = await service.create(dto, userId);
 
@@ -266,8 +284,8 @@ describe('SkillsService', () => {
         images: dto.images,
         owner: mockUser,
       });
-      expect(skillRepository.save).toHaveBeenCalledWith(mockSkill);
-      expect(result).toEqual(mockSkill);
+      expect(skillRepository.save).toHaveBeenCalledWith(newSkill);
+      expect(result).toEqual(newSkill);
     });
 
     it('Должна вернуться ошибка NotFound, если пытаемся создать навык с несуществующей категорией', async () => {
@@ -310,17 +328,29 @@ describe('SkillsService', () => {
     });
 
     it('Должен вернуться список навыков с пагинацией', async () => {
-      const skills = [mockSkill];
-      queryBuilder.getMany.mockResolvedValue(skills);
+      const expectedSkills = [
+        {
+          id: mockSkill.id,
+          title: mockSkill.title,
+          images: mockSkill.images,
+          description: mockSkill.description,
+          category: {
+            id: mockSkill.category.id,
+            parentSlug: mockSkill.category.parent?.slug || '',
+          },
+        },
+      ];
+
+      queryBuilder.getMany.mockResolvedValue([mockSkill]);
       queryBuilder.getCount.mockResolvedValue(2);
 
       const query: GetSkillsQueryDto = {};
       const result = await service.findAll(query);
 
       expect(skillRepository.createQueryBuilder).toHaveBeenCalledWith('skill');
-      expect(queryBuilder.take).toHaveBeenCalledWith(21);
+      expect(queryBuilder.take).toHaveBeenCalledWith(12);
       expect(queryBuilder.skip).toHaveBeenCalledWith(0);
-      expect(result).toEqual(skills);
+      expect(result).toEqual(expectedSkills);
     });
 
     it('Должен вернуться отфильтрованный список навыков', async () => {
@@ -344,7 +374,7 @@ describe('SkillsService', () => {
         owner: 10,
       });
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        '(skill.title ILIKE :search OR skill.description ILIKE :search)',
+        '(skill.title ILIKE :search)',
         { search: '%test%' },
       );
       expect(queryBuilder.take).toHaveBeenCalledWith(10);

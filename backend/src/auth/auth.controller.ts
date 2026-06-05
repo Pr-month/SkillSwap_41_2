@@ -1,7 +1,16 @@
-import { Controller, Post, Body, UseGuards, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Res,
+  Get,
+  Inject,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDTO } from './dto/register.dto';
-import { TRequestWithRefreshToken } from './auth.types';
+import { OAuthRequest, TRequestWithRefreshToken } from './auth.types';
 import { LoginDTO } from './dto/login.dto';
 import { Response } from 'express';
 import { TLogoutRequest } from './auth.types';
@@ -13,10 +22,17 @@ import {
   ApiAuthRegister,
 } from './auth.swagger';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { YandexAuthGuard } from './guards/yandex.quard';
+import { GoogleOAuthGuard } from './guards/google.guard';
+import { jwtConfig, TJwtConfig } from 'src/config/jwt.config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(jwtConfig.KEY)
+    private readonly jwtCfg: TJwtConfig,
+  ) {}
 
   @ApiAuthRegister()
   @Post('register')
@@ -24,9 +40,10 @@ export class AuthController {
     @Body() registerDTO: RegisterDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.register(registerDTO);
-    this.authService.setRefreshTokenCookie(res, result.refreshToken);
-    return result;
+    const { user, accessToken, refreshToken } =
+      await this.authService.register(registerDTO);
+    this.authService.setRefreshTokenCookie(res, refreshToken);
+    return { user, accessToken };
   }
 
   @ApiAuthRefresh()
@@ -38,9 +55,10 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
-    const result = await this.authService.refreshTokens(userId, refreshToken);
-    this.authService.setRefreshTokenCookie(res, result.refreshToken);
-    return result;
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.authService.refreshTokens(userId, refreshToken);
+    this.authService.setRefreshTokenCookie(res, newRefreshToken);
+    return { accessToken };
   }
 
   @ApiAuthLogin()
@@ -49,9 +67,10 @@ export class AuthController {
     @Body() loginDTO: LoginDTO,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.login(loginDTO);
-    this.authService.setRefreshTokenCookie(res, result.refreshToken);
-    return result;
+    const { user, accessToken, refreshToken } =
+      await this.authService.login(loginDTO);
+    this.authService.setRefreshTokenCookie(res, refreshToken);
+    return { user, accessToken };
   }
 
   @ApiAuthLogout()
@@ -64,5 +83,31 @@ export class AuthController {
     const result = await this.authService.logout(req.user.id);
     res.clearCookie('refreshToken', { path: '/auth' });
     return result;
+  }
+
+  @UseGuards(YandexAuthGuard)
+  @Get('yandex/login')
+  async yandex() {}
+
+  @UseGuards(YandexAuthGuard)
+  @Get('yandex/callback')
+  async yandexCallback(@Req() req: OAuthRequest, @Res() res: Response) {
+    const oauthUser = req.user;
+    const authData = await this.authService.findOrCreateOAuthUser(oauthUser);
+    this.authService.setRefreshTokenCookie(res, authData.refreshToken);
+    return res.redirect(`${this.jwtCfg.frontendUrl}/oauth/success`);
+  }
+
+  @Get('google/login')
+  @UseGuards(GoogleOAuthGuard)
+  googleOAuthLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  async googleOAuthCallback(@Req() req: OAuthRequest, @Res() res: Response) {
+    const oauthUser = req.user;
+    const oauthData = await this.authService.findOrCreateOAuthUser(oauthUser);
+    this.authService.setRefreshTokenCookie(res, oauthData.refreshToken);
+    return res.redirect(`${this.jwtCfg.frontendUrl}/oauth/success`);
   }
 }

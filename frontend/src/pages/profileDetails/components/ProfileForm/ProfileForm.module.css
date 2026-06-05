@@ -42,8 +42,11 @@
 }
 .profileCityInputWrapper {
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 .profileSelectInputWrapper select {
+  width: 100%;
   block-size: 48px;
   border-radius: 12px;
   padding: 15px;
@@ -212,4 +215,8 @@
   mask-image: url('@/app/assets/static/images/icons/chevron-down.svg');
   mask-repeat: no-repeat;
   mask-size: cover;
+}
+
+.selectFullWidth {
+  width: 100%;
 }

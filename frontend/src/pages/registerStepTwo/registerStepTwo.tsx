@@ -1,32 +1,34 @@
-import { FC, useState } from 'react';
-import styles from './registerStepTwo.module.css';
-import { TextInput } from '@/shared/ui/textInput/textInput';
-import { CustomDatePicker } from '@/widgets/datePicker/datePicker';
-import calendarIcon from '@/app/assets/static/images/icons/calendar.svg';
-import plusIcon from '@/app/assets/static/images/icons/add.svg';
-import { CustomSelect } from '@/shared/ui/customSelect/customSelect';
-import { Autocomplete } from '@/shared/ui/autoComplete/autoComplete';
-import { MultiSelect } from '@/shared/ui/multiSelect/multiSelect';
-import { Controller, useForm } from 'react-hook-form';
-import { Button } from '@/shared/ui/button/button';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { russianCities } from '@/shared/lib/cities';
 import userIcon from '@/app/assets/static/images/background/user-info.svg';
+import plusIcon from '@/app/assets/static/images/icons/add.svg';
+import calendarIcon from '@/app/assets/static/images/icons/calendar.svg';
+import { getCategoriesSelector } from '@/services/slices/categorySlice';
+import { getCitiesSelector } from '@/services/slices/citiesSlice';
 import {
   resetStepTwoData,
   TStepTwoData,
   updateStepTwoData,
 } from '@/services/slices/registrationSlice';
-import { useDispatch, useSelector } from '@/services/store/store';
-import { RegistrationInfoPanel } from '@/shared/ui/registrationInfoPanel/registrationInfoPanel';
 import { stepActions } from '@/services/slices/stepSlice';
-import { getCategoriesSelector, getSubcategoriesByCategory } from '@/services/slices/skillsSlice';
+import { useDispatch, useSelector } from '@/services/store/store';
+import { Autocomplete } from '@/shared/ui/autoComplete/autoComplete';
+import { Button } from '@/shared/ui/button/button';
+import { CustomSelect } from '@/shared/ui/customSelect/customSelect';
+import { MultiSelect } from '@/shared/ui/multiSelect/multiSelect';
+import { RegistrationInfoPanel } from '@/shared/ui/registrationInfoPanel/registrationInfoPanel';
+import { TextInput } from '@/shared/ui/textInput/textInput';
+import { CustomDatePicker } from '@/widgets/datePicker/datePicker';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { FC, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import styles from './registerStepTwo.module.css';
 
 export const RegisterStepTwo: FC = () => {
   const [isDatePickerOpen, setDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const dispatch = useDispatch();
+  const citiesFromStore = useSelector(getCitiesSelector);
+  const cityNames = citiesFromStore.map(c => c.name);
   const defaultValues = useSelector(state => state.register.stepTwoData);
   const genders = ['Мужской', 'Женский'] as const;
   const schema = yup.object({
@@ -64,10 +66,7 @@ export const RegisterStepTwo: FC = () => {
         }
         return age >= 12 && age <= 100;
       }),
-    city: yup
-      .string()
-      .required('Укажите город')
-      .oneOf(russianCities, 'Выбранный город не существует'),
+    city: yup.string().required('Укажите город').oneOf(cityNames, 'Выбранный город не существует'),
     gender: yup.string().required('Укажите пол').oneOf(genders, 'Выберите пол'),
     categories: yup
       .array()
@@ -93,18 +92,30 @@ export const RegisterStepTwo: FC = () => {
     mode: 'onBlur',
     defaultValues: { ...defaultValues },
   });
+
   const rawSkills = useSelector(getCategoriesSelector);
+
   const skills = rawSkills.map(category => ({
-    label: category,
-    value: category,
+    label: category.name,
+    value: category.name,
   }));
+
   const selectedCategories = watch('categories') || '';
-  const subcategoryOptions = useSelector(state =>
-    getSubcategoriesByCategory(state, selectedCategories),
-  ).map((category: string) => ({
-    label: category,
-    value: category,
-  }));
+
+  const subcategoryOptions = useSelector(() => {
+    if (!selectedCategories.length) return [];
+
+    const allSubcategories = selectedCategories.flatMap(categoryName => {
+      const category = rawSkills.find(c => c.name === categoryName);
+      return category ? category.subCategory.map(sub => sub.name) : [];
+    });
+
+    return [...new Set(allSubcategories)].map(subName => ({
+      label: subName,
+      value: subName,
+    }));
+  });
+
   const onSubmit = (data: TStepTwoData) => {
     dispatch(resetStepTwoData());
     dispatch(
@@ -130,10 +141,11 @@ export const RegisterStepTwo: FC = () => {
           render={({ fieldState }) => (
             <div className={styles.logoContainer}>
               <label htmlFor="avatar" className={styles.avatarLabel}>
-                <img className={styles.avatarLabelPlusIcon} src={plusIcon} />
+                <img className={styles.avatarLabelPlusIcon} src={plusIcon} alt="Загрузить аватар" />
               </label>
               <input
                 id="avatar"
+                name="avatar"
                 type="file"
                 accept="image/*"
                 className={styles.avatarInput}
@@ -150,6 +162,7 @@ export const RegisterStepTwo: FC = () => {
                 }}
                 onBlur={() => trigger('avatar')}
               />
+
               {fieldState.error && <p className={styles.errorText}>{fieldState.error.message}</p>}
             </div>
           )}
@@ -247,7 +260,7 @@ export const RegisterStepTwo: FC = () => {
               id="city"
               title="Город"
               placeholder="Не указан"
-              suggestions={russianCities}
+              suggestions={cityNames}
               error={errors.city?.message || ''}
               onFocus={() => clearErrors('city')}
             />

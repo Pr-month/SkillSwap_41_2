@@ -36,7 +36,7 @@ export const initializeLikes = createAsyncThunk(
 
 export const toggleLike = createAsyncThunk(
   'likes/toggleLike',
-  async (itemId: string, { getState, rejectWithValue }) => {
+  async (itemId: number, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
       const isCurrentlyLiked = state.likes.likedItems[itemId] || false;
@@ -48,7 +48,7 @@ export const toggleLike = createAsyncThunk(
       const liked = JSON.parse(localStorage.getItem('likedSkills') || '[]');
       let updated;
       if (isCurrentlyLiked) {
-        updated = liked.filter((id: string) => id !== itemId);
+        updated = liked.filter((id: number) => id !== itemId);
       } else {
         updated = [...liked, itemId];
       }

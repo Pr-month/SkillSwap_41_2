@@ -5,10 +5,11 @@ import {
   ApiBody,
   ApiResponse,
   ApiBearerAuth,
+  ApiCookieAuth,
 } from '@nestjs/swagger';
 import { LoginDTO } from './dto/login.dto';
 import { AuthResponseDto } from './dto/authResponse.dto';
-import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { RefreshResponseDto } from './dto/refreshResponse.dto';
 
 // =========================
 // Error Responses
@@ -87,7 +88,7 @@ export function ApiAuthRegister() {
           description: 'Устанавливает HTTP-only cookie с refresh токеном',
           schema: {
             type: 'string',
-            example: 'refreshToken=abc123; Path=/; HttpOnly; Secure',
+            example: 'refresh-token=abc123; Path=/; HttpOnly; Secure',
           },
         },
       },
@@ -101,25 +102,17 @@ export function ApiAuthRegister() {
 export function ApiAuthRefresh() {
   return applyDecorators(
     ApiOperation({ summary: 'Обновление токенов доступа и обновления' }),
-
-    // ApiBearerAuth('refreshToken'), // Для HTTP-only cookie
-
-    ApiBody({
-      type: RefreshTokenDto,
-      required: true,
-      description: 'Refresh token',
-    }),
-
+    ApiCookieAuth('refresh-token'), // Для HTTP-only cookie
     ApiResponse({
       status: 200,
       description: 'Токены успешно обновлены',
-      type: AuthResponseDto,
+      type: RefreshResponseDto,
       headers: {
         'Set-Cookie': {
           description: 'Устанавливает новый HTTP-only cookie с refresh токеном',
           schema: {
             type: 'string',
-            example: 'refreshToken=abc123; Path=/; HttpOnly; Secure',
+            example: 'refresh-token=abc123; Path=/; HttpOnly; Secure',
           },
         },
       },
