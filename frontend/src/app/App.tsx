@@ -39,10 +39,7 @@ function App() {
 
   useEffect(() => {
     dispatch(initializeLikes());
-    // Получения текущего профиля пользователя не должно быть на главной странице
-    dispatch(fetchCatalog());
     dispatch(fetchExchanges());
-    // dispatch(getSkills());
     dispatch(getCategories());
     dispatch(getCities());
   }, [dispatch]);

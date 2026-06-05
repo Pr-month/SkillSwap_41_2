@@ -11,7 +11,7 @@ interface InfiniteScrollProps<T> {
   minItems?: number;
 }
 
-export const InfiniteScroll = <T extends { _id: string }>({
+export const InfiniteScroll = <T extends { id: number }>({
   items,
   renderItem,
   hasMore,
@@ -25,6 +25,7 @@ export const InfiniteScroll = <T extends { _id: string }>({
   const loaderRef = useRef<HTMLDivElement>(null);
   const [displayedItems, setDisplayedItems] = useState<T[]>([]);
   const [columnsCount, setColumnsCount] = useState(3);
+  const isInitialLoad = useRef(true);
 
   // Определяем количество колонок по ширине экрана
   const getColumnsCount = useCallback((): number => {
@@ -85,6 +86,11 @@ export const InfiniteScroll = <T extends { _id: string }>({
 
     const onIntersect: IntersectionObserverCallback = entries => {
       const entry = entries[0];
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false;
+        return;
+      }
+
       if (entry.isIntersecting && !loading && hasMore) {
         onLoadMore();
       }
@@ -101,6 +107,11 @@ export const InfiniteScroll = <T extends { _id: string }>({
     };
   }, [containerRef, hasMore, loading, onLoadMore, threshold]);
 
+  // Сбрасываем флаг при изменении ключевых пропсов
+  useEffect(() => {
+    isInitialLoad.current = true;
+  }, [items.length, hasMore]);
+
   // Обновление отображаемых элементов при изменении данных
   useEffect(() => {
     updateDisplayedItems(items, columnsCount);
@@ -110,7 +121,7 @@ export const InfiniteScroll = <T extends { _id: string }>({
     <div ref={setContainerRef} className={styles.container}>
       <div className={styles.itemsGrid}>
         {displayedItems.map(item => (
-          <div key={item._id} className={styles.itemWrapper}>
+          <div key={item.id} className={styles.itemWrapper}>
             {renderItem(item)}
           </div>
         ))}

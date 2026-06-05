@@ -53,7 +53,7 @@ export const UserSectionUI: React.FC<UserSectionUIProps> = ({
       ) : (
         <div className={styles.usersGrid}>
           {users.map(user => (
-            <UserCard key={user._id} {...user} />
+            <UserCard key={user.id} {...user} />
           ))}
         </div>
       )}

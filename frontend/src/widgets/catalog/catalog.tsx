@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { CatalogUI } from './ui/catalogUI';
-import { useSelector } from '@/services/store/store';
+import { useDispatch, useSelector } from '@/services/store/store';
 import { selectCatalogItems, selectCatalogLoading } from '@/services/selectors/catalogSelectors';
 import { User } from '@/entities/user/model/types';
 import { UserSection } from '../userSection/userSection';
@@ -8,6 +8,7 @@ import styles from './catalog.module.css';
 import { selectLikedItems } from '@/services/selectors/likeSelectors';
 import useFilteredUsers from '@/shared/hooks/useFilterCatalog';
 import { useExchange } from '@/shared/hooks/useExchange';
+import { fetchCatalog, fetchMoreCatalog } from '@/services/slices/catalogSlice';
 
 type CategorySection = {
   title: string;
@@ -22,15 +23,21 @@ const Catalog: React.FC<{ isAuthenticated: boolean; isFiltered: boolean }> = ({
   isAuthenticated,
   isFiltered,
 }) => {
+  const dispatch = useDispatch();
   const [currentCategory, setCurrentCategory] = useState<ProfileCategory | null>(null);
+
+  // Данные из Redux
   const allUsers = useSelector(selectCatalogItems) as User[];
-  const likedItems = useSelector(selectLikedItems);
-  const filteredUsers = useFilteredUsers() as User[];
   const loading = useSelector(selectCatalogLoading);
-  const [hasMore, setHasMore] = useState(true);
-  const [displayedUsers, setDisplayedUsers] = useState<User[]>([]);
+  const pagination = useSelector((state: any) => state.catalog.pagination);
+
+  // Локальная фильтрация
+  const filteredUsers = useFilteredUsers() as User[];
+  const likedItems = useSelector(selectLikedItems);
   const { hasSentRequest } = useExchange();
   const currentUser = useSelector(state => state.authUser.data);
+
+  const [initialized, setInitialized] = useState(false);
 
   // Автоматически определяем есть ли активная фильтрация
   const isActuallyFiltered = useMemo(() => {
@@ -53,10 +60,10 @@ const Catalog: React.FC<{ isAuthenticated: boolean; isFiltered: boolean }> = ({
     return {
       // Для "Точное соответствие" (заглушка)
       // Так как эту часть не описали достаточно, временно тут будут обобрадаться те карточки, кому мы предложили обмен
-      match: currentUser ? usersToCategorize.filter(user => hasSentRequest(user._id)) : [],
+      match: currentUser ? usersToCategorize.filter(user => hasSentRequest(user.id)) : [],
 
       // "Популярное" - пользователи с лайками
-      popular: usersToCategorize.filter(user => likedItems[user._id]),
+      popular: usersToCategorize.filter(user => likedItems[user.id]),
 
       // "Новое" - 9 самых новых по дате создания
       new: [...usersToCategorize]
@@ -82,42 +89,35 @@ const Catalog: React.FC<{ isAuthenticated: boolean; isFiltered: boolean }> = ({
       case 'category':
         return categorizedUsers[currentCategory!];
       default:
-        return displayedUsers;
+        return allUsers;
     }
   };
 
   // Количество карточек для загрузки
-  const getItemsPerLoad = () => {
+  const getItemsPerLoad = useCallback(() => {
     const width = window.innerWidth;
     const columns = width < 768 ? 1 : width < 1024 ? 2 : 3;
-    return Math.ceil(20 / columns) * columns;
-  };
+    const targetItems = 6;
+    const rows = Math.ceil(targetItems / columns);
+    return rows * columns;
+  }, []);
 
   // Инициализация "Рекомендуем" (все пользователи)
   useEffect(() => {
-    if (displayMode === 'default' && !currentCategory) {
-      const initialItems = categorizedUsers.recommended.slice(0, getItemsPerLoad());
-      setDisplayedUsers(initialItems);
-      setHasMore(initialItems.length < categorizedUsers.recommended.length);
+    if (!initialized && displayMode === 'default' && !currentCategory && allUsers.length === 0) {
+      const limit = getItemsPerLoad();
+      // Передаем page = 1 (первая страница)
+      dispatch(fetchCatalog({ page: 1, limit }));
+      setInitialized(true);
     }
-  }, [displayMode, currentCategory, categorizedUsers.recommended]);
+  }, [dispatch, initialized, displayMode, currentCategory, allUsers.length, getItemsPerLoad]);
 
-  // Подгрузка "Рекомендуем"
+  // Подгрузка "Рекомендуем" с сервера
   const handleLoadMore = useCallback(() => {
-    if (loading || !hasMore) return;
+    if (loading || !pagination.hasMore || displayMode !== 'default') return;
 
-    //setLoading(true);
-    setTimeout(() => {
-      const nextItems = categorizedUsers.recommended.slice(
-        displayedUsers.length,
-        displayedUsers.length + getItemsPerLoad(),
-      );
-
-      setDisplayedUsers(prev => [...prev, ...nextItems]);
-      setHasMore(displayedUsers.length + nextItems.length < categorizedUsers.recommended.length);
-      //setLoading(false);
-    }, 500);
-  }, [loading, hasMore, displayedUsers.length, categorizedUsers.recommended]);
+    dispatch(fetchMoreCatalog());
+  }, [loading, pagination.hasMore, displayMode, dispatch]);
 
   // Заголовок для текущего режима
   const getCurrentTitle = () => {
@@ -173,7 +173,7 @@ const Catalog: React.FC<{ isAuthenticated: boolean; isFiltered: boolean }> = ({
       },
       {
         title: 'Рекомендуем',
-        users: displayedUsers,
+        users: allUsers,
         showAllButton: false,
       },
     ];
@@ -181,7 +181,7 @@ const Catalog: React.FC<{ isAuthenticated: boolean; isFiltered: boolean }> = ({
     return {
       sections,
       onLoadMoreRecommended: handleLoadMore,
-      hasMoreRecommended: hasMore,
+      hasMoreRecommended: pagination.hasMore,
       isLoadingRecommended: loading,
     };
   };

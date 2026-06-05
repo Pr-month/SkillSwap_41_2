@@ -1,18 +1,20 @@
-import { CustomSkill } from '@/entities/skill/model/types';
+import { Category } from '@/entities/categories/model/types';
+import { TCity } from '@/entities/cities/model/cities';
+import { Skill } from '@/entities/skill/model/types';
 
 export type User = {
-  createdAt: string | number | Date;
-  _id: string;
+  id: number;
   name: string;
-  image: string | File[];
-  city: string;
+  about?: string;
+  birthdate: string;
+  city: TCity;
   gender: GenderOption['value'];
-  birthdayDate: string;
-  description: string;
-  likes: string[];
-  canTeach: CustomSkill;
-  wantsToLearn: Omit<CustomSkill, 'description' | 'image'>[];
+  avatar: string | File[];
+  skills: Skill[];
+  favoriteSkills: Skill[];
+  wantToLearn: Category[];
   email?: string;
+  createdAt: string;
 };
 
 export type ExchangeRequest = {
@@ -30,7 +32,7 @@ export type ExperienceOption = {
 };
 
 export type GenderOption = {
-  value: 'any' | 'male' | 'female';
+  value: 'other' | 'male' | 'female';
   label: string;
 };
 

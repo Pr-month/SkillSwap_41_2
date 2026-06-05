@@ -1,8 +1,15 @@
 import { TUpdateProfileData, TUserResponse, TUsersResponse } from './user.types';
 import { apiClient } from '@/shared/api';
 
-export const getUsersApi = async () => {
-  return apiClient.get<TUsersResponse>('/api/users');
+export type TGetUsersParams = {
+  search?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export const getUsersApi = async (params?: TGetUsersParams ) => {
+  const res = await apiClient.get<TUsersResponse>('/api/users', { params });
+  return res;
 };
 
 export const updateProfileApi = (data: TUpdateProfileData) => {

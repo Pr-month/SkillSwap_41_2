@@ -10,7 +10,7 @@ import React from 'react';
 import styles from './catalogPage.module.css';
 
 export const CatalogPage: React.FC = () => {
-  // Получаем данные пользователя из Redux
+  // Данные user из Redux
   const user = useSelector(userSliceSelectors.selectUser);
 
   const citiesFromStore = useSelector(getCitiesSelector);
@@ -19,7 +19,10 @@ export const CatalogPage: React.FC = () => {
   const categories = useSelector(getCategoriesSelector);
 
   const mappingCategories = Object.fromEntries(
-    categories.map(category => [category.name, category.subCategory.map(sub => sub.name)]),
+    categories.map(category => [
+      category.name,
+      category.subCategory ? category.subCategory.map(sub => sub.name) : [],
+    ]),
   );
 
   // isAuthenticated = true, если user не null

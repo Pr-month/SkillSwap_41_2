@@ -16,14 +16,15 @@ type UserCardProps = User & {
 };
 
 export const UserCard: React.FC<UserCardProps> = ({
-  image,
+  id,
   name,
+  about,
+  birthdate,
   city,
-  canTeach,
-  wantsToLearn,
-  _id,
-  birthdayDate,
-  description,
+  avatar,
+  skills,
+  // favoriteSkills, // лайки
+  wantToLearn,
   showLike = true,
   showDescription = false,
   showDetails = true,
@@ -31,20 +32,25 @@ export const UserCard: React.FC<UserCardProps> = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { hasSentRequest } = useExchange();
-  const alreadyRequested = hasSentRequest(_id);
-  const learnSkill = wantsToLearn.slice(0, 2);
-  const moreSkills = wantsToLearn.length - learnSkill.length;
-  const isLiked = useSelector(state => selectIsLiked(state, _id));
+  const alreadyRequested = hasSentRequest(id);
+  const learnSkill = wantToLearn.slice(0, 2);
+  const moreSkills = wantToLearn.length - learnSkill.length;
+  const isLiked = useSelector(state => selectIsLiked(state, id));
 
   const handleLikeClick = () => {
-    dispatch(toggleLike(_id));
+    dispatch(toggleLike(id));
   };
 
   const openProfile = () => {
-    navigate(`/skill/${_id}`);
+    navigate(`/skill/${id}`);
   };
 
-  const imageUrl = typeof image === 'string' ? image : undefined;
+  const imageUrl =
+    typeof avatar === 'string'
+      ? avatar.startsWith('http')
+        ? avatar
+        : `${import.meta.env.VITE_SKILLSWAP_API_URL}/${avatar}`
+      : undefined;
 
   return (
     <div className={styles.cardContainer}>
@@ -62,28 +68,35 @@ export const UserCard: React.FC<UserCardProps> = ({
         )}
         <div className={styles.userInfo}>
           <p className={styles.userName}>{name}</p>
-          <p className={styles.userCityAndAge}>{`${city}, ${calculateAge(birthdayDate)}`}</p>
+          <p
+            className={styles.userCityAndAge}
+          >{`${city ? city.name : 'бомж'}, ${calculateAge(birthdate)}`}</p>
         </div>
       </div>
       <div className={styles.bodyCard}>
-        {showDescription && <p className={styles.description}>{description}</p>}
+        {showDescription && <p className={styles.description}>{about}</p>}
         <div className={styles.teach}>
           <p className={styles.pointCard}>Может научить:</p>
           <div className={styles.skills}>
-            {canTeach ? <Skill type={canTeach.category}>{canTeach.name}</Skill> : ''}
+            {skills &&
+              skills.map((skill, index) => (
+                <Skill key={index} type={skill.category?.parentSlug}>
+                  {skill.title}
+                </Skill>
+              ))}
           </div>
         </div>
         <div className={styles.teach}>
           <p className={styles.pointCard}>Хочет научиться:</p>
           <div className={styles.skills}>
             {learnSkill &&
-              learnSkill.map(skill => (
-                <Skill type={skill.category} key={skill.customSkillId}>
-                  {skill.name}
+              learnSkill.map((category, index) => (
+                <Skill key={index} type={category.parentSlug}>
+                  {category.name}
                 </Skill>
               ))}
-            {wantsToLearn.length > 2 && (
-              <Skill type={'Остальные категории'}>{`+ ${moreSkills}`}</Skill>
+            {wantToLearn.length > 2 && (
+              <Skill type={'other'}>{`+ ${moreSkills}`}</Skill>
             )}
           </div>
         </div>

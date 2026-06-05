@@ -35,7 +35,7 @@ export const FiltersPanel = ({ skillsCategories, cities }: FiltersPanelProps) =>
     let count = 0;
 
     if (mode !== 'all') count++;
-    if (gender !== 'any') count++;
+    if (gender !== 'other') count++;
     count += skill.length;
     count += city.length;
 
