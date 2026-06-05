@@ -91,6 +91,7 @@ export class UsersService {
         'user.gender',
         'user.avatar',
         'user.createdAt',
+        'user.email',
 
         'city.id',
         'city.name',

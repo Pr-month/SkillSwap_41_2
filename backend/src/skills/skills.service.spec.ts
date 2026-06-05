@@ -41,12 +41,15 @@ describe('SkillsService', () => {
     name: 'Test Category',
     parent: null,
     children: [],
+    slug: 'test-category',
   };
+
   const mockUser: User = {
     id: 10,
     name: 'John Doe',
     email: 'john@example.com',
   } as User;
+
   const mockSkill: Skill = {
     id: 100,
     title: 'Test Skill',
@@ -218,7 +221,11 @@ describe('SkillsService', () => {
     });
 
     it('Должна вернуться ошибка NotFound, если пытаемся удалить из Избранного навык, которого нет в Избранном', async () => {
-      const anotherSkill = { ...mockSkill, id: 999 };
+      const anotherSkill = {
+        ...mockSkill,
+        id: 999,
+        status: SkillStatus.ACTIVE,
+      };
       const userWithOtherFavorite = {
         ...mockUser,
         favoriteSkills: [anotherSkill],
@@ -246,8 +253,17 @@ describe('SkillsService', () => {
     it('Должен создаться новый навык', async () => {
       categoryRepository.findOne.mockResolvedValue(mockCategory);
       userRepository.findOne.mockResolvedValue(mockUser);
-      skillRepository.create.mockReturnValue(mockSkill);
-      skillRepository.save.mockResolvedValue(mockSkill);
+      const newSkill = {
+        ...mockSkill,
+        title: dto.title,
+        description: dto.description,
+        category: mockCategory,
+        images: dto.images,
+        owner: mockUser,
+        status: SkillStatus.ACTIVE,
+      };
+      skillRepository.create.mockReturnValue(newSkill);
+      skillRepository.save.mockResolvedValue(newSkill);
 
       const result = await service.create(dto, userId);
 
@@ -268,8 +284,8 @@ describe('SkillsService', () => {
         images: dto.images,
         owner: mockUser,
       });
-      expect(skillRepository.save).toHaveBeenCalledWith(mockSkill);
-      expect(result).toEqual(mockSkill);
+      expect(skillRepository.save).toHaveBeenCalledWith(newSkill);
+      expect(result).toEqual(newSkill);
     });
 
     it('Должна вернуться ошибка NotFound, если пытаемся создать навык с несуществующей категорией', async () => {
@@ -316,8 +332,12 @@ describe('SkillsService', () => {
         {
           id: mockSkill.id,
           title: mockSkill.title,
+          images: mockSkill.images,
           description: mockSkill.description,
-          category: mockSkill.category.id, // только ID категории, а не весь объект
+          category: {
+            id: mockSkill.category.id,
+            parentSlug: mockSkill.category.parent?.slug || '',
+          },
         },
       ];
 
@@ -328,7 +348,7 @@ describe('SkillsService', () => {
       const result = await service.findAll(query);
 
       expect(skillRepository.createQueryBuilder).toHaveBeenCalledWith('skill');
-      expect(queryBuilder.take).toHaveBeenCalledWith(21);
+      expect(queryBuilder.take).toHaveBeenCalledWith(12);
       expect(queryBuilder.skip).toHaveBeenCalledWith(0);
       expect(result).toEqual(expectedSkills);
     });
@@ -354,7 +374,7 @@ describe('SkillsService', () => {
         owner: 10,
       });
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-        '(skill.title ILIKE :search OR skill.description ILIKE :search)',
+        '(skill.title ILIKE :search)',
         { search: '%test%' },
       );
       expect(queryBuilder.take).toHaveBeenCalledWith(10);

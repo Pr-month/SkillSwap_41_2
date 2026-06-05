@@ -306,7 +306,6 @@ async function bootstrap() {
     console.log(
       `✅ WantToLearn added: ${addedWantToLearn}, skipped: ${skippedWantToLearn}`,
     );
-
   } catch (error) {
     console.error('❌ seeding finished error', error);
     process.exitCode = 1;

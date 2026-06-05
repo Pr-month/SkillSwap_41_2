@@ -803,7 +803,7 @@ export const seedTestUsers: ISeedUser[] = [
     favoriteSkills: [11, 23],
     role: UserRole.USER,
   },
-  { 
+  {
     name: 'Евгения Белова',
     email: 'evgenia.belova@test.local',
     password: 'Qw7Rt3Yp',

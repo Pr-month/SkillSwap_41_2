@@ -38,7 +38,7 @@ async function bootstrap() {
         gender: userData.gender,
         avatar: userData.avatar,
         role: userData.role,
-        createdAt: faker.date.recent({ days: 365*3 }), // Добавляем случайную дату создания
+        createdAt: faker.date.recent({ days: 365 * 3 }), // Добавляем случайную дату создания
       });
       createdUser++;
       console.log(`user ${userData.email} created`);

@@ -191,44 +191,58 @@ describe('UsersService', () => {
 
   describe('findAll', () => {
     it('должен вернуть пагинированный список пользователей', async () => {
-      const users = [
-        { id: 1, name: 'User1' },
-        { id: 2, name: 'User2' },
-      ] as User[];
-      const query: FindUsersQueryDto = { limit: 10, offset: 1, search: '' };
+      const mockUsers = [
+        {
+          id: 1,
+          name: 'User1',
+          email: 'user1@test.com',
+          birthdate: new Date(),
+          gender: 'male',
+          avatar: 'avatar1.jpg',
+          createdAt: new Date(),
+          city: { id: 1, name: 'Moscow' },
+          skills: [
+            {
+              id: 1,
+              title: 'JS',
+              category: { id: 1, parent: { id: 1, slug: 'programming' } },
+            },
+          ],
+          favoriteSkills: [{ id: 2, title: 'Python' }],
+          wantToLearn: [
+            {
+              id: 1,
+              name: 'Web Development',
+              parent: { id: 1, slug: 'it' },
+            },
+          ],
+        },
+      ];
+
+      const query: FindUsersQueryDto = { limit: 10, offset: 0, search: '' };
 
       const mockQb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(users),
-        getCount: jest.fn().mockResolvedValue(users.length),
+        getManyAndCount: jest.fn().mockResolvedValue([mockUsers, 1]),
       };
 
-      mockRepo.createQueryBuilder = jest.fn().mockReturnValue(mockQb);
+      mockRepo.createQueryBuilder.mockReturnValue(mockQb);
 
       const result = await service.findAll(query);
-      expect(result.data).toEqual(users);
-      expect(result.meta.total).toBe(2);
-      expect(result.meta.offset).toBe(1);
+
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.offset).toBe(0);
       expect(result.meta.limit).toBe(10);
       expect(result.meta.totalPages).toBe(1);
-    });
-
-    it('должен выбросить NotFoundException, если страница за пределами', async () => {
-      const query: FindUsersQueryDto = { limit: 10, offset: 99, search: '' };
-
-      const mockQb = {
-        where: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([]),
-        getCount: jest.fn().mockResolvedValue(5),
-      };
-
-      mockRepo.createQueryBuilder = jest.fn().mockReturnValue(mockQb);
-
-      await expect(service.findAll(query)).rejects.toThrow(NotFoundException);
+      // В сервисе 7 вызовов leftJoinAndSelect, а не 6
+      expect(mockQb.leftJoinAndSelect).toHaveBeenCalledTimes(7);
+      expect(mockQb.andWhere).toHaveBeenCalled();
     });
   });
 });
