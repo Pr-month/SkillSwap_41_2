@@ -1,6 +1,5 @@
 import { AboutPage } from '@/pages/AboutPage/AboutPage';
 import { CatalogPage } from '@/pages/catalogPage/catalogPage';
-import { fetchCatalog } from '@/services/slices/catalogSlice';
 import { getCategories } from '@/services/slices/categorySlice';
 import { getCities } from '@/services/slices/citiesSlice';
 import { fetchExchanges } from '@/services/slices/exchangeSlice';

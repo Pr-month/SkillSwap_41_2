@@ -45,8 +45,8 @@ export const UserSectionUI: React.FC<UserSectionUIProps> = ({
         <InfiniteScroll
           items={users}
           renderItem={user => <UserCard {...user} />}
-          hasMore={hasMore} // ✅ Динамическое значение
-          onLoadMore={onLoadMore ?? (() => {})} // ✅ Безопасный fallback
+          hasMore={hasMore}
+          onLoadMore={onLoadMore ?? (() => {})}
           loading={loading}
           minItems={20}
         />

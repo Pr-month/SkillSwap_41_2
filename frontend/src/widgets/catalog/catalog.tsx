@@ -8,7 +8,7 @@ import styles from './catalog.module.css';
 import { selectLikedItems } from '@/services/selectors/likeSelectors';
 import useFilteredUsers from '@/shared/hooks/useFilterCatalog';
 import { useExchange } from '@/shared/hooks/useExchange';
-import { fetchCatalog, fetchMoreCatalog } from '@/services/slices/catalogSlice';
+import { fetchCatalog, fetchMoreCatalog } from '@/services/thunk/catalog.thunk';
 
 type CategorySection = {
   title: string;
@@ -106,8 +106,7 @@ const Catalog: React.FC<{ isAuthenticated: boolean; isFiltered: boolean }> = ({
   useEffect(() => {
     if (!initialized && displayMode === 'default' && !currentCategory && allUsers.length === 0) {
       const limit = getItemsPerLoad();
-      // Передаем page = 1 (первая страница)
-      dispatch(fetchCatalog({ page: 1, limit }));
+      dispatch(fetchCatalog({ offset: 0, limit }));
       setInitialized(true);
     }
   }, [dispatch, initialized, displayMode, currentCategory, allUsers.length, getItemsPerLoad]);

@@ -26,6 +26,12 @@ export const InfiniteScroll = <T extends { id: number }>({
   const [displayedItems, setDisplayedItems] = useState<T[]>([]);
   const [columnsCount, setColumnsCount] = useState(3);
   const isInitialLoad = useRef(true);
+  const isLoadingRef = useRef(loading);
+
+  // Синхронизация ref с loading
+  useEffect(() => {
+    isLoadingRef.current = loading;
+  }, [loading]);
 
   // Определяем количество колонок по ширине экрана
   const getColumnsCount = useCallback((): number => {
@@ -78,34 +84,40 @@ export const InfiniteScroll = <T extends { id: number }>({
       return;
     }
 
-    const options = {
-      root: null,
-      rootMargin: `${threshold}px`,
-      threshold: 0.1,
-    };
+    // Небольшая задержка перед настройкой observer
+    const timeoutId = setTimeout(() => {
+      if (!loaderRef.current) return;
 
-    const onIntersect: IntersectionObserverCallback = entries => {
-      const entry = entries[0];
-      if (isInitialLoad.current) {
-        isInitialLoad.current = false;
-        return;
-      }
+      const options = {
+        root: null,
+        rootMargin: `${threshold}px`,
+        threshold: 0.1,
+      };
 
-      if (entry.isIntersecting && !loading && hasMore) {
-        onLoadMore();
-      }
-    };
+      const onIntersect: IntersectionObserverCallback = entries => {
+        const entry = entries[0];
+        if (isInitialLoad.current) {
+          isInitialLoad.current = false;
+          return;
+        }
 
-    observer.current = new IntersectionObserver(onIntersect, options);
-    observer.current.observe(loaderRef.current);
+        if (entry.isIntersecting && !isLoadingRef.current && hasMore) {
+          onLoadMore();
+        }
+      };
+
+      observer.current = new IntersectionObserver(onIntersect, options);
+      observer.current.observe(loaderRef.current);
+    }, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       if (observer.current) {
         observer.current.disconnect();
         observer.current = null;
       }
     };
-  }, [containerRef, hasMore, loading, onLoadMore, threshold]);
+  }, [containerRef, hasMore, onLoadMore, threshold]);
 
   // Сбрасываем флаг при изменении ключевых пропсов
   useEffect(() => {

@@ -1,8 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 import { User } from '@/entities/user/model/types';
-import { getUsersApi } from '@/entities/user/api/user.api';
-
-const DOWNLOAD_TIME = 1000; // Время для имитации загрузки при подгрузке следующих страниц
+import { fetchCatalog, fetchMoreCatalog } from '../thunk/catalog.thunk';
 
 interface CatalogState {
   users: User[];
@@ -11,7 +9,7 @@ interface CatalogState {
   searchQuery: string;
   // Пагинация
   pagination: {
-    currentPage: number; // Используем offset
+    offset: number;
     limit: number;
     total: number;
     totalPages: number;
@@ -25,60 +23,13 @@ const initialState: CatalogState = {
   error: null,
   searchQuery: '',
   pagination: {
-    currentPage: 1, // Начинаем с 1
+    offset: 0,
     limit: 20,
     total: 0,
     totalPages: 0,
     hasMore: true,
   },
 };
-
-// Thunk для первой загрузки
-export const fetchCatalog = createAsyncThunk<
-  { users: User[]; total: number; currentPage: number; limit: number; totalPages: number },
-  { page?: number; limit?: number }
->('catalog/fetch', async params => {
-  const page = params?.page || 1;
-  const limit = params?.limit || 20;
-
-  // Сервер ожидает offset как номер страницы
-  const res = await getUsersApi({ limit, offset: page });
-
-  return {
-    users: res.data,
-    total: res.meta.total,
-    currentPage: res.meta.offset, // Используем offset из ответа как текущую страницу
-    limit: res.meta.limit,
-    totalPages: res.meta.totalPages,
-  };
-});
-
-// Thunk для подгрузки следующих страниц
-export const fetchMoreCatalog = createAsyncThunk(
-  'catalog/fetchMore',
-  async (_, { getState, rejectWithValue }) => {
-    const state = getState() as any;
-    const { currentPage, totalPages, limit } = state.catalog.pagination;
-
-    const nextPage = currentPage + 1;
-
-    // Проверяем, есть ли следующая страница
-    if (nextPage > totalPages) {
-      return rejectWithValue('No more pages');
-    }
-
-    await new Promise(resolve => setTimeout(resolve, DOWNLOAD_TIME));
-
-    // Запрашиваем следующую страницу (offset = номер страницы)
-    const res = await getUsersApi({ limit, offset: nextPage });
-
-    return {
-      users: res.data,
-      currentPage: res.meta.offset,
-      hasMore: nextPage < totalPages,
-    };
-  },
-);
 
 const catalogSlice = createSlice({
   name: 'catalog',
@@ -93,7 +44,7 @@ const catalogSlice = createSlice({
     resetCatalog(state) {
       state.users = [];
       state.pagination = {
-        currentPage: 1,
+        offset: 0,
         limit: 20,
         total: 0,
         totalPages: 0,
@@ -111,11 +62,11 @@ const catalogSlice = createSlice({
       .addCase(fetchCatalog.fulfilled, (state, action) => {
         state.users = action.payload.users;
         state.pagination = {
-          currentPage: action.payload.currentPage,
+          offset: action.payload.nextOffset,
           limit: action.payload.limit,
           total: action.payload.total,
           totalPages: action.payload.totalPages,
-          hasMore: action.payload.currentPage < action.payload.totalPages,
+          hasMore: action.payload.nextOffset < action.payload.total,
         };
         state.loading = false;
       })
@@ -130,8 +81,13 @@ const catalogSlice = createSlice({
       })
       .addCase(fetchMoreCatalog.fulfilled, (state, action) => {
         state.users = [...state.users, ...action.payload.users];
-        state.pagination.currentPage = action.payload.currentPage;
-        state.pagination.hasMore = action.payload.hasMore;
+        state.pagination = {
+          offset: action.payload.nextOffset,
+          limit: action.payload.limit,
+          total: action.payload.total,
+          totalPages: action.payload.totalPages,
+          hasMore: action.payload.hasMore,
+        };
         state.loading = false;
       })
       .addCase(fetchMoreCatalog.rejected, (state, action) => {
@@ -145,5 +101,5 @@ const catalogSlice = createSlice({
   },
 });
 
-export const { setSearchQuery, resetCatalog } = catalogSlice.actions;
+export const { setSearchQuery, resetCatalog, clearError } = catalogSlice.actions;
 export const catalogReducer = catalogSlice.reducer;
