@@ -1,10 +1,10 @@
-import { ApiClientError } from "./errors";
+import { ApiClientError } from './errors';
 
 type ApiError = {
   status: number;
   message: string;
   errors?: Record<string, string[]>;
-}
+};
 
 const API_URL = import.meta.env.VITE_SKILLSWAP_API_URL;
 
@@ -12,25 +12,36 @@ if (!API_URL) {
   throw new Error('VITE_SKILLSWAP_API_URL is not defined in environment variables');
 }
 
-export type ApiRequestOptions = RequestInit;
+export interface ApiRequestOptions extends RequestInit {
+  params?: Record<string, string | number | boolean | undefined>;
+}
 
 // ======================
 // API-клиент
 // ======================
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { headers: customHeaders, body, ...restOptions } = options;
+  const { headers: customHeaders, body, params, ...restOptions } = options;
 
   const headers = new Headers(customHeaders);
+  const url = new URL(path, API_URL);
 
   if (!(body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
+    });
   }
 
   // ======================
   // Блок запроса
   // ======================
   try {
-    const response = await fetch(`${API_URL}${path}`, {
+    const response = await fetch(url.toString(), {
       ...restOptions,
       body,
       credentials: 'include',
@@ -72,7 +83,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     const contentType = response.headers.get('Content-Type');
 
     if (contentType?.includes('application/json')) {
-      return await response.json() as T
+      return (await response.json()) as T;
     }
 
     /**

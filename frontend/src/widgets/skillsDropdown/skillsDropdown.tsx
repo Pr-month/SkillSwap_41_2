@@ -14,8 +14,6 @@ export const SkillsDropdown = forwardRef<HTMLDivElement, SkillsDropdownProps>(({
 
   const categories = useSelector(getCategoriesSelector);
 
-  console.log('categories', categories);
-
   const mapCategories = categories.map(category => ({
     id: category.id,
     slug: category.slug,

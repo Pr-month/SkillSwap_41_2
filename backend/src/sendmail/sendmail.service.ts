@@ -18,7 +18,7 @@ export class SendmailService implements OnModuleInit {
   async onModuleInit() {
     // Проверяем, не отключена ли отправка писем
     if (this.isEmailDisabled()) {
-      console.log('=== Email sending is DISABLED during seeding ===');
+      console.log('=== Email sending is DISABLED ===');
       return;
     }
     await this.verifyConnection();

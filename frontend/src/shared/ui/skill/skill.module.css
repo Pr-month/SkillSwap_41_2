@@ -40,6 +40,16 @@
   background-color: #fff;
 }
 
-.more {
+.other {
   background-color: var(--skill-component-bg-more);
+}
+
+.content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wrapper {
+  max-width: 120px;
 }

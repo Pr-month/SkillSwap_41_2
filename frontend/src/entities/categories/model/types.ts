@@ -9,6 +9,7 @@ type CategorySlug =
 export type Category = {
   id: number;
   name: string;
-  slug: CategorySlug | '';
-  subCategory: Category[];
-}
+  slug?: CategorySlug;
+  subCategory?: Category[];
+  parentSlug?: CategorySlug; // Для Skills
+};

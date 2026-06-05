@@ -6,6 +6,6 @@ export const selectLikesLoading = (state: RootState) => state.likes.loading;
 export const selectLikesError = (state: RootState) => state.likes.error;
 
 export const selectIsLiked = createSelector(
-  [selectLikedItems, (_, itemId: string) => itemId],
+  [selectLikedItems, (_, itemId: number) => itemId],
   (likedItems, itemId) => likedItems[itemId] || false,
 );

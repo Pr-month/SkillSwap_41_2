@@ -4,12 +4,12 @@ export type SkillCategory = keyof typeof skillsCategories;
 export type SkillSubcategory<T extends SkillCategory> = (typeof skillsCategories)[T][number];
 
 export type Skill = {
-  [K in SkillCategory]: {
-    category: K;
-    subcategory: SkillSubcategory<K>;
-    subcategoryId: string;
-  };
-}[SkillCategory];
+  id: number;
+  title: string;
+  images?: string[];
+  description?: string;
+  category: { id: number; parentSlug?: string };
+};
 
 export type CustomSkill = Skill & {
   name: string;

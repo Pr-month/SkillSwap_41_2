@@ -33,7 +33,9 @@ export class Skill {
   description!: string;
 
   @ApiProperty({ example: Category })
-  @ManyToOne(() => Category)
+  @ManyToOne(() => Category, (category) => category.children, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'categoryId' })
   category!: Category;
 

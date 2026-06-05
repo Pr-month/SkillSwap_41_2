@@ -3,6 +3,7 @@ import { Request } from 'src/requests/entities/request.entity';
 import { Skill } from 'src/skills/entities/skill.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
@@ -60,7 +61,7 @@ export class User {
 
   @ApiProperty({ example: Skill })
   @ManyToMany(() => Skill)
-  @JoinTable({ name: 'user_favorite_skills' })
+  @JoinTable({ name: 'favoriteSkills' })
   favoriteSkills?: Skill[];
 
   @ApiProperty({ example: UserRole })
@@ -90,4 +91,7 @@ export class User {
 
   @Column({ type: 'enum', enum: OAuthProvider, nullable: true })
   provider?: OAuthProvider | null;
+
+  @CreateDateColumn()
+  createdAt!: Date;
 }

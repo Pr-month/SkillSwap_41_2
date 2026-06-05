@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { CategoriesService } from './categories.service';
 import { Category } from './entities/category.entity';
 
@@ -49,7 +49,6 @@ describe('CategoriesService', () => {
       };
 
       repository.create.mockReturnValue(savedCategory);
-
       repository.save.mockResolvedValue(savedCategory);
 
       const result = await service.create(dto);
@@ -60,27 +59,49 @@ describe('CategoriesService', () => {
       });
 
       expect(repository.save).toHaveBeenCalled();
-
       expect(result).toEqual(savedCategory);
     });
   });
 
   describe('findAll', () => {
     it('should return categories', async () => {
-      const categories = [
+      const mockCategoriesFromDb = [
         {
           id: 1,
           name: 'Frontend',
+          slug: 'frontend',
+          children: [],
+          parent: null,
         },
       ];
 
-      repository.find.mockResolvedValue(categories);
+      const expectedTransformedCategories = [
+        {
+          id: 1,
+          name: 'Frontend',
+          slug: 'frontend',
+          subCategory: [],
+        },
+      ];
+
+      repository.find.mockResolvedValue(mockCategoriesFromDb);
 
       const result = await service.findAll();
 
-      expect(repository.find).toHaveBeenCalled();
+      expect(repository.find).toHaveBeenCalledWith({
+        where: { parent: IsNull() },
+        relations: ['children'],
+      });
 
-      expect(result).toEqual(categories);
+      expect(result).toEqual(expectedTransformedCategories);
+    });
+
+    it('should return empty array when categories are undefined', async () => {
+      repository.find.mockResolvedValue(undefined as any);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([]);
     });
   });
 
@@ -89,6 +110,9 @@ describe('CategoriesService', () => {
       const category = {
         id: 1,
         name: 'Frontend',
+        slug: 'frontend',
+        children: [],
+        parent: null,
       };
 
       repository.findOne.mockResolvedValue(category);
@@ -115,6 +139,8 @@ describe('CategoriesService', () => {
       const category = {
         id: 1,
         name: 'Frontend',
+        slug: 'frontend',
+        parent: null,
       };
 
       const updateDto = {
@@ -124,10 +150,11 @@ describe('CategoriesService', () => {
       const updatedCategory = {
         id: 1,
         name: 'Backend',
+        slug: 'frontend',
+        parent: null,
       };
 
       repository.findOne.mockResolvedValue(category);
-
       repository.save.mockResolvedValue(updatedCategory);
 
       const result = await service.update(1, updateDto);
@@ -137,7 +164,6 @@ describe('CategoriesService', () => {
       });
 
       expect(repository.save).toHaveBeenCalled();
-
       expect(result).toEqual(updatedCategory);
     });
 
@@ -155,16 +181,15 @@ describe('CategoriesService', () => {
       const category = {
         id: 1,
         name: 'Frontend',
+        slug: 'frontend',
       };
 
       repository.findOne.mockResolvedValue(category);
-
       repository.remove.mockResolvedValue(category);
 
       const result = await service.remove(1);
 
       expect(repository.remove).toHaveBeenCalledWith(category);
-
       expect(result).toEqual({
         message: `Категория "Frontend" успешно удалена`,
       });

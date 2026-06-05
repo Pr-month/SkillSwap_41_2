@@ -7,7 +7,7 @@ import { FiltersPanel } from './filtersPanel';
 // Используем типы из вашего слайса
 type FiltersState = {
   mode: 'all' | 'want-to-learn' | 'can-teach';
-  gender: 'any' | 'male' | 'female';
+  gender: 'other' | 'male' | 'female';
   city: string[];
   skill: string[];
 };
@@ -22,7 +22,7 @@ const createMockStore = (preloadedState?: Partial<FiltersState>) => {
     preloadedState: {
       filters: {
         mode: 'all',
-        gender: 'any',
+        gender: 'other',
         city: [],
         skill: [],
         ...preloadedState,

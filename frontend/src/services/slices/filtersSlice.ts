@@ -10,7 +10,7 @@ interface FiltersState {
 
 const initialState: FiltersState = {
   mode: 'all',
-  gender: 'any',
+  gender: 'other',
   city: [],
   skill: [],
 };
@@ -45,7 +45,7 @@ export const filtersSlice = createSlice({
           state.mode = 'all';
           break;
         case 'gender':
-          state.gender = 'any';
+          state.gender = 'other';
           break;
         case 'city':
           if (value) {
