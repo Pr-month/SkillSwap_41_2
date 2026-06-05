@@ -15,7 +15,7 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
-import { SkillResponseDto } from './dto/skill-response.gto';
+import { SkillResponseDto } from './dto/skill-response.dto';
 
 @Injectable()
 export class SkillsService {
@@ -135,6 +135,7 @@ export class SkillsService {
       .createQueryBuilder('skill')
       .cache(true) // кэширование
       .leftJoinAndSelect('skill.category', 'category') // внешние связи
+      .leftJoinAndSelect('category.parent', 'parent')
       .leftJoinAndSelect('skill.owner', 'owner');
 
     // фильтры
@@ -147,10 +148,7 @@ export class SkillsService {
     }
 
     if (search) {
-      qb.andWhere(
-        '(skill.title ILIKE :search OR skill.description ILIKE :search)',
-        { search: `%${search}%` },
-      );
+      qb.andWhere('(skill.title ILIKE :search)', { search: `%${search}%` });
     }
 
     // сортировка (последние навыки)
@@ -172,8 +170,12 @@ export class SkillsService {
     return data.map((skill: Skill) => ({
       id: skill.id,
       title: skill.title,
+      images: skill.images,
       description: skill.description,
-      category: skill.category.id,
+      category: {
+        id: skill.category.id,
+        parentSlug: skill.category.parent?.slug || '',
+      },
     }));
   }
 

@@ -14,6 +14,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { FindUsersQueryDto } from './dto/get-users.dto';
 import { Category } from 'src/categories/entities/category.entity';
+import { UserRole } from './enums/users.enums';
 
 @Injectable()
 export class UsersService {
@@ -57,46 +58,108 @@ export class UsersService {
 
   async findAll(query: FindUsersQueryDto) {
     // limit = сколько записей вернуть
-    // offset = номер страницы
-    // search = строка для поиска #по имени или email#
-    const { limit, search, offset } = query;
+    // offset = сколько записей пропустить (смещение)
+    // search = строка для поиска по имени или email
+    const { limit = 12, search, offset = 0 } = query;
 
-    // take = сколько записей вернуть
-    // skip = сколько записей пропустить (для пагинации)
-    const take = limit || 10;
-    const skip = offset ? (offset - 1) * take : 0;
+    const take = limit || 12;
+    const skip = offset || 0;
 
-    // SQL запрос, алиас таблицы - user
+    // SQL запрос
     const qb = this.usersRepository.createQueryBuilder('user');
 
-    // Фильтрация по имени или email, если search передан
-    // ILike - для case-insensitive
-    // % - это wildcard, поиск по подстроке
     if (search) {
-      qb.where('user.name ILIKE :search OR user.email ILIKE :search', {
+      qb.where('(user.name ILIKE :search OR user.email ILIKE :search)', {
         search: `%${search}%`,
       });
     }
 
-    // users - массив найденных пользователей
-    // total - общее количество пользователей, подходящих под фильтр (без учета пагинации)
-    // альтеранива - getManyAndCount() : [users, total]
-    const users = await qb.skip(skip).take(take).getMany();
-    const total = await qb.getCount();
+    const [users, total] = await qb
+      .leftJoinAndSelect('user.city', 'city')
+      .leftJoinAndSelect('user.skills', 'skills')
+      .leftJoinAndSelect('user.favoriteSkills', 'favoriteSkills')
 
-    // totalPages - общее количество страниц c округлением в большую сторону
+      .leftJoinAndSelect('skills.category', 'skillCategory')
+      .leftJoinAndSelect('skillCategory.parent', 'categoryParent')
+
+      .leftJoinAndSelect('user.wantToLearn', 'wantToLearn')
+      .leftJoinAndSelect('wantToLearn.parent', 'wantToLearnParent')
+      .select([
+        'user.id',
+        'user.name',
+        'user.birthdate',
+        'user.gender',
+        'user.avatar',
+        'user.createdAt',
+
+        'city.id',
+        'city.name',
+
+        'skills.id',
+        'skills.title',
+        'skillCategory.id',
+
+        'categoryParent.id', // ID родительской категории
+        'categoryParent.slug',
+
+        'favoriteSkills.id',
+        'favoriteSkills.title',
+
+        'wantToLearn.id',
+        'wantToLearn.name',
+        'wantToLearnParent.id',
+        'wantToLearnParent.slug',
+      ])
+      .andWhere('user.role != :role', { role: UserRole.ADMIN }) // исключаем админов
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
+
+    // общее количество страниц
     const totalPages = Math.ceil(total / take);
 
-    if (total > 0 && offset > totalPages) {
-      throw new NotFoundException('Страница не найдена');
+    if (total > 0 && offset >= total) {
+      throw new NotFoundException(
+        `Смещение ${offset} превышает общее количество записей (${total}).`,
+      );
     }
 
+    // Если запрошена пустая страница, возвращаем пустой массив
+    if (total === 0) {
+      return {
+        data: [],
+        meta: {
+          total,
+          offset,
+          limit: take,
+          totalPages: 0,
+        },
+      };
+    }
+
+    const userOutput = users.map((user) => ({
+      ...user,
+      skills: user.skills?.map((skill) => ({
+        id: skill.id,
+        title: skill.title,
+        category: {
+          id: skill.category?.id,
+          parentSlug: skill.category?.parent?.slug || '',
+        },
+      })),
+      wantToLearn: user.wantToLearn?.map((category) => ({
+        id: category.id,
+        name: category.name,
+        parentSlug: category.parent?.slug || '',
+      })),
+    }));
+
     return {
-      data: users,
+      data: userOutput,
       meta: {
         total,
         offset,
-        limit,
+        limit: take,
         totalPages,
       },
     };

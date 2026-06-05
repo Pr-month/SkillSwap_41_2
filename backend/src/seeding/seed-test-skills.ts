@@ -29,7 +29,7 @@ async function bootstrap() {
     for (const userData of seedTestUsers) {
       const user = await userRepo.findOne({
         where: { email: userData.email },
-        relations: ['skills', 'favoriteSkills'],
+        relations: ['skills', 'favoriteSkills', 'wantToLearn'],
       });
       if (!user) {
         throw new Error(
@@ -209,6 +209,104 @@ async function bootstrap() {
     console.log(
       `✅ FavoriteSkills added: ${addedFavoriteSkills}, skipped: ${skippedFavoriteSkills}`,
     );
+
+    // ============================================
+    // --- Категории для изучения (wantToLearn) ---
+    // ============================================
+    let addedWantToLearn = 0;
+    let skippedWantToLearn = 0;
+
+    console.log('\n--- Adding wantToLearn categories to users ---');
+
+    // Создаем карту ТОЛЬКО дочерних категорий (у которых есть parent)
+    const childCategoryByIdMap = new Map<number, Category>();
+    for (const category of allCategories) {
+      // Добавляем только категории, у которых есть parent (дочерние)
+      if (category.parent !== null && category.parent !== undefined) {
+        childCategoryByIdMap.set(category.id, category);
+      }
+    }
+
+    for (const userData of seedTestUsers) {
+      const user = userByEmailMap.get(userData.email);
+      if (!user || !userData.wantToLearn || userData.wantToLearn.length === 0) {
+        continue;
+      }
+
+      // Загружаем актуальные wantToLearn пользователя с отношениями
+      const userWithWantToLearn = await userRepo.findOne({
+        where: { id: user.id },
+        relations: ['wantToLearn'],
+      });
+
+      const currentWantToLearn = userWithWantToLearn?.wantToLearn || [];
+      const existingIds = new Set(currentWantToLearn.map((c) => c.id));
+
+      const newWantToLearnCategories: Category[] = [];
+
+      for (const categoryId of userData.wantToLearn) {
+        const category = childCategoryByIdMap.get(categoryId);
+
+        if (!category) {
+          console.warn(
+            `Category with id ${categoryId} is not a child category or not found for user ${user.email}`,
+          );
+          skippedWantToLearn++;
+          continue;
+        }
+
+        if (existingIds.has(category.id)) {
+          console.log(
+            `Category "${category.name}" (id: ${category.id}) already in wantToLearn for ${user.email}`,
+          );
+          skippedWantToLearn++;
+          continue;
+        }
+
+        newWantToLearnCategories.push(category);
+      }
+
+      if (newWantToLearnCategories.length > 0) {
+        // Добавляем категории через QueryBuilder
+        for (const category of newWantToLearnCategories) {
+          try {
+            await categoryRepo.manager
+              .createQueryBuilder()
+              .relation(User, 'wantToLearn')
+              .of(user)
+              .add(category);
+            addedWantToLearn++;
+            console.log(
+              `Added category "${category.name}" to ${user.name}'s wantToLearn`,
+            );
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            if (
+              !errorMessage.includes('duplicate') &&
+              !errorMessage.includes('already exists') &&
+              !errorMessage.includes('violates unique constraint')
+            ) {
+              console.error(
+                `Error adding wantToLearn category ${category.id}:`,
+                errorMessage,
+              );
+              skippedWantToLearn++;
+            } else {
+              addedWantToLearn++;
+            }
+          }
+        }
+        console.log(
+          `Added ${newWantToLearnCategories.length} wantToLearn categories to ${user.name}`,
+        );
+      }
+    }
+
+    console.log(
+      `✅ WantToLearn added: ${addedWantToLearn}, skipped: ${skippedWantToLearn}`,
+    );
+
   } catch (error) {
     console.error('❌ seeding finished error', error);
     process.exitCode = 1;

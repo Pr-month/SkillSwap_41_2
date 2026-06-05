@@ -10,6 +10,7 @@ export interface ISeedUser {
   gender?: Gender;
   avatar?: string;
   skills?: number[];
+  wantToLearn?: number[];
   favoriteSkills?: number[];
   role: UserRole;
 }
@@ -24,9 +25,10 @@ export const seedTestUsers: ISeedUser[] = [
     birthdate: new Date('1990-01-01'),
     city: 23,
     gender: Gender.OTHER,
-    avatar: 'public/uploads/bruce.jpg',
+    avatar: 'uploads/bruce.jpg',
     skills: [1],
-    favoriteSkills: [4, 17, 29],
+    wantToLearn: [52, 87],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -37,9 +39,10 @@ export const seedTestUsers: ISeedUser[] = [
     birthdate: new Date('1990-01-01'),
     city: 45,
     gender: Gender.OTHER,
-    avatar: 'public/uploads/chan.jpg',
+    avatar: 'uploads/chan.jpg',
     skills: [2],
-    favoriteSkills: [7],
+    wantToLearn: [23, 67, 104],
+    favoriteSkills: [4, 17],
     role: UserRole.USER,
   },
   {
@@ -53,7 +56,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-yapic/28439/c2C5tZ34ITInGSxIVJrWaPMZiA-1/orig',
     skills: [3],
-    favoriteSkills: [2, 11, 23],
+    wantToLearn: [15, 64],
+    favoriteSkills: [2, 11],
     role: UserRole.USER,
   },
   {
@@ -67,6 +71,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/b8/e6/3b/b8e63b99cd3b38474fe11eb98f3045fd.jpg',
     skills: [4],
+    wantToLearn: [8, 29, 73, 118],
     favoriteSkills: [6, 13, 25, 39, 48],
     role: UserRole.USER,
   },
@@ -81,6 +86,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/736x/c1/d3/3d/c1d33d6901e0d4082409830c683b63ea.jpg',
     skills: [5],
+    wantToLearn: [3, 45, 78, 92, 125],
     favoriteSkills: [1, 9, 18],
     role: UserRole.USER,
   },
@@ -94,7 +100,8 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.FEMALE,
     avatar: 'https://stihi.ru/pics/2025/07/03/5421.jpg',
     skills: [6],
-    favoriteSkills: [10, 21, 34],
+    wantToLearn: [19, 56],
+    favoriteSkills: [10, 21],
     role: UserRole.USER,
   },
   {
@@ -108,7 +115,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-shedevrum/12421798/img_7f6287dcfefb11ee87c89608ae710c1d/orig',
     skills: [7],
-    favoriteSkills: [5, 16],
+    wantToLearn: [1, 44, 99],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -122,6 +130,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/65/05/21/6505211baace954cdcc8b4c97a2e41f3.jpg',
     skills: [8],
+    wantToLearn: [12, 38, 85, 130],
     favoriteSkills: [19, 31, 40],
     role: UserRole.USER,
   },
@@ -136,7 +145,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-shedevrum/11270697/img_bdb3217b091c11efb1e4425307c1c5e5/orig',
     skills: [9],
-    favoriteSkills: [12, 26, 37],
+    wantToLearn: [17, 61, 107, 114, 129],
+    favoriteSkills: [12, 26],
     role: UserRole.USER,
   },
   {
@@ -150,6 +160,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/736x/7c/ee/e8/7ceee832d7f2fca5c3aea32c818623bf.jpg',
     skills: [10],
+    wantToLearn: [28, 76],
     favoriteSkills: [20],
     role: UserRole.USER,
   },
@@ -163,6 +174,7 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.FEMALE,
     avatar: 'https://stihi.ru/pics/2024/05/31/137.jpg',
     skills: [11],
+    wantToLearn: [9, 34, 68],
     favoriteSkills: [14, 25, 39],
     role: UserRole.USER,
   },
@@ -177,6 +189,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-shedevrum/12421798/img_51aa6f68ef8111eea76b3aa34a603afe/orig',
     skills: [12],
+    wantToLearn: [6, 53, 95, 122],
     favoriteSkills: [32, 45, 16, 8, 21],
     role: UserRole.USER,
   },
@@ -190,7 +203,8 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.FEMALE,
     avatar: 'https://stihi.ru/pics/2025/06/06/1045.jpg',
     skills: [13],
-    favoriteSkills: [1, 18, 29],
+    wantToLearn: [41, 82],
+    favoriteSkills: [1, 18],
     role: UserRole.USER,
   },
   {
@@ -203,6 +217,7 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.MALE,
     avatar: 'https://stihi.ru/pics/2024/03/30/7855.jpg',
     skills: [14],
+    wantToLearn: [21, 58, 101],
     favoriteSkills: [6, 22],
     role: UserRole.USER,
   },
@@ -217,7 +232,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://masterpiecer-images.s3.yandex.net/fb3a11eb54b611eeaa384659bdca6a39:upscaled',
     skills: [15],
-    favoriteSkills: [10, 23, 35],
+    wantToLearn: [14, 47, 89, 115],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -231,6 +247,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://masterpiecer-images.s3.yandex.net/3011fc6e7e4411ee8071ceda526c50ab:upscaled',
     skills: [16],
+    wantToLearn: [2, 36, 79, 111, 128],
     favoriteSkills: [4, 27],
     role: UserRole.USER,
   },
@@ -245,6 +262,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://img.goodfon.com/wallpaper/nbig/e/83/chest-girl-model-panties-tummy-figure-underwear-legs-on-th-4.webp',
     skills: [17],
+    wantToLearn: [26, 72],
     favoriteSkills: [15, 28, 40, 31],
     role: UserRole.USER,
   },
@@ -259,7 +277,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.dzeninfra.ru/get-zen_doc/9827869/pub_64cb7c0e926aa97cdaf192af_64cb7cf4f24c176c51068510/scale_1200',
     skills: [18],
-    favoriteSkills: [2, 17, 26],
+    wantToLearn: [16, 49, 86],
+    favoriteSkills: [2, 17],
     role: UserRole.USER,
   },
   {
@@ -273,6 +292,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://masterpiecer-images.s3.yandex.net/f15f38125dfd11ee936a6a0259d7362a:upscaled',
     skills: [19],
+    wantToLearn: [7, 39, 91, 126],
     favoriteSkills: [8, 21],
     role: UserRole.USER,
   },
@@ -287,7 +307,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-shedevrum/12155741/img_17e57411fda811ee885a6a067d72cb03/orig',
     skills: [20],
-    favoriteSkills: [9, 24, 36],
+    wantToLearn: [31, 77],
+    favoriteSkills: [9, 24],
     role: UserRole.USER,
   },
   {
@@ -301,6 +322,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.dzeninfra.ru/get-zen_doc/271828/pub_67acb410ee961d5e4e0c8259_67acb5857ef27a7301872d35/scale_1200',
     skills: [21],
+    wantToLearn: [11, 51, 93],
     favoriteSkills: [3, 18, 29],
     role: UserRole.USER,
   },
@@ -315,6 +337,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://masterpiecer-images.s3.yandex.net/4c63586d7f0011ee949a5696910b1137:upscaled',
     skills: [22],
+    wantToLearn: [5, 59, 103, 119],
     favoriteSkills: [11, 25, 35, 44],
     role: UserRole.USER,
   },
@@ -329,7 +352,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-shedevrum/12363575/cb6e98e3cc8f11ee9a579a79ffaf5bd2/orig',
     skills: [23],
-    favoriteSkills: [5, 14, 22],
+    wantToLearn: [13, 46, 81, 117, 127],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -343,6 +367,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://masterpiecer-images.s3.yandex.net/7cc3ec2bb06d11ee8a563abd0be4d755:upscaled',
     skills: [24],
+    wantToLearn: [18, 62],
     favoriteSkills: [7, 23],
     role: UserRole.USER,
   },
@@ -357,7 +382,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://masterpiecer-images.s3.yandex.net/af7eff9778ea11ee93f7963c1ee369ba:upscaled',
     skills: [25],
-    favoriteSkills: [10, 19, 30],
+    wantToLearn: [27, 54, 98],
+    favoriteSkills: [10, 19],
     role: UserRole.USER,
   },
   {
@@ -371,6 +397,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/a1/6a/f6/a16af6cdac7be9473b6e19acd97e7cec.jpg',
     skills: [26],
+    wantToLearn: [4, 33, 74, 112],
     favoriteSkills: [15, 27],
     role: UserRole.USER,
   },
@@ -385,6 +412,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/4b/5c/2d/4b5c2dae9c3818114c40fcd1d954d3b9.jpg',
     skills: [27],
+    wantToLearn: [25, 69],
     favoriteSkills: [1, 12, 24],
     role: UserRole.USER,
   },
@@ -399,6 +427,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.dzeninfra.ru/get-zen_doc/271828/pub_65946b5816f1ad2e391f7745_6594711b4fb36f2999a4d56c/scale_1200',
     skills: [28],
+    wantToLearn: [10, 42, 87],
     favoriteSkills: [4, 17, 29],
     role: UserRole.USER,
   },
@@ -413,6 +442,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://rusradio.ru/uploads/87/ad/faafbf2903ad59b0b84079468302.jpg',
     skills: [29],
+    wantToLearn: [20, 57, 96, 120],
     favoriteSkills: [9, 21, 32, 45],
     role: UserRole.USER,
   },
@@ -427,7 +457,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/736x/1c/4e/29/1c4e290f01141c83de7a3e4f526e3f36.jpg',
     skills: [30],
-    favoriteSkills: [7, 20, 31],
+    wantToLearn: [22, 63, 102, 121, 130],
+    favoriteSkills: [7, 20],
     role: UserRole.USER,
   },
   {
@@ -441,6 +472,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/6c/e6/98/6ce6987eddb90d15e291e4411b5fbaea.jpg',
     skills: [31],
+    wantToLearn: [34, 79],
     favoriteSkills: [2, 14],
     role: UserRole.USER,
   },
@@ -455,6 +487,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.mds.yandex.net/get-shedevrum/12151221/img_aa7a3734f0be11ee970ffa438e8a26f5/orig',
     skills: [32],
+    wantToLearn: [1, 48, 83],
     favoriteSkills: [3, 16, 28],
     role: UserRole.USER,
   },
@@ -469,7 +502,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/d9/88/ac/d988ace7d3bff035bdff4eafaae0fb57.webp',
     skills: [33],
-    favoriteSkills: [6, 19, 30, 43, 36],
+    wantToLearn: [8, 37, 74, 109],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -482,6 +516,7 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.MALE,
     avatar: 'https://cdn1.flamp.ru/711b8b3234f41e9f68d629229ff27f14.jpg',
     skills: [34],
+    wantToLearn: [12, 52],
     favoriteSkills: [10, 23, 35],
     role: UserRole.USER,
   },
@@ -496,6 +531,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://avatars.dzeninfra.ru/get-zen_doc/5218815/pub_63ead032afb29857ce316e07_63ead1016f86f30cddf567cf/scale_1200',
     skills: [35],
+    wantToLearn: [15, 44, 88],
     favoriteSkills: [4, 17],
     role: UserRole.USER,
   },
@@ -510,6 +546,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/736x/61/fe/28/61fe28c3f1dda2a9879f0e2d36ed99cc.jpg',
     skills: [36],
+    wantToLearn: [3, 29, 71, 105],
     favoriteSkills: [8, 22, 33],
     role: UserRole.USER,
   },
@@ -523,7 +560,8 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.FEMALE,
     avatar: 'https://i.ytimg.com/vi/ZV2TnBohs6A/maxresdefault.jpg',
     skills: [37],
-    favoriteSkills: [1, 18, 31],
+    wantToLearn: [6, 32, 81, 108, 126],
+    favoriteSkills: [1, 18],
     role: UserRole.USER,
   },
   {
@@ -537,6 +575,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://p0.piqsels.com/preview/217/979/788/man-male-smile-portrait.jpg',
     skills: [38],
+    wantToLearn: [19, 61],
     favoriteSkills: [5, 16],
     role: UserRole.USER,
   },
@@ -551,6 +590,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/3c/9f/2c/3c9f2cb07b98e34f4cbe77e02e0f20de.jpg',
     skills: [39],
+    wantToLearn: [9, 55, 97],
     favoriteSkills: [7, 20, 34, 45],
     role: UserRole.USER,
   },
@@ -565,7 +605,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/7d/ca/be/7dcabe92370fff0c6489aba65af5dab2.jpg',
     skills: [40],
-    favoriteSkills: [3, 15, 26],
+    wantToLearn: [5, 27, 68, 116],
+    favoriteSkills: [3, 15],
     role: UserRole.USER,
   },
   {
@@ -579,6 +620,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/ed/92/9e/ed929e87ab35ddc754ae50feae0228db.jpg',
     skills: [41],
+    wantToLearn: [11, 49],
     favoriteSkills: [9, 22, 35],
     role: UserRole.USER,
   },
@@ -593,6 +635,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/736x/ee/71/74/ee7174feb2450d8f79f30e6f0e31c411.jpg',
     skills: [42],
+    wantToLearn: [18, 46, 94],
     favoriteSkills: [6, 19, 31, 42],
     role: UserRole.USER,
   },
@@ -607,7 +650,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://yobte.ru/uploads/posts/2019-11/devushki-s-golubymi-glazami-s-rusymi-volosami-41-foto-3.jpg',
     skills: [43],
-    favoriteSkills: [2, 14],
+    wantToLearn: [13, 41, 76, 110],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -621,6 +665,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/736x/aa/01/39/aa0139b260f3edebb46dc1bd2e7a1117.jpg',
     skills: [44],
+    wantToLearn: [22, 56, 103, 121, 128],
     favoriteSkills: [5, 18, 30],
     role: UserRole.USER,
   },
@@ -635,7 +680,8 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/c0/62/63/c0626354ac57b138ec7a113c7353f014.jpg',
     skills: [45],
-    favoriteSkills: [1, 13, 25],
+    wantToLearn: [24, 65],
+    favoriteSkills: [1, 13],
     role: UserRole.USER,
   },
   {
@@ -649,6 +695,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/e4/79/de/e479de8cae918f5ad91076bd3dfe7078.jpg',
     skills: [46],
+    wantToLearn: [10, 39, 85],
     favoriteSkills: [8, 21, 34],
     role: UserRole.USER,
   },
@@ -663,6 +710,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/70/a9/2f/70a92f8895863a5c544b71d49c3a5dea.jpg',
     skills: [47],
+    wantToLearn: [4, 35, 72, 114],
     favoriteSkills: [4, 17, 29],
     role: UserRole.USER,
   },
@@ -677,6 +725,7 @@ export const seedTestUsers: ISeedUser[] = [
     avatar:
       'https://i.pinimg.com/originals/b4/75/db/b475db4f81386bdf37dd4cf49bbc9f60.jpg',
     skills: [48],
+    wantToLearn: [17, 59],
     favoriteSkills: [7, 20],
     role: UserRole.USER,
   },
@@ -690,7 +739,8 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.FEMALE,
     avatar:
       'https://i.pinimg.com/originals/cf/4f/d4/cf4fd4743158b3801d6b6fa47ea3ba8d.jpg',
-    skills: [],
+    skills: [49, 60],
+    wantToLearn: [7, 28, 54, 89, 123],
     favoriteSkills: [3, 16, 28],
     role: UserRole.USER,
   },
@@ -704,8 +754,9 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.MALE,
     avatar:
       'https://www.churchofjesuschrist.org/bc/content/shared/content/images/gospel-library/manual/PD60004369/iStock-157403823.jpg',
-    skills: [],
-    favoriteSkills: [9, 22, 35, 47],
+    skills: [50, 55],
+    wantToLearn: [2, 23, 48, 77, 106],
+    favoriteSkills: [],
     role: UserRole.USER,
   },
   {
@@ -718,7 +769,8 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.FEMALE,
     avatar:
       'https://wallpaper.forfun.com/fetch/4a/4a18c32ad3e38db6ab287a7fd06185d4.jpeg',
-    skills: [],
+    skills: [51],
+    wantToLearn: [12, 37, 66, 95, 124],
     favoriteSkills: [1, 14, 26],
     role: UserRole.USER,
   },
@@ -732,8 +784,37 @@ export const seedTestUsers: ISeedUser[] = [
     gender: Gender.MALE,
     avatar:
       'https://i.pinimg.com/originals/3a/69/68/3a696883cde69524213c569c8013b2c0.jpg',
-    skills: [],
+    skills: [52, 59],
+    wantToLearn: [1, 25, 43, 82, 112],
     favoriteSkills: [5, 18],
+    role: UserRole.USER,
+  },
+  {
+    name: 'Владимир Соколов',
+    email: 'vladimir.sokolov@test.local',
+    password: 'Hj9Km4Np',
+    about: 'Fullstack разработчик с 8-летним опытом',
+    birthdate: new Date('1992-03-18'),
+    city: 1,
+    gender: Gender.MALE,
+    avatar: 'uploads/bruce.jpg',
+    skills: [53, 54],
+    wantToLearn: [41, 60],
+    favoriteSkills: [11, 23],
+    role: UserRole.USER,
+  },
+  { 
+    name: 'Евгения Белова',
+    email: 'evgenia.belova@test.local',
+    password: 'Qw7Rt3Yp',
+    about: 'Продуктовый дизайнер и UX-исследователь',
+    birthdate: new Date('1995-09-27'),
+    city: 3,
+    gender: Gender.FEMALE,
+    avatar: 'uploads/bruce.jpg',
+    skills: [56, 57],
+    wantToLearn: [1, 49, 58],
+    favoriteSkills: [12, 27, 34],
     role: UserRole.USER,
   },
 ];

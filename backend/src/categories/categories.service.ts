@@ -38,7 +38,10 @@ export class CategoriesService {
         id: category.id,
         slug: category.slug,
         name: category.name,
-        subCategory: category.children,
+        subCategory: category.children?.map((child) => ({
+          id: child.id,
+          name: child.name,
+        })) || [],
       }));
     } catch (error) {
       console.error(' Error in findAll:', error);
