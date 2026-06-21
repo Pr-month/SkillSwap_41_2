@@ -1,8 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { RootState } from '@/services/store/store';
+import { addToFavoritesApi, removeFromFavoritesApi } from '@/entities/skill/api/skill.api';
+import { fetchUser, loginUser } from '@/services/thunk/authUser';
 
 interface LikeState {
-  likedItems: Record<string, boolean>;
+  likedItems: Record<number, boolean>;
   loading: boolean;
   error: string | null;
 }
@@ -13,27 +15,6 @@ const initialState: LikeState = {
   error: null,
 };
 
-// Инициализация из localStorage при запуске
-export const initializeLikes = createAsyncThunk(
-  'likes/initialize',
-  async (_, { rejectWithValue }) => {
-    try {
-      const likedSkills = JSON.parse(localStorage.getItem('likedSkills') || '[]');
-      const likedUsers = JSON.parse(localStorage.getItem('likedUsers') || '[]');
-
-      // Комбинируем все лайки в один объект
-      const allLikes: Record<string, boolean> = {};
-      likedSkills.forEach((id: string) => (allLikes[id] = true));
-      likedUsers.forEach((id: string) => (allLikes[id] = true));
-
-      return allLikes;
-    } catch (error) {
-      console.error('Failed to initialize likes:', error);
-      return rejectWithValue('Ошибка при инициализации лайков');
-    }
-  },
-);
-
 export const toggleLike = createAsyncThunk(
   'likes/toggleLike',
   async (itemId: number, { getState, rejectWithValue }) => {
@@ -41,22 +22,21 @@ export const toggleLike = createAsyncThunk(
       const state = getState() as RootState;
       const isCurrentlyLiked = state.likes.likedItems[itemId] || false;
 
-      // Имитация API вызова
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Обновляем localStorage
-      const liked = JSON.parse(localStorage.getItem('likedSkills') || '[]');
-      let updated;
       if (isCurrentlyLiked) {
-        updated = liked.filter((id: number) => id !== itemId);
+        await removeFromFavoritesApi(itemId);
       } else {
-        updated = [...liked, itemId];
+        await addToFavoritesApi(itemId);
       }
-      localStorage.setItem('likedSkills', JSON.stringify(updated));
 
       return { itemId, liked: !isCurrentlyLiked };
     } catch (error) {
-      console.error('Like error:', error);
+      const status = (error as { status?: number })?.status;
+      if (status === 409) {
+        return { itemId, liked: true };
+      }
+      if (status === 404) {
+        return { itemId, liked: false };
+      }
       return rejectWithValue('Ошибка при обработке лайка');
     }
   },
@@ -77,18 +57,19 @@ const likeSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      .addCase(initializeLikes.pending, state => {
-        state.loading = true;
-        state.error = null;
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        const favoriteSkills = action.payload.user?.favoriteSkills ?? [];
+        state.likedItems = {};
+        favoriteSkills.forEach(skill => {
+          state.likedItems[skill.id] = true;
+        });
       })
-      .addCase(initializeLikes.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
-        state.likedItems = action.payload;
-      })
-      .addCase(initializeLikes.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+      .addCase(loginUser.fulfilled, (state, action) => {
+        const favoriteSkills = action.payload.user?.favoriteSkills ?? [];
+        state.likedItems = {};
+        favoriteSkills.forEach(skill => {
+          state.likedItems[skill.id] = true;
+        });
       })
       .addCase(toggleLike.pending, state => {
         state.loading = true;

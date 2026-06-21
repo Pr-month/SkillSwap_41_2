@@ -169,6 +169,7 @@ export class UsersService {
   async findById(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
+      relations: { favoriteSkills: true },
     });
 
     if (!user) throw new NotFoundException('Пользователь не найден');

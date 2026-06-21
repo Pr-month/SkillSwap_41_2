@@ -35,10 +35,15 @@ export const UserCard: React.FC<UserCardProps> = ({
   const alreadyRequested = hasSentRequest(id);
   const learnSkill = wantToLearn.slice(0, 2);
   const moreSkills = wantToLearn.length - learnSkill.length;
-  const isLiked = useSelector(state => selectIsLiked(state, id));
+  const primarySkillId = skills?.[0]?.id;
+  const isLiked = useSelector(state =>
+    primarySkillId !== undefined ? selectIsLiked(state, primarySkillId) : false,
+  );
 
   const handleLikeClick = () => {
-    dispatch(toggleLike(id));
+    if (primarySkillId !== undefined) {
+      dispatch(toggleLike(primarySkillId));
+    }
   };
 
   const openProfile = () => {
@@ -56,7 +61,7 @@ export const UserCard: React.FC<UserCardProps> = ({
     <div className={styles.cardContainer}>
       <div className={styles.headerCard}>
         <img src={imageUrl} alt={`Avatar ${name}`} className={styles.image} />
-        {showLike && (
+        {showLike && primarySkillId !== undefined && (
           <div className={styles.cardLike}>
             <button
               type="button"

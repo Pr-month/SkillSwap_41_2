@@ -3,7 +3,7 @@ import { selectIsLiked, selectLikesLoading } from '@/services/selectors/likeSele
 import { useDispatch, useSelector } from '@/services/store/store';
 
 interface UseLikeProps {
-  itemId: string;
+  itemId: number;
 }
 
 export const useLike = ({ itemId }: UseLikeProps) => {

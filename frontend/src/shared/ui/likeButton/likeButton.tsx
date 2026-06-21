@@ -2,7 +2,7 @@ import styles from './likeButton.module.css';
 import { useLike } from '@/shared/hooks/useLike';
 
 interface LikeButtonProps {
-  itemId: string;
+  itemId: number;
   className?: string;
   ariaLabel?: string;
 }
