@@ -11,7 +11,11 @@ export const fetchUser = createAsyncThunk<TUserResponse, void>(
   async (_, { rejectWithValue }) => {
     try {
       const data = await getProfileApi();
-      return data;
+      // Backend returns User directly, wrap to match TUserResponse shape
+      const user = (data as unknown as { user?: unknown }).user
+        ? data
+        : ({ success: true, user: data } as unknown as TUserResponse);
+      return user;
     } catch (error) {
       return rejectWithValue(error);
     }

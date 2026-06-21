@@ -25,7 +25,7 @@ export const refreshToken = async (): Promise<void> => {
     throw new UnauthorizedError('Нет обновленного токена');
   }
 
-  const res = await apiRequest<RefreshResponse>('/auth/refresh', {
+  const res = await apiRequest<RefreshResponse>('/api/auth/refresh', {
     method: 'POST',
     body: JSON.stringify({ refreshToken }),
   });
@@ -58,9 +58,9 @@ export const authApiClient = async <T>(
   } catch (err) {
     const isUnauthorized =
       err instanceof UnauthorizedError ||
-      (err instanceof Error && 'status' in err && err.status === 401);
+      (err instanceof Error && 'status' in err && (err as { status?: number }).status === 401);
 
-    if (isUnauthorized) {
+    if (!isUnauthorized) {
       throw err;
     }
 

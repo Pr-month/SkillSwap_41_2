@@ -102,13 +102,10 @@ export const AuthFormContainer = ({ isFirstStage = true }) => {
       try {
         const data = await dispatch(loginUser({ email, password })).unwrap();
         auth.login({
-          id: String(data.user._id),
+          id: String(data.user.id),
           name: data.user.name,
           email: data.user.email ?? '',
-          avatar: typeof data.user.image === 'string' ? data.user.image : undefined,
-          birthdayDate: data.user.birthdayDate,
-          city: data.user.city,
-          description: data.user.description,
+          avatar: typeof data.user.avatar === 'string' ? data.user.avatar : undefined,
         });
       } catch {
         setErrors(prev => ({

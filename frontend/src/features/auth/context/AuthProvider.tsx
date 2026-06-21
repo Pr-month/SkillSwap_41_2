@@ -7,9 +7,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(() => {
     const savedAuth = localStorage.getItem('auth');
     const registrationData = localStorage.getItem('registrationData');
+    const hasRefreshToken = !!localStorage.getItem('refreshToken');
 
     if (savedAuth) {
-      return JSON.parse(savedAuth);
+      const parsed = JSON.parse(savedAuth) as AuthState;
+      if (parsed.isAuthenticated && !hasRefreshToken) {
+        localStorage.removeItem('auth');
+        return { isAuthenticated: false, user: null };
+      }
+      return parsed;
     } else if (registrationData) {
       const data = JSON.parse(registrationData);
       return {
